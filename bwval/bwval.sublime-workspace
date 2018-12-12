@@ -1,0 +1,1412 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"Panic",
+				"PanicA\tfunc(a bw.I) ·ƒ"
+			],
+			[
+				"test",
+				"testName\tstring ·ν"
+			],
+			[
+				"array",
+				"arrayOfMustBeFollowedBySomeType\tfunc() error ·ƒ"
+			],
+			[
+				"Sp",
+				"Sprintf\tfunc(format string, a ...interface{}) string ·ƒ"
+			],
+			[
+				"In",
+				"LastIndex\tfunc(s string, substr string) int ·ƒ"
+			],
+			[
+				"in",
+				"numIn\tint ·ν"
+			],
+			[
+				"S",
+				"String\treflect.Kind ·Ɩ"
+			],
+			[
+				"pa",
+				"panicVal\tinterface ·ν"
+			],
+			[
+				"testee",
+				"testeeFunc\tstring ·ν"
+			],
+			[
+				"Me",
+				"MethodByName\tfunc(name string) reflect.Value ·ƒ"
+			],
+			[
+				"eta",
+				"etaResult\tinterface ·ν"
+			],
+			[
+				"Ma",
+				"MaxInt\tint ·Ɩ"
+			],
+			[
+				"bw",
+				"bwdebug\tpackage ·ρ"
+			],
+			[
+				"Mus",
+				"MustPath\tfunc(result bw.ValPath, err error) bw.ValPath ·ƒ"
+			],
+			[
+				"P",
+				"Print\tfunc(a ...interface{}) int, error ·ƒ"
+			],
+			[
+				"Call",
+				"CallersFrames\tfunc(callers []uintptr) *runtime.Frames ·ƒ"
+			],
+			[
+				"Val",
+				"ValString\tValKind ·Ɩ"
+			],
+			[
+				"ansi",
+				"ansiIsNotOfType\tstring ·ν"
+			],
+			[
+				"ValP",
+				"ValPathItem\tstruct ·ʈ"
+			],
+			[
+				"typ",
+				"typeOf\treflect.Type ·ν"
+			],
+			[
+				"prefix",
+				"prefixArgs\t[]interface{} ·ν"
+			],
+			[
+				"fmt",
+				"fmtArgs\t[]interface{} ·ν"
+			],
+			[
+				"fun",
+				"function\tuintptr ·ν"
+			],
+			[
+				"val",
+				"ValChecker\tinterface ·ʈ"
+			],
+			[
+				"V",
+				"VarValue\tinterface ·ν"
+			],
+			[
+				"Var",
+				"VarPathStr\tstring ·ν"
+			],
+			[
+				"type",
+				"typedArg\tVarIs ·ν"
+			],
+			[
+				"t",
+				"typedArg\tUnicodeCategory ·ν"
+			],
+			[
+				"get",
+				"getVarValue\tfunc(varPath VarPath) VarValue ·ƒ"
+			],
+			[
+				"Run",
+				"RunePtrStruct\tstruct ·ʈ"
+			],
+			[
+				"pre",
+				"preLineCount\tint ·ν"
+			],
+			[
+				"pu",
+				"pushRune\tfunc() ·ƒ"
+			],
+			[
+				"rune",
+				"runePtr\t*rune ·ν"
+			],
+			[
+				"cha",
+				"charPtr\t*rune ·ν"
+			],
+			[
+				"string",
+				"stringCharProvider\tstruct ·ʈ"
+			],
+			[
+				"item",
+				"itemType\tparseStackItemType ·ν"
+			],
+			[
+				"stack",
+				"stackSubItem\tparseStackItem ·ν"
+			],
+			[
+				"def",
+				"defaultValue\t[]interface{} ·ν"
+			],
+			[
+				"Con",
+				"ConfigState\tstruct ·ʈ"
+			],
+			[
+				"A",
+				"ArrayOf\tdeftype.Item ·Ɩ"
+			],
+			[
+				"FromS",
+				"FromArgs\tfunc(kk ...deftype.Item) deftype.Set ·ƒ"
+			],
+			[
+				"max",
+				"maxNumber\t*float64 ·ν"
+			],
+			[
+				"min",
+				"minNumber\t*float64 ·ν"
+			],
+			[
+				"From",
+				"FromSlice\tfunc(kk []Item) Set ·ƒ"
+			],
+			[
+				"Ar",
+				"Array\tdeftype.Item ·Ɩ"
+			],
+			[
+				"limi",
+				"limitValue\tinvalid type ·ν"
+			],
+			[
+				"value",
+				"valueErrorMake\tfunc(v value, errorType valueErrorType, args ...interface{}) valueError ·ƒ"
+			],
+			[
+				"_mu",
+				"_mustBeInt64\tfunc(v interface{}) int64 ·ƒ"
+			],
+			[
+				"Arr",
+				"ArrayOf\tdeftype.Item ·Ɩ"
+			],
+			[
+				"elemVal",
+				"elemValIntf\tinterface ·ν"
+			],
+			[
+				"Item_",
+				"Item_below_\tdeftype.Item ·Ɩ"
+			],
+			[
+				"valKe",
+				"valKeyValIntf\tinterface ·ν"
+			],
+			[
+				"co",
+				"compileDefResult\t*Def ·ν"
+			],
+			[
+				"Flo",
+				"Float64\treflect.Kind ·Ɩ"
+			],
+			[
+				"MaxInt",
+				"MaxInt64\tint64 ·Ɩ"
+			],
+			[
+				"Ui",
+				"Uint32\treflect.Kind ·Ɩ"
+			],
+			[
+				"Uint",
+				"Uint16\treflect.Kind ·Ɩ"
+			],
+			[
+				"U",
+				"Uint8\treflect.Kind ·Ɩ"
+			],
+			[
+				"valu",
+				"valueErrorMake\tfunc(v value, errorType valueErrorType, args ...interface{}) valueError ·ƒ"
+			],
+			[
+				"Pre",
+				"PrettyJson\tfunc(v interface{}) string ·ƒ"
+			],
+			[
+				"Pr",
+				"PrettyJson\tfunc(v interface{}) string ·ƒ"
+			],
+			[
+				"_mus",
+				"_mustBeString\tfunc(v interface{}) string ·ƒ"
+			],
+			[
+				"fm",
+				"fmtString\tstring ·ν"
+			],
+			[
+				"ofType",
+				"ofTypeStrings\t[]string ·ν"
+			],
+			[
+				"ofTy",
+				"ofTypeArray\t[]string ·ν"
+			],
+			[
+				"default",
+				"defaultValueIntf\tinterface ·ν"
+			],
+			[
+				"errHa",
+				"errHasUnexpectedKeys\tfunc(unexpectedKeys []string) ·ƒ"
+			],
+			[
+				"valueha",
+				"valueHasUnexpectedKeysError\tvalueError ·Ɩ"
+			],
+			[
+				"defKeys",
+				"defKeysKey\tstring ·ν"
+			],
+			[
+				"va",
+				"valMap\tmap[string]interface{} ·ν"
+			],
+			[
+				"where",
+				"whereVal\tstring ·ν"
+			],
+			[
+				"int",
+				"interface"
+			],
+			[
+				"defKey",
+				"defKeysKeyValue"
+			],
+			[
+				"some",
+				"somewhere"
+			],
+			[
+				"vali",
+				"validateType"
+			],
+			[
+				"exp",
+				"expectedKeys"
+			],
+			[
+				"whe",
+				"whereStruct"
+			],
+			[
+				"valid",
+				"validFields"
+			],
+			[
+				"keyValue",
+				"keyValueType"
+			],
+			[
+				"wher",
+				"where"
+			],
+			[
+				"is",
+				"isRequired"
+			],
+			[
+				"_get",
+				"_getValidatedTypeValueOfHashKey"
+			],
+			[
+				"sca",
+				"scalar"
+			],
+			[
+				"sub",
+				"subType"
+			],
+			[
+				"ex",
+				"expectedTypes"
+			],
+			[
+				"exis",
+				"exists"
+			],
+			[
+				"su",
+				"suffix"
+			],
+			[
+				"str",
+				"structValue"
+			],
+			[
+				"exi",
+				"exists"
+			],
+			[
+				"exit",
+				"exitOnError"
+			],
+			[
+				"all",
+				"allSeparate"
+			],
+			[
+				"el",
+				"elsif"
+			],
+			[
+				"ar",
+				"array"
+			],
+			[
+				"no",
+				"normalize"
+			],
+			[
+				"arr",
+				"arrayItem"
+			],
+			[
+				"forc",
+				"forceRecreate"
+			],
+			[
+				"dockerIma",
+				"dockerImageName"
+			],
+			[
+				"ngi",
+				"nginx"
+			],
+			[
+				"temp",
+				"templateFileSpec"
+			],
+			[
+				"var",
+				"varSubstSub"
+			],
+			[
+				"commen",
+				"commentSuffix"
+			],
+			[
+				"sep",
+				"separatorLine"
+			],
+			[
+				"git",
+				"gitignore"
+			],
+			[
+				"ima",
+				"imageId"
+			],
+			[
+				"et",
+				"etaImageId"
+			],
+			[
+				"err",
+				"errorCode"
+			],
+			[
+				"retu",
+				"returnCode"
+			],
+			[
+				"por",
+				"portNameByValue"
+			],
+			[
+				"bas",
+				"basePorts"
+			],
+			[
+				"ke",
+				"camelCaseToKebabCase"
+			],
+			[
+				"by",
+				"byName"
+			],
+			[
+				"op",
+				"options"
+			],
+			[
+				"opt",
+				"optName"
+			],
+			[
+				"en",
+				"entityName"
+			],
+			[
+				"_de",
+				"_debugVar"
+			],
+			[
+				"_sho",
+				"_shortenFileSpec"
+			],
+			[
+				"forceRecreateA",
+				"forceRecreateAndCleanMappedVolumesDef"
+			],
+			[
+				"_is",
+				"_isInDocker"
+			],
+			[
+				"BW_",
+				"BW_SELF_UPDATE_SOURCE"
+			],
+			[
+				"_bwPro",
+				"_bwProjShortcut"
+			],
+			[
+				"баз",
+				"базовых"
+			],
+			[
+				"см",
+				"смещение"
+			],
+			[
+				"proj",
+				"projShortcut"
+			],
+			[
+				"projSh",
+				"projShortcut"
+			],
+			[
+				"OPT_",
+				"OPT_uninstall"
+			],
+			[
+				"gitO",
+				"gitOriginHolder"
+			],
+			[
+				"projD",
+				"projDir"
+			],
+			[
+				"prof",
+				"profileLineRegExp"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 392.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"git",
+				"Git: Status"
+			],
+			[
+				"inst",
+				"Package Control: Install Package"
+			],
+			[
+				"packa",
+				"Package Control: Remove Package"
+			],
+			[
+				"gi",
+				"Git: Status"
+			],
+			[
+				"g",
+				"Git: Status"
+			],
+			[
+				"ins",
+				"Package Control: Install Package"
+			],
+			[
+				"git:st",
+				"Git: Status"
+			],
+			[
+				"git:s",
+				"Git: Status"
+			],
+			[
+				"git:",
+				"Git: Status"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"instal",
+				"Package Control: Install Package"
+			],
+			[
+				"gitst",
+				"Git: Status"
+			],
+			[
+				"gits",
+				"Git: Status"
+			],
+			[
+				"git:sta",
+				"Git: Status"
+			],
+			[
+				"git bla",
+				"Git: Blame"
+			],
+			[
+				"git:stat",
+				"Git: Status"
+			],
+			[
+				"git: st",
+				"Git: Status"
+			],
+			[
+				"in",
+				"Package Control: Install Package"
+			],
+			[
+				"sublimelinter setting",
+				"Preferences: SublimeLinter Settings – User"
+			],
+			[
+				"vintage",
+				"Package Control: Advanced Install Package"
+			],
+			[
+				":w",
+				":w - Save"
+			]
+		],
+		"width": 428.0
+	},
+	"console":
+	{
+		"height": 150.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval"
+	],
+	"file_history":
+	[
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/bwval.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/bwval_errors.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/valkind_set.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwtesting/bwtesting.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/val/val.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwstr/bwstr.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/bool_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/string_set.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/bwval_def.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwmap/bwmap.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/bwval_kind.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwerr/bwerr.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bw/bw.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwstr/bwstr_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/bwval_holder.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/bwval_def_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/val/val_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/runeprovider/runeprovider.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/valkind_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwsetter/bwsetter.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwsetter/internal/helper/helper.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/bwval_range.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/bwval_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/bwval_holder_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/bool_set.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/deftype/deftype.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/ansi/tags/tags.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwdebug/bwdebug_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwerr/bwerr_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwos/bwos.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwexec/bwexec_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwmap/bwmap_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwsetter/internal/helper/test_gen.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/path/path_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwval/path/path.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwos/bwos_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/float32_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/float64_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/int16_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/int32_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/int64_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/int8_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/int_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/interface_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/rune_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/string_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/uint16_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/uint32_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/uint64_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/uint8_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/uint_set_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwsetter/internal/pkgnamegetter/pkgnamegetter_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/defparse_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/defvalid_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/pathparse/pathparse_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/pfa/pfa_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/runeprovider/runeprovider_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwerr/where/where.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwjson/bwjson.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/def.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/defparse_logic.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/compiledef.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/defvalid_error.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/defvalid_value.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwerror/bwerror.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/ansi/ansi.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwset/bwset.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/pfa_item_methods.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/pfa.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/pfa_state_methods.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/internal/pfa/pfa_errors.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/defparse.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/internal/pfa/pfa_item_methods.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/internal/pfa/pfa_state_methods.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/internal/pfa/pfa.go",
+		"/Users/yurybikuzin/Library/Application Support/Sublime Text 3/Packages/User/GoSublime/src/margo/margo.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/test.sh",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/parsestackitem.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/pfaerrortype_string.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/pfa_errors.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/parsestate.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/parsestackitemtype.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/parsestack.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwint/bwint.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/deftype/deftype.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwjson/bwjson_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/defvalid.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/defvalid_init.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/getvalidval.go",
+		"/Users/yurybikuzin/Library/Application Support/Sublime Text 3/Packages/GoSublime/CHANGELOG.md",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/deftype.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/defvalid_errors.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwexec/bwexectesthelper2/bwexectesthelper2.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwtesting/bwtesting_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/ansi/ansi_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwerror/bwerror_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwexec/bwexectesthelper/bwexectesthelper.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwstring/bwstring.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwexec/bwexec.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwstring/bwstring_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/value.go",
+		"/Users/yurybikuzin/bw/pm/BwAnsi.pm",
+		"/Users/yurybikuzin/bw/go/bin/bwexectesthelper",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defvalid/defvalid_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparse/defparse_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparse/pfa_state_methods.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/core/core_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/core/core.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defvalid/defvalid.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparse/pfa.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparse/pfa_item_methods.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/bwtesting/bwtesting.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparse/defparse.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparse/parseprimarystate_string.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparse/parsesecondarystate_string.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparse/parsestack.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparse/parsestackitem.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparse/parsestackitemtype.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparse/parsestackitemtype_string.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparse/parsestate.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparse/parsetertiarystate_string.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparse/pfa_errors.go",
+		"/Users/yurybikuzin/bw/go/.gitignore",
+		"/Users/yurybikuzin/bw/go/src/.gitignore",
+		"/Users/yurybikuzin/bw/go/src/github.com/.gitignore",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparser/defparser_test.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparser/pfa_errors.go",
+		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/defparser/pfa_item_methods.go"
+	],
+	"find":
+	{
+		"height": 26.0
+	},
+	"find_in_files":
+	{
+		"height": 101.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": true,
+		"find_history":
+		[
+		],
+		"highlight": false,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": false,
+		"use_buffer2": true,
+		"whole_word": true,
+		"wrap": false
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 26.0
+	},
+	"input":
+	{
+		"height": 33.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.SublimeLinter":
+	{
+		"height": 0.0
+	},
+	"output.find_results":
+	{
+		"height": 100.0
+	},
+	"output.mdpopups":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "bwval.sublime-project",
+	"replace":
+	{
+		"height": 48.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"bwval_hl",
+				"bwval/bwval_holder.go"
+			],
+			[
+				"bwval",
+				"bwval/bwval.go"
+			],
+			[
+				"path_",
+				"bwval/path/path_test.go"
+			],
+			[
+				"bwmap",
+				"bwmap/bwmap.go"
+			],
+			[
+				"bwmap_",
+				"bwmap/bwmap_test.go"
+			],
+			[
+				"valkind_set_",
+				"bwval/valkind_set_test.go"
+			],
+			[
+				"bwtes",
+				"bwtesting/bwtesting.go"
+			],
+			[
+				"bwval_hold",
+				"bwval/bwval_holder_test.go"
+			],
+			[
+				"bwval_ho",
+				"bwval/bwval_holder.go"
+			],
+			[
+				"bwval_te",
+				"bwval/bwval_test.go"
+			],
+			[
+				"bwval_err",
+				"bwval/bwval_errors.go"
+			],
+			[
+				"bwval_def_",
+				"bwval/bwval_def_test.go"
+			],
+			[
+				"bwval_de",
+				"bwval/bwval_def.go"
+			],
+			[
+				"bw.",
+				"bw/bw.go"
+			],
+			[
+				"rune",
+				"runeprovider/runeprovider.go"
+			],
+			[
+				"val",
+				"bwval/val/val.go"
+			],
+			[
+				"bwstr",
+				"bwstr/bwstr.go"
+			],
+			[
+				"bwsett",
+				"bwsetter/bwsetter.go"
+			],
+			[
+				"string",
+				"bwset/string_set.go"
+			],
+			[
+				"st",
+				"bwset/bool_set_test.go"
+			],
+			[
+				"valkind",
+				"bwval/valkind_set.go"
+			],
+			[
+				"bwsetter",
+				"bwsetter/bwsetter.go"
+			],
+			[
+				"valkind_s",
+				"bwval/valkind_set.go"
+			],
+			[
+				"bwv",
+				"bwval/bwval_holder.go"
+			],
+			[
+				"bwval_e",
+				"bwval/bwval_errors.go"
+			],
+			[
+				"valki",
+				"bwval/valkind_set.go"
+			],
+			[
+				"bwval_def",
+				"bwval/bwval_def_test.go"
+			],
+			[
+				"vw",
+				"bwval/bwval_kind.go"
+			],
+			[
+				"deftype",
+				"bwval/deftype/deftype.go"
+			],
+			[
+				"bwer",
+				"bwval/bwval_errors.go"
+			],
+			[
+				"tag",
+				"ansi/tags/tags.go"
+			],
+			[
+				"bw.go",
+				"bw/bw.go"
+			],
+			[
+				"bool_",
+				"bwset/bool_set_test.go"
+			],
+			[
+				"helpe",
+				"bwsetter/internal/helper/helper.go"
+			],
+			[
+				"test_ge",
+				"bwsetter/internal/helper/test_gen.go"
+			],
+			[
+				"bool",
+				"bwset/bool_set_test.go"
+			],
+			[
+				"bwmap_test",
+				"bwmap/bwmap_test.go"
+			],
+			[
+				"bwexe",
+				"bwexec/bwexec_test.go"
+			],
+			[
+				"bwos",
+				"bwos/bwos.go"
+			],
+			[
+				"bwerr",
+				"bwerr/bwerr_test.go"
+			],
+			[
+				"bwd",
+				"bwdebug/bwdebug_test.go"
+			],
+			[
+				"bwtest",
+				"bwtesting/bwtesting.go"
+			],
+			[
+				"bw",
+				"bw/bw.go"
+			],
+			[
+				"path",
+				"bwval/path/path_test.go"
+			],
+			[
+				"path_te",
+				"bwval/path/path_test.go"
+			],
+			[
+				"bwval_",
+				"bwval/bwval_test.go"
+			],
+			[
+				"bwte",
+				"bwtesting/bwtesting.go"
+			],
+			[
+				"bwvalt",
+				"bwval/bwval_test.go"
+			],
+			[
+				"bwjson",
+				"bwjson/bwjson.go"
+			],
+			[
+				"where",
+				"bwerr/where/where.go"
+			],
+			[
+				"ansi",
+				"ansi/ansi.go"
+			],
+			[
+				"def.",
+				"defvalid/def.go"
+			],
+			[
+				"bwset",
+				"bwset/bwset.go"
+			],
+			[
+				"pfa",
+				"pfa/pfa.go"
+			],
+			[
+				"pfa.g",
+				"pfa/pfa.go"
+			],
+			[
+				"pfa_a",
+				"pfa/pfa_actions.go"
+			],
+			[
+				"pfa_te",
+				"pfa/pfa_test.go"
+			],
+			[
+				"pfa.",
+				"pfa/pfa.go"
+			],
+			[
+				"def",
+				"defparse/defparse_logic.go"
+			],
+			[
+				"pfa_",
+				"pfa_state_methods.go"
+			],
+			[
+				"defpa",
+				"defparse_test.go"
+			],
+			[
+				"pfa_it",
+				"pfa_item_methods.go"
+			],
+			[
+				"pfa.go",
+				"pfa.go"
+			],
+			[
+				"pfa_er",
+				"go/src/github.com/baza-winner/bwcore/defparse/pfa_errors.go"
+			],
+			[
+				"pfa_i",
+				"go/src/github.com/baza-winner/bwcore/defparse/pfa_item_methods.go"
+			],
+			[
+				"pfa_s",
+				"go/src/github.com/baza-winner/bwcore/defparse/internal/pfa/pfa_state_methods.go"
+			],
+			[
+				"pfa_e",
+				"go/src/github.com/baza-winner/bwcore/defparse/internal/pfa/pfa_errors.go"
+			],
+			[
+				"parsesta",
+				"go/src/github.com/baza-winner/bwcore/defparse/parsestackitemtype.go"
+			],
+			[
+				"parsest",
+				"go/src/github.com/baza-winner/bwcore/defparse/parsestate.go"
+			],
+			[
+				"parse",
+				"go/src/github.com/baza-winner/bwcore/defparse/parsestack.go"
+			],
+			[
+				"pfa_st",
+				"go/src/github.com/baza-winner/bwcore/defparse/pfa_state_methods.go"
+			],
+			[
+				"test.",
+				"go/src/github.com/baza-winner/bwcore/test.sh"
+			],
+			[
+				"defva",
+				"go/src/github.com/baza-winner/bwcore/defvalid/defvalid_test.go"
+			],
+			[
+				"stack",
+				"go/src/github.com/baza-winner/bwcore/defparse/parsestackitem.go"
+			],
+			[
+				"defpar",
+				"go/src/github.com/baza-winner/bwcore/defparse/defparse_test.go"
+			],
+			[
+				"pfa_ite",
+				"go/src/github.com/baza-winner/bwcore/defparse/pfa_item_methods.go"
+			],
+			[
+				"state",
+				"go/src/github.com/baza-winner/bwcore/defparse/pfa_state_methods.go"
+			],
+			[
+				"pfa_err",
+				"go/src/github.com/baza-winner/bwcore/defparse/pfa_errors.go"
+			],
+			[
+				"pfa_item",
+				"go/src/github.com/baza-winner/bwcore/defparse/pfa_item_methods.go"
+			],
+			[
+				"comp",
+				"go/src/github.com/baza-winner/bwcore/defvalid/compiledef.go"
+			],
+			[
+				"bwtestg",
+				"go/src/github.com/baza-winner/bwcore/bwtesting/bwtesting.go"
+			],
+			[
+				"compile",
+				"go/src/github.com/baza-winner/bwcore/defvalid/compiledef.go"
+			],
+			[
+				"defval",
+				"go/src/github.com/baza-winner/bwcore/defvalid/defvalid_test.go"
+			],
+			[
+				"defvalid_v",
+				"go/src/github.com/baza-winner/bwcore/defvalid/defvalid_value.go"
+			],
+			[
+				"defvali",
+				"go/src/github.com/baza-winner/bwcore/defvalid/defvalid.go"
+			],
+			[
+				"defv",
+				"go/src/github.com/baza-winner/bwcore/defvalid/defvalid.go"
+			],
+			[
+				"getva",
+				"go/src/github.com/baza-winner/bwcore/defvalid/getvalidval.go"
+			],
+			[
+				"bwint",
+				"go/src/github.com/baza-winner/bwcore/bwint/bwint.go"
+			],
+			[
+				"valid",
+				"go/src/github.com/baza-winner/bwcore/defvalid/getvalidval.go"
+			],
+			[
+				"deftyp",
+				"go/src/github.com/baza-winner/bwcore/defvalid/deftype/deftype.go"
+			],
+			[
+				"compli",
+				"go/src/github.com/baza-winner/bwcore/defvalid/compiledef.go"
+			],
+			[
+				"bwtestin",
+				"go/src/github.com/baza-winner/bwcore/bwtesting/bwtesting.go"
+			],
+			[
+				"defvalid_te",
+				"go/src/github.com/baza-winner/bwcore/defvalid/defvalid_test.go"
+			],
+			[
+				"pfa_metho",
+				"go/src/github.com/baza-winner/bwcore/defparse/pfa_item_methods.go"
+			],
+			[
+				"parsestackit",
+				"go/src/github.com/baza-winner/bwcore/defparse/parsestackitemtype.go"
+			],
+			[
+				"parseit",
+				"go/src/github.com/baza-winner/bwcore/defparse/parsestackitem.go"
+			],
+			[
+				"bwjsonte",
+				"go/src/github.com/baza-winner/bwcore/bwjson/bwjson_test.go"
+			],
+			[
+				"bwerror",
+				"go/src/github.com/baza-winner/bwcore/bwerror/bwerror.go"
+			],
+			[
+				"bwtesting",
+				"go/src/github.com/baza-winner/bwcore/bwtesting/bwtesting.go"
+			],
+			[
+				"bwmapte",
+				"go/src/github.com/baza-winner/bwcore/bwmap/bwmap_test.go"
+			],
+			[
+				"pfa_sta",
+				"go/src/github.com/baza-winner/bwcore/defparse/pfa_state_methods.go"
+			],
+			[
+				"bwmap_te",
+				"go/src/github.com/baza-winner/bwcore/bwmap/bwmap_test.go"
+			],
+			[
+				"ansi.go",
+				"go/src/github.com/baza-winner/bwcore/ansi/ansi.go"
+			],
+			[
+				"bwexec",
+				"go/src/github.com/baza-winner/bwcore/bwexec/bwexectesthelper/bwexectesthelper.go"
+			],
+			[
+				"bwna",
+				"pm/BwAnsi.pm"
+			],
+			[
+				"bwex",
+				"go/src/github.com/baza-winner/bwcore/bwexec/bwexec.go"
+			],
+			[
+				"bwstring",
+				"go/src/github.com/baza-winner/bwcore/bwstring/bwstring.go"
+			],
+			[
+				"bwmap_t",
+				"go/src/github.com/baza-winner/bwcore/bwmap/bwmap_test.go"
+			],
+			[
+				"ansi_",
+				"go/src/github.com/baza-winner/bwcore/ansi/ansi_test.go"
+			],
+			[
+				"bwero",
+				"go/src/github.com/baza-winner/bwcore/bwerror/bwerror.go"
+			],
+			[
+				"test.sh",
+				"go/src/github.com/baza-winner/bwcore/test.sh"
+			],
+			[
+				"bwstrin",
+				"go/src/github.com/baza-winner/bwcore/bwstring/bwstring_test.go"
+			],
+			[
+				"defp",
+				"go/src/github.com/baza-winner/bwcore/defparse/defparse.go"
+			],
+			[
+				"bwjso",
+				"go/src/github.com/baza-winner/bwcore/bwjson/bwjson.go"
+			],
+			[
+				"bwtesit",
+				"go/src/github.com/baza-winner/bwcore/bwtesting/bwtesting.go"
+			],
+			[
+				"bwexectes",
+				"go/src/github.com/baza-winner/bwcore/bwexec/bwexectesthelper/bwexectesthelper.go"
+			],
+			[
+				"core.",
+				"go/src/github.com/baza-winner/bw/core/core.go"
+			],
+			[
+				"core_te",
+				"go/src/github.com/baza-winner/bw/core/core_test.go"
+			],
+			[
+				"go/src/github",
+				"go/src/github.com/.gitignore"
+			],
+			[
+				"go/src",
+				"go/src/.gitignore"
+			],
+			[
+				"go/.gi",
+				"go/.gitignore"
+			],
+			[
+				"core_tes",
+				"go/src/github.com/baza-winner/bw/core/core_test.go"
+			],
+			[
+				"ansi_te",
+				"go/src/github.com/baza-winner/bw/ansi/ansi_test.go"
+			],
+			[
+				"pfa_state_",
+				"go/src/github.com/baza-winner/bw/defparser/pfa_state_methods.go"
+			],
+			[
+				"parsestackitemtype_string.go",
+				"go/src/github.com/baza-winner/bw/defparser/parsestackitemtype_string.go"
+			],
+			[
+				".git",
+				"go/.gitignore"
+			],
+			[
+				"bwcore",
+				"go/src/github.com/baza-winner/bw/bwcoretestinghelper/bwcoretestinghelper.go"
+			],
+			[
+				"bwCore",
+				"go/src/github.com/baza-winner/bw/bwcoretesting/bwcoretesting.go"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 380.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": false,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 83.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
