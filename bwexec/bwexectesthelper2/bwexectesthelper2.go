@@ -38,26 +38,27 @@ func main() {
 	ret := bwexec.MustCmd(
 		bwexec.Args(argsWithoutProg[0], argsWithoutProg[1:]...),
 		map[string]interface{}{
-			"verbosity":   *verbosityFlag,
-			"exitOnError": *exitOnErrorFlag,
-			"silent":      *silentFlag,
+			"verbosity":     *verbosityFlag,
+			"exitOnError":   *exitOnErrorFlag,
+			"silent":        *silentFlag,
+			"captureStdout": true,
+			"captureStderr": true,
 		},
 	)
 	if display {
-		exitCode := ret[`exitCode`].(int)
 		ansiExitCode := `<ansiOK>`
-		if exitCode != 0 {
+		if ret.ExitCode != 0 {
 			ansiExitCode = `<ansiErr>`
 		}
-		fmt.Printf(ansi.String(`<ansiHeader>===== exitCode: `+ansiExitCode+"%d\n"), exitCode)
+		fmt.Printf(ansi.String(`<ansiHeader>===== exitCode: `+ansiExitCode+"%d\n"), ret.ExitCode)
 		fmt.Println(ansi.String(`<ansiHeader>===== stdout:`))
-		fmt.Println(strings.Join(ret[`stdout`].([]string), "\n"))
+		fmt.Println(strings.Join(ret.Stdout, "\n"))
 		fmt.Println(ansi.String(`<ansiHeader>===== stderr:`))
-		fmt.Println(strings.Join(ret[`stderr`].([]string), "\n"))
+		fmt.Println(strings.Join(ret.Stderr, "\n"))
 
-		if output, ok := ret[`output`]; ok {
+		if len(ret.Output) > 0 {
 			fmt.Println(ansi.String(`<ansiHeader>===== output:`))
-			fmt.Println(strings.Join(output.([]string), "\n"))
+			fmt.Println(strings.Join(ret.Output, "\n"))
 		}
 	}
 }

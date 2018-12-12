@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/baza-winner/bwcore/bwdebug"
 	"github.com/baza-winner/bwcore/bwexec"
 	"github.com/baza-winner/bwcore/bwtesting"
 	"github.com/baza-winner/bwcore/bwval"
@@ -20,16 +21,19 @@ func TestMain(m *testing.M) { // https://stackoverflow.com/questions/23729790/ho
 // var installOpt = defparse.MustParseMap("{v: 'err', exitOnError: true, s: 'none'}")
 // var installOpt map[string]interface{}
 
-var installOpt interface{}
+var installOpt, testOpt interface{}
 
 func init() {
-	installOpt = bwval.From(bwval.S{S: `
-		{
-			verbosity "err"
-			exitOnError true
-			silent "none"
-		}
-		`}).MustMap()
+	installOpt = bwval.From(bwval.S{S: `{
+		verbosity "err"
+		exitOnError true
+		silent "none"
+	}`}).Val
+	bwdebug.Print("installOpt:#v", installOpt)
+	testOpt = bwval.From(bwval.S{S: `{
+		captureStdout true
+		captureStderr true
+	}`}).Val
 }
 
 func mySetupFunction() {
@@ -39,14 +43,15 @@ func mySetupFunction() {
 
 func ExampleCmd() {
 	ret := bwexec.MustCmd(bwexec.Args(`bwexectesthelper`, `-exit`, `2`, `<stdout>some<stderr>thing`))
-	for k, v := range ret {
-		fmt.Printf("%s: %v\n", k, v)
-	}
+	fmt.Printf("%s: %v\n", "Stdout", ret.Stdout)
+	fmt.Printf("%s: %v\n", "Stderr", ret.Stderr)
+	fmt.Printf("%s: %v\n", "Output", ret.Output)
+	fmt.Printf("%s: %v\n", "ExitCode", ret.ExitCode)
 	// Unordered ouput:
-	// - stdout:[some]
-	// - stderr:[thing]
-	// - output:[some thing]
-	// - exitCode:2
+	// - Stdout: [some]
+	// - Stderr: [thing]
+	// - Output: [some thing]
+	// - ExitCode: 2
 }
 
 func TestCmd(t *testing.T) {
@@ -60,19 +65,29 @@ func TestCmd(t *testing.T) {
 							`bwexectesthelper2`,
 							`-v`, `none`, `-s`, `all`, `-d`, `-n`, `bwexectesthelper`, `-exit`, `2`, `<stdout>some<stderr>thing`,
 						),
+						testOpt,
 					},
 					Out: []interface{}{
-						map[string]interface{}{
-							"stdout": []string{
+						bwexec.CmdResult{
+							Stdout: []string{
 								"===== exitCode: 2",
 								"===== stdout:",
 								"some",
 								"===== stderr:",
 								"thing",
 							},
-							"stderr":   []string{},
-							"exitCode": 0,
 						},
+						// map[string]interface{}{
+						// 	"stdout": []string{
+						// 		"===== exitCode: 2",
+						// 		"===== stdout:",
+						// 		"some",
+						// 		"===== stderr:",
+						// 		"thing",
+						// 	},
+						// 	"stderr":   []string{},
+						// 	"exitCode": 0,
+						// },
 					},
 				},
 				"test2": {
@@ -81,13 +96,19 @@ func TestCmd(t *testing.T) {
 							`bwexectesthelper2`,
 							`-v`, `none`, `-s`, `all`, `-d`, `-n`, `-e`, `bwexectesthelper`, `-exit`, `2`, `<stdout>some<stderr>thing`,
 						),
+						testOpt,
 					},
 					Out: []interface{}{
-						map[string]interface{}{
-							"stdout":   []string{},
-							"stderr":   []string{},
-							"exitCode": 2,
+						bwexec.CmdResult{
+							// Stdout:   nil,
+							// Stderr:   nil,
+							ExitCode: 2,
 						},
+						// map[string]interface{}{
+						// 	"stdout":   []string{},
+						// 	"stderr":   []string{},
+						// 	"exitCode": 2,
+						// },
 					},
 				},
 				"test3": {
@@ -96,10 +117,11 @@ func TestCmd(t *testing.T) {
 							`bwexectesthelper2`,
 							`-v`, `all`, `-d`, `-n`, `bwexectesthelper`, `-exit`, `2`, `<stdout>some<stderr>thing`,
 						),
+						testOpt,
 					},
 					Out: []interface{}{
-						map[string]interface{}{
-							"stdout": []string{
+						bwexec.CmdResult{
+							Stdout: []string{
 								"bwexectesthelper -exit 2 \u003cstdout\u003esome\u003cstderr\u003ething . . .",
 								"some",
 								"ERR: bwexectesthelper -exit 2 \u003cstdout\u003esome\u003cstderr\u003ething",
@@ -109,11 +131,27 @@ func TestCmd(t *testing.T) {
 								"===== stderr:",
 								"thing",
 							},
-							"stderr": []string{
+							Stderr: []string{
 								"thing",
 							},
-							"exitCode": 0,
+							ExitCode: 0,
 						},
+						// map[string]interface{}{
+						// 	"stdout": []string{
+						// 		"bwexectesthelper -exit 2 \u003cstdout\u003esome\u003cstderr\u003ething . . .",
+						// 		"some",
+						// 		"ERR: bwexectesthelper -exit 2 \u003cstdout\u003esome\u003cstderr\u003ething",
+						// 		"===== exitCode: 2",
+						// 		"===== stdout:",
+						// 		"some",
+						// 		"===== stderr:",
+						// 		"thing",
+						// 	},
+						// 	"stderr": []string{
+						// 		"thing",
+						// 	},
+						// 	"exitCode": 0,
+						// },
 					},
 				},
 			}
