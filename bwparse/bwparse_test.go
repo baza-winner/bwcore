@@ -15,10 +15,10 @@ import (
 	"github.com/baza-winner/bwcore/bwtype"
 )
 
-func TestFrom(t *testing.T) {
+func TestMustFrom(t *testing.T) {
 	bwtesting.BwRunTests(t,
 		func(s string, opt ...map[string]interface{}) {
-			_ = bwparse.From(bwrune.S{s}, opt...)
+			_ = bwparse.MustFrom(bwrune.S{s}, opt...)
 		},
 		map[string]bwtesting.Case{
 			`preLineCount non uint`: {
@@ -45,7 +45,7 @@ func TestLookAhead(t *testing.T) {
 		},
 		func() map[string]bwtesting.Case {
 			s := "s\no\nm\ne\nt\nhing"
-			p := bwparse.From(bwrune.S{s})
+			p := bwparse.MustFrom(bwrune.S{s})
 			p.Forward(0)
 			tests := map[string]bwtesting.Case{}
 			for i, r := range s {
@@ -71,7 +71,7 @@ func TestError(t *testing.T) {
 		func() map[string]bwtesting.Case {
 			tests := map[string]bwtesting.Case{}
 			testUnexpectedHelper := func(s string, ofs uint) bwparse.I {
-				p := bwparse.From(bwrune.S{s})
+				p := bwparse.MustFrom(bwrune.S{s})
 				p.Forward(ofs)
 				return p
 			}
@@ -118,7 +118,7 @@ func TestUnexpected(t *testing.T) {
 		func() map[string]bwtesting.Case {
 			tests := map[string]bwtesting.Case{}
 			testUnexpectedHelper := func(s string, ofs uint) *bwparse.P {
-				p := bwparse.From(bwrune.S{s})
+				p := bwparse.MustFrom(bwrune.S{s})
 				p.Forward(ofs)
 				return p
 			}
@@ -162,7 +162,7 @@ func TestMustPath(t *testing.T) {
 		// 		if len(optBases) > 0 {
 		// 			opt.Bases = optBases[0]
 		// 		}
-		// 		p := bwparse.From(bwrune.S{s})
+		// 		p := bwparse.MustFrom(bwrune.S{s})
 		// 		if result, err = bwparse.PathContent(p, opt); err == nil {
 		// 			err = end(p, true)
 		// 		}
@@ -284,7 +284,7 @@ func TestInt(t *testing.T) {
 						result = 0
 					}
 				}()
-				p := bwparse.From(bwrune.S{s})
+				p := bwparse.MustFrom(bwrune.S{s})
 				// var ok bool
 				var status bwparse.Status
 				if result, status = bwparse.Int(p); status.Err == nil {
@@ -351,7 +351,7 @@ func TestOptEvents(t *testing.T) {
 			var err error
 			if err = func(s string) error {
 				var st bwparse.Status
-				p := bwparse.From(bwrune.S{s})
+				p := bwparse.MustFrom(bwrune.S{s})
 				result = []eventLogItem{}
 				var val interface{}
 				if val, st = bwparse.Val(p, bwparse.Opt{
@@ -651,7 +651,7 @@ func TestVal(t *testing.T) {
 						result = nil
 					}
 				}()
-				p := bwparse.From(bwrune.S{s})
+				p := bwparse.MustFrom(bwrune.S{s})
 				if result, st = bwparse.Val(p, opt); st.IsOK() {
 					st.Err = end(p, st.OK)
 				}
@@ -987,7 +987,7 @@ func TestVal(t *testing.T) {
 func TestNil(t *testing.T) {
 	bwtesting.BwRunTests(t,
 		func(s string, optIdNil bwset.String) {
-			p := bwparse.From(bwrune.S{s})
+			p := bwparse.MustFrom(bwrune.S{s})
 			var st bwparse.Status
 			if st = bwparse.Nil(p, bwparse.Opt{IdNil: optIdNil}); st.Err == nil {
 				st.Err = end(p, true)
@@ -1031,7 +1031,7 @@ func TestNil(t *testing.T) {
 func TestBool(t *testing.T) {
 	bwtesting.BwRunTests(t,
 		func(s string, optIdTrue bwset.String, optIdFalse bwset.String) (result bool) {
-			p := bwparse.From(bwrune.S{s})
+			p := bwparse.MustFrom(bwrune.S{s})
 			var st bwparse.Status
 			if result, st = bwparse.Bool(p, bwparse.Opt{IdTrue: optIdTrue, IdFalse: optIdFalse}); st.Err == nil {
 				st.Err = end(p, true)
@@ -1081,7 +1081,7 @@ func TestBool(t *testing.T) {
 func TestNumber(t *testing.T) {
 	bwtesting.BwRunTests(t,
 		func(s string, opt bwparse.Opt) (result bwtype.Number) {
-			p := bwparse.From(bwrune.S{s})
+			p := bwparse.MustFrom(bwrune.S{s})
 			var st bwparse.Status
 			if result, st = bwparse.Number(p, opt); st.Err == nil {
 				st.Err = end(p, true)
@@ -1135,7 +1135,7 @@ func TestLineCount(t *testing.T) {
 				type Float64
 				another "key"
 			}`
-			p := bwparse.From(bwrune.S{s}, opt...)
+			p := bwparse.MustFrom(bwrune.S{s}, opt...)
 			var st bwparse.Status
 			if result, st = bwparse.Val(p, bwparse.Opt{IdVals: map[string]interface{}{"Int": "Int"}}); st.Err != nil {
 				bwerr.PanicErr(st.Err)

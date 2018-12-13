@@ -8,7 +8,6 @@ import (
 
 	"github.com/baza-winner/bwcore/ansi"
 	"github.com/baza-winner/bwcore/bw"
-	"github.com/baza-winner/bwcore/bwjson"
 )
 
 type W struct {
@@ -102,7 +101,8 @@ func (v WW) MarshalJSON() ([]byte, error) {
 }
 
 func (v WW) String() string {
-	return bwjson.Pretty(v)
+	bytes, _ := json.MarshalIndent(v, "", "  ")
+	return string(bytes[:])
 }
 
 func (v W) String() string {

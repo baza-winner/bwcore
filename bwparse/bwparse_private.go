@@ -145,14 +145,6 @@ func suffix(p I, start Start, postLineCount uint) (suffix string) {
 		separator = " "
 	}
 	if fileSpec := p.FileSpec(); fileSpec != "" {
-		// if homeDir := os.Getenv("HOME"); homeDir != "" {
-		// 	if homeDir[len(homeDir)-1] != '/' {
-		// 		homeDir += string('/')
-		// 	}
-		// 	if len(fileSpec) >= len(homeDir) && fileSpec[:len(homeDir)] == homeDir {
-		// 		fileSpec = "~/" + fileSpec[len(homeDir):]
-		// 	}
-		// }
 		suffix += fmt.Sprintf(" of <ansiPath>%s<ansi>", bwos.ShortenFileSpec(fileSpec))
 	}
 	suffix += ":" + separator + ansiOK + start.ps.prefix

@@ -38,4 +38,10 @@ func init() {
 		ansi.SGRCodeOfColor256(ansi.Color256{Code: 253}),
 		ansi.MustSGRCodeOfCmd(ansi.SGRCmdBold),
 	)
+	ansi.MustAddTag("ansiUrl",
+		ansi.SGRCodeOfColor256(ansi.Color256{Code: 27}),
+		// ansi.SGRCmdUnderline,
+		// ansi.SGRCodeOfColor256(ansi.Color256{Code: 253}),
+		ansi.MustSGRCodeOfCmd(ansi.SGRCmdUnderline),
+	)
 }

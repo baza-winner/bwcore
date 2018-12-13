@@ -67,16 +67,16 @@ func TestHolderMustSetKeyVal(t *testing.T) {
 			tests := map[string]bwtesting.Case{
 				"ok": {
 					In: []interface{}{
-						bwval.Holder{Val: map[string]interface{}{"some": "not bad"}, Pth: bwval.MustPath(bwval.PathStr{S: "1.some"})},
+						bwval.Holder{Val: map[string]interface{}{"some": "not bad"}, Pth: bwval.MustPath(bwval.PathS{S: "1.some"})},
 						"thing", "good",
 					},
 					Out: []interface{}{
-						bwval.Holder{Val: map[string]interface{}{"some": "not bad", "thing": "good"}, Pth: bwval.MustPath(bwval.PathStr{S: "1.some"})},
+						bwval.Holder{Val: map[string]interface{}{"some": "not bad", "thing": "good"}, Pth: bwval.MustPath(bwval.PathS{S: "1.some"})},
 					},
 				},
 				"panic": {
 					In: []interface{}{
-						bwval.Holder{Val: nil, Pth: bwval.MustPath(bwval.PathStr{S: "1.some"})},
+						bwval.Holder{Val: nil, Pth: bwval.MustPath(bwval.PathS{S: "1.some"})},
 						"thing", "good",
 					},
 					Panic: "\x1b[38;5;252;1m1.some\x1b[0m (\x1b[96;1mnull\x1b[0m)\x1b[0m is not \x1b[97;1mMap\x1b[0m",
@@ -118,7 +118,7 @@ func TestHolderMustKeyVal(t *testing.T) {
 				},
 				"panic": {
 					In: []interface{}{
-						bwval.Holder{Val: nil, Pth: bwval.MustPath(bwval.PathStr{S: "1.some"})},
+						bwval.Holder{Val: nil, Pth: bwval.MustPath(bwval.PathS{S: "1.some"})},
 						"thing",
 					},
 					Panic: "\x1b[38;5;252;1m1.some\x1b[0m is \x1b[91;1m(interface {})<nil>\x1b[0m",
@@ -136,14 +136,14 @@ func TestHolderMustKey(t *testing.T) {
 		func() map[string]bwtesting.Case {
 			tests := map[string]bwtesting.Case{
 				"panic": {
-					V:     bwval.Holder{Val: nil, Pth: bwval.MustPath(bwval.PathStr{S: "1.some"})},
+					V:     bwval.Holder{Val: nil, Pth: bwval.MustPath(bwval.PathS{S: "1.some"})},
 					In:    []interface{}{"thing"},
 					Panic: "\x1b[38;5;252;1m1.some\x1b[0m is \x1b[91;1m(interface {})<nil>\x1b[0m",
 				},
 				"ok": {
-					V:   bwval.Holder{Val: map[string]interface{}{"thing": "good"}, Pth: bwval.MustPath(bwval.PathStr{S: "1.some"})},
+					V:   bwval.Holder{Val: map[string]interface{}{"thing": "good"}, Pth: bwval.MustPath(bwval.PathS{S: "1.some"})},
 					In:  []interface{}{"thing"},
-					Out: []interface{}{bwval.Holder{Val: "good", Pth: bwval.MustPath(bwval.PathStr{S: "1.some.thing"})}},
+					Out: []interface{}{bwval.Holder{Val: "good", Pth: bwval.MustPath(bwval.PathS{S: "1.some.thing"})}},
 				},
 			}
 			return tests
@@ -162,7 +162,7 @@ func TestHolderMustIdxVal(t *testing.T) {
 					Out: []interface{}{"good"},
 				},
 				"panic": {
-					V:     bwval.Holder{Val: nil, Pth: bwval.MustPath(bwval.PathStr{S: "1.some"})},
+					V:     bwval.Holder{Val: nil, Pth: bwval.MustPath(bwval.PathS{S: "1.some"})},
 					In:    []interface{}{1},
 					Panic: "\x1b[38;5;252;1m1.some\x1b[0m is \x1b[91;1m(interface {})<nil>\x1b[0m",
 				},
@@ -178,12 +178,12 @@ func TestHolderMustIdx(t *testing.T) {
 		func() map[string]bwtesting.Case {
 			tests := map[string]bwtesting.Case{
 				"ok": {
-					V:   bwval.Holder{Val: []interface{}{"thing", "good"}, Pth: bwval.MustPath(bwval.PathStr{S: "1.some"})},
+					V:   bwval.Holder{Val: []interface{}{"thing", "good"}, Pth: bwval.MustPath(bwval.PathS{S: "1.some"})},
 					In:  []interface{}{1},
-					Out: []interface{}{bwval.Holder{Val: "good", Pth: bwval.MustPath(bwval.PathStr{S: "1.some.1"})}},
+					Out: []interface{}{bwval.Holder{Val: "good", Pth: bwval.MustPath(bwval.PathS{S: "1.some.1"})}},
 				},
 				"panic": {
-					V:     bwval.Holder{Val: nil, Pth: bwval.MustPath(bwval.PathStr{S: "1.some"})},
+					V:     bwval.Holder{Val: nil, Pth: bwval.MustPath(bwval.PathS{S: "1.some"})},
 					In:    []interface{}{1},
 					Panic: "\x1b[38;5;252;1m1.some\x1b[0m is \x1b[91;1m(interface {})<nil>\x1b[0m",
 				},
@@ -198,17 +198,17 @@ func TestHolderMustPath(t *testing.T) {
 		map[string]bwtesting.Case{
 			"ok": {
 				V:   bwval.Holder{Val: []interface{}{nil, map[string]interface{}{"some": "thing"}}},
-				In:  []interface{}{bwval.MustPath(bwval.PathStr{S: "1.some"})},
-				Out: []interface{}{bwval.Holder{Val: "thing", Pth: bwval.MustPath(bwval.PathStr{S: "1.some"})}},
+				In:  []interface{}{bwval.MustPath(bwval.PathS{S: "1.some"})},
+				Out: []interface{}{bwval.Holder{Val: "thing", Pth: bwval.MustPath(bwval.PathS{S: "1.some"})}},
 			},
 			"panic": {
 				V:     bwval.Holder{Val: []interface{}{map[string]interface{}{"some": "thing"}}},
-				In:    []interface{}{bwval.MustPath(bwval.PathStr{S: "1.some"})},
+				In:    []interface{}{bwval.MustPath(bwval.PathS{S: "1.some"})},
 				Panic: "\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1m[\n  {\n    \"some\": \"thing\"\n  }\n]\x1b[0m)\x1b[0m has not enough length (\x1b[96;1m1\x1b[0m) for idx (\x1b[96;1m1)\x1b[0m",
 			},
 			"invalid path": {
 				V:     bwval.Holder{Val: []interface{}{nil, map[string]interface{}{"some": "thing"}}},
-				In:    []interface{}{bwval.PathStr{S: ".some"}},
+				In:    []interface{}{bwval.PathS{S: ".some"}},
 				Panic: "invalid path: unexpected char \x1b[96;1m's'\x1b[0m (\x1b[38;5;201;1mcharCode\x1b[0m: \x1b[96;1m115\x1b[0m)\x1b[0m at pos \x1b[38;5;252;1m1\x1b[0m: \x1b[32m.\x1b[91ms\x1b[0mome\n",
 			},
 		},
@@ -231,7 +231,7 @@ func TestHolderMarshalJSON(t *testing.T) {
 			},
 			"val, path": {
 				In: []interface{}{
-					bwval.Holder{Val: "string", Pth: bwval.MustPath(bwval.PathStr{S: "key"})},
+					bwval.Holder{Val: "string", Pth: bwval.MustPath(bwval.PathS{S: "key"})},
 				},
 				Out: []interface{}{
 					"{\n  \"path\": \"key\",\n  \"val\": \"string\"\n}",
@@ -264,7 +264,7 @@ func TestHolderMustBool(t *testing.T) {
 				Out: []interface{}{false},
 			},
 			"non Bool, no default": {
-				V:     bwval.Holder{Val: "s", Pth: bwval.MustPath(bwval.PathStr{S: "some.1.boolKey"})},
+				V:     bwval.Holder{Val: "s", Pth: bwval.MustPath(bwval.PathS{S: "some.1.boolKey"})},
 				Panic: "\x1b[38;5;252;1msome.1.boolKey\x1b[0m (\x1b[96;1m\"s\"\x1b[0m)\x1b[0m is not \x1b[97;1mBool\x1b[0m",
 			},
 		},
@@ -284,7 +284,7 @@ func TestHolderMustString(t *testing.T) {
 				Out: []interface{}{"good"},
 			},
 			"non String": {
-				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathStr{S: "some.1.key"})},
+				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
 				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m is not \x1b[97;1mString\x1b[0m",
 			},
 		},
@@ -312,7 +312,7 @@ func TestHolderMustInt(t *testing.T) {
 				Out: []interface{}{273},
 			},
 			"non Int: bwtype.MustNumberFrom(bw.MaxUint)": {
-				V:     bwval.Holder{Val: bwtype.MustNumberFrom(bw.MaxUint), Pth: bwval.MustPath(bwval.PathStr{S: "some.1.key"})},
+				V:     bwval.Holder{Val: bwtype.MustNumberFrom(bw.MaxUint), Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
 				Panic: fmt.Sprintf("\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1m%d\x1b[0m)\x1b[0m is not \x1b[97;1mInt\x1b[0m", bw.MaxUint),
 			},
 			"non Int: bwtype.MustNumberFrom(bw.MaxUint), but has default": {
@@ -321,7 +321,7 @@ func TestHolderMustInt(t *testing.T) {
 				Out: []interface{}{273},
 			},
 			"non Int: true": {
-				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathStr{S: "some.1.key"})},
+				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
 				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m is not \x1b[97;1mInt\x1b[0m",
 			},
 			"non Int: true, but has default": {
@@ -350,11 +350,11 @@ func TestHolderMustUint(t *testing.T) {
 				Out: []interface{}{uint(273)},
 			},
 			"non Uint: bwtype.MustNumberFrom(float64(-273))": {
-				V:     bwval.Holder{Val: bwtype.MustNumberFrom(float64(-273)), Pth: bwval.MustPath(bwval.PathStr{S: "some.1.key"})},
+				V:     bwval.Holder{Val: bwtype.MustNumberFrom(float64(-273)), Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
 				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1m-273\x1b[0m)\x1b[0m is not \x1b[97;1mUint\x1b[0m",
 			},
 			"non Uint: true": {
-				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathStr{S: "some.1.key"})},
+				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
 				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m is not \x1b[97;1mUint\x1b[0m",
 			},
 			"non Uint: bwtype.MustNumberFrom(float64(-273)), but has default": {
@@ -391,7 +391,7 @@ func TestHolderMustFloat64(t *testing.T) {
 				Out: []interface{}{float64(273)},
 			},
 			"non Float64": {
-				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathStr{S: "some.1.key"})},
+				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
 				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m is not \x1b[97;1mFloat64\x1b[0m",
 			},
 			"non Float64, but has default": {
@@ -415,7 +415,7 @@ func TestHolderMustArray(t *testing.T) {
 				Out: []interface{}{[]interface{}{"some", "thing"}},
 			},
 			"non Array": {
-				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathStr{S: "some.1.key"})},
+				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
 				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m is not \x1b[97;1mArray\x1b[0m",
 			},
 			"non Array, but has default": {
@@ -439,7 +439,7 @@ func TestHolderMustMap(t *testing.T) {
 				Out: []interface{}{map[string]interface{}{"a": "some"}},
 			},
 			"non Map": {
-				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathStr{S: "some.1.key"})},
+				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
 				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m is not \x1b[97;1mMap\x1b[0m",
 			},
 		},
@@ -453,7 +453,7 @@ func TestHolderValidVal(t *testing.T) {
 			tests := map[string]bwtesting.Case{}
 			testProto := func(source string) bwtesting.Case {
 				test := bwtesting.Case{}
-				p := bwparse.From(bwrune.S{source})
+				p := bwparse.MustFrom(bwrune.S{source})
 				if _, err := bwparse.SkipSpace(p, bwparse.TillNonEOF); err != nil {
 					bwerr.PanicErr(err)
 				}
@@ -475,9 +475,9 @@ func TestHolderValidVal(t *testing.T) {
 								test.V = bwval.Holder{Val: val}
 							}
 						case "def":
-							var def bwval.Def
+							var def *bwval.Def
 							if def, status = bwval.ParseDef(on.P); status.IsOK() {
-								test.In = []interface{}{def}
+								test.In = []interface{}{*def}
 							}
 						}
 						m[key] = nil

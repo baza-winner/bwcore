@@ -51,17 +51,19 @@ func TestDefMarshalJSON(t *testing.T) {
 func TestParseDef(t *testing.T) {
 	bwtesting.BwRunTests(t,
 		func(s string) (result bwval.Def) {
-			p := bwparse.From(bwrune.S{s})
+			p := bwparse.MustFrom(bwrune.S{s})
 			if _, err := bwparse.SkipSpace(p, bwparse.TillNonEOF); err != nil {
 				bwerr.PanicErr(err)
 			}
 			var st bwparse.Status
-			if result, st = bwval.ParseDef(p); st.Err == nil {
+			var def *bwval.Def
+			if def, st = bwval.ParseDef(p); st.Err == nil {
 				_, st.Err = bwparse.SkipSpace(p, bwparse.TillEOF)
 			}
 			if st.Err != nil {
 				bwerr.PanicErr(st.Err)
 			}
+			result = *def
 			return
 		},
 		func() map[string]bwtesting.Case {

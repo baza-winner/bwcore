@@ -18,10 +18,10 @@ import (
 
 const defaultFailedCode = 1
 
-var cmdOptDef bwval.Def
+var cmdOptDef *bwval.Def
 
 func init() {
-	cmdOptDef = bwval.MustDef(bwrune.S{`
+	cmdOptDef = bwval.MustDefFrom(bwrune.S{`
 		{
 			type Map
 			keys {
@@ -89,7 +89,7 @@ func Cmd(a A, optOpt ...interface{}) (result CmdResult, err error) {
 	if len(optOpt) > 0 {
 		opt = optOpt[0]
 	}
-	hOpt := bwval.From(bwval.V{opt}, bwval.PathStr{S: "Cmd.opt"}).MustValid(cmdOptDef)
+	hOpt := bwval.MustFrom(bwval.V{Val: opt}, bwval.PathS{S: "Cmd.opt"}).MustValid(*cmdOptDef)
 
 	cmdTitle := bwstr.SmartQuote(append([]string{a.Cmd}, a.Args...)...)
 	optSilent := hOpt.MustPathStr("silent").MustString()

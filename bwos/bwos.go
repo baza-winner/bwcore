@@ -36,7 +36,7 @@ func Exit(exitCode int, fmtString string, fmtArgs ...interface{}) {
 
 // Exit with exitCode and message defined by bw.I
 func ExitA(exitCode int, a bw.I) {
-	fmt.Print(exitMsg(a))
+	fmt.Print(ExitMsg(a))
 	os.Exit(exitCode)
 }
 
@@ -44,7 +44,7 @@ func ExitA(exitCode int, a bw.I) {
 
 var newlineAtTheEnd, _ = regexp.Compile(`\n\s*$`)
 
-func exitMsg(a bw.I) (result string) {
+func ExitMsg(a bw.I) (result string) {
 	err := bwerr.FromA(a)
 	result = err.S
 	if !newlineAtTheEnd.MatchString(ansi.ChopReset(result)) {

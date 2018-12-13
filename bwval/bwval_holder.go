@@ -115,7 +115,7 @@ func (v Holder) MustPath(pathProvider bw.ValPathProvider, optVars ...map[string]
 }
 
 func (v Holder) MustPathStr(pathStr string, optVars ...map[string]interface{}) (result Holder) {
-	return v.MustPath(PathStr{S: pathStr})
+	return v.MustPath(PathS{S: pathStr})
 }
 
 // MarshalJSON - реализация интерфейса bw.Val
@@ -168,8 +168,17 @@ func (v *Holder) SetPathVal(val interface{}, path bw.ValPath, optVars ...map[str
 		for i, vpi := range simplePath[:len(simplePath)-1] {
 			switch vpi.Type {
 			case bw.ValPathItemKey:
-				result, err = Holder{result, path[:i+1]}.KeyVal(vpi.Key)
-				// bwdebug.Print("result", result)
+				m, _ := result.(map[string]interface{})
+				result, err = Holder{result, path[:i+1]}.KeyVal(
+					vpi.Key,
+					func() (result interface{}, ok bool) {
+						if ok = simplePath[i+1].Type == bw.ValPathItemKey; ok {
+							result = map[string]interface{}{}
+							m[vpi.Key] = result
+						}
+						return
+					},
+				)
 			case bw.ValPathItemIdx:
 				result, err = Holder{result, path[:i+1]}.IdxVal(vpi.Idx)
 			}
@@ -340,6 +349,20 @@ func (v Holder) MustMap(optDefault ...map[string]interface{}) (result map[string
 
 // ============================================================================
 
+func (v Holder) HasKey(key string) (result bool) {
+	if v.Val == nil {
+		return
+	}
+	_, _ = v.KindSwitch(map[bwtype.ValKind]KindCase{
+		bwtype.ValMap: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+			m, _ := val.(map[string]interface{})
+			_, result = m[key]
+			return nil, nil
+		},
+	})
+	return
+}
+
 func (v Holder) KeyVal(key string, optDefaultValProvider ...defaultValProvider) (result interface{}, err error) {
 	if v.Val == nil {
 		var ok bool
@@ -409,6 +432,19 @@ func (v Holder) MustSetKeyVal(key string, val interface{}) {
 }
 
 // ============================================================================
+
+func (v Holder) HasIdx(idx int) (result bool) {
+	if v.Val == nil {
+		return
+	}
+	_ = v.idxHelper(idx,
+		func(vals []interface{}, nidx int, ok bool) (err error) {
+			result = ok
+			return
+		},
+	)
+	return
+}
 
 func (v Holder) IdxVal(idx int, optDefaultValProvider ...defaultValProvider) (result interface{}, err error) {
 	if v.Val == nil {
@@ -791,7 +827,6 @@ func (v Holder) idxHelper(
 type defaultValProvider func() (interface{}, bool)
 
 func defaultVal(optDefaultValProvider []defaultValProvider) (result interface{}, ok bool) {
-	// bwdebug.Print("optDefaultValProvider", optDefaultValProvider)
 	if len(optDefaultValProvider) > 0 {
 		if optDefaultValProvider[0] == nil {
 			result = nil

@@ -74,7 +74,13 @@ func init() {
 	)
 }
 
-func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result Def, status bwparse.Status) {
+func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, status bwparse.Status) {
+	result = &Def{}
+	defer func() {
+		if !status.IsOK() {
+			result = nil
+		}
+	}()
 
 	var base bw.ValPath
 	if len(optBaseProvider) > 0 {
@@ -285,7 +291,9 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result Def, s
 						if result.Keys == nil {
 							result.Keys = map[string]Def{}
 						}
-						if result.Keys[key], status = ParseDef(p, base.AppendKey(key)); status.IsOK() {
+						var def *Def
+						if def, status = ParseDef(p, base.AppendKey(key)); status.IsOK() {
+							result.Keys[key] = *def
 							m[key] = nil
 						} else if status.Err == nil {
 							status.Err = bwparse.Expects(p, nil, "<ansiType>Def<ansi>")
@@ -296,12 +304,12 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result Def, s
 					status.Err = bwparse.Expects(p, nil, "<ansiType>Map<ansi>")
 				}
 			case "elem", "arrayElem":
-				var def Def
+				var def *Def
 				if def, status = ParseDef(p, base.AppendKey(key)); status.IsOK() {
 					if key == "elem" {
-						result.Elem = &def
+						result.Elem = def
 					} else {
-						result.ArrayElem = &def
+						result.ArrayElem = def
 					}
 				} else if status.Err == nil {
 					status.Err = bwparse.Expects(p, nil, "<ansiType>Def<ansi>")
@@ -310,7 +318,7 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result Def, s
 				result.IsOptional, status = bwparse.Bool(p)
 				isOptionalSpecified = true
 			case "default":
-				result.Default, status = ParseValByDef(p, result, base.AppendKey(key))
+				result.Default, status = ParseValByDef(p, *result, base.AppendKey(key))
 				if result.Default != nil {
 					result.IsOptional = true
 				}

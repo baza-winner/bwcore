@@ -2,8 +2,10 @@ package bw
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/davecgh/go-spew/spew"
 )
@@ -147,6 +149,25 @@ type ValPathItem struct {
 	IsOptional bool
 }
 
+func (vpi ValPathItem) keyForPathS() (result string) {
+	result = vpi.Key
+	runes := []rune(result)
+	var needQuote bool
+	if needQuote = len(runes) == 0; !needQuote {
+		for i, r := range runes {
+			if r == '_' || unicode.IsLetter(r) || i > 0 && ('0' <= r && r <= '9') {
+				continue
+			}
+			needQuote = true
+			break
+		}
+	}
+	if needQuote {
+		result = fmt.Sprintf("%q", result)
+	}
+	return
+}
+
 type ValPath []ValPathItem
 
 func (v ValPath) MarshalJSON() ([]byte, error) {
@@ -158,8 +179,6 @@ func (v ValPath) MarshalJSON() ([]byte, error) {
 }
 
 func (v ValPath) String() (result string) {
-	// bwerr.Panic("HERE")
-	// panic("HERE")
 	ss := []string{}
 	if len(v) == 0 {
 		result = "."
@@ -170,9 +189,9 @@ func (v ValPath) String() (result string) {
 			case ValPathItemPath:
 				s = "(" + vpi.Path.String() + ")"
 			case ValPathItemKey:
-				s = vpi.Key
+				s = vpi.keyForPathS()
 			case ValPathItemVar:
-				s = "$" + vpi.Key
+				s = "$" + vpi.keyForPathS()
 			case ValPathItemIdx:
 				s = strconv.FormatInt(int64(vpi.Idx), 10)
 			case ValPathItemHash:
@@ -187,14 +206,6 @@ func (v ValPath) String() (result string) {
 		}
 		result = strings.Join(ss, ".")
 	}
-	// ww := where.WWFrom(0)
-	// bytes, _ = json.MarshalIndent(ww, "", "  ")
-	// function, file, line, _ := runtime.Caller(1)
-	// fmt.Printf("result: %s, where: %s, %s, %d\n", result,
-	// 	runtime.FuncForPC(function).Name(),
-	// 	file,
-	// 	line,
-	// )
 	return
 }
 

@@ -26,7 +26,7 @@ type Provider interface {
 // ============================================================================
 
 type ProviderProvider interface {
-	Provider() Provider
+	Provider() (Provider, error)
 }
 
 // ============================================================================
@@ -35,8 +35,8 @@ type S struct {
 	S string
 }
 
-func (v S) Provider() Provider {
-	return FromString(v.S)
+func (v S) Provider() (Provider, error) {
+	return FromString(v.S), nil
 }
 
 // ============================================================================
@@ -45,8 +45,8 @@ type F struct {
 	S string
 }
 
-func (v F) Provider() Provider {
-	return MustFromFile(v.S)
+func (v F) Provider() (Provider, error) {
+	return FromFile(v.S)
 }
 
 // ============================================================================
@@ -61,11 +61,12 @@ func FromFile(fileSpec string) (result Provider, err error) {
 		return
 	}
 	p := &fileProvider{fileSpec: fileSpec, pos: -1, bytePos: -1, line: 1}
-	p.data, err = os.Open(fileSpec)
-	if err == nil {
-		p.reader = bufio.NewReader(p.data)
-		result = p
+	if p.data, err = os.Open(fileSpec); err != nil {
+		// err = bwerr.Refine(err, "<ansiFunc>bwrune.FromFile<ansi>: {Error}")
+		return
 	}
+	p.reader = bufio.NewReader(p.data)
+	result = p
 	return
 }
 

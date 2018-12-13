@@ -138,9 +138,18 @@ type P struct {
 	starts        map[int]*Start
 }
 
-func From(pp bwrune.ProviderProvider, opt ...map[string]interface{}) (result *P) {
+func From(pp bwrune.ProviderProvider, opt ...map[string]interface{}) (result *P, err error) {
+	var p bwrune.Provider
+	if p, err = pp.Provider(); err != nil {
+		return
+	}
+	defer func() {
+		if err != nil {
+			p.Close()
+		}
+	}()
 	result = &P{
-		prov:          pp.Provider(),
+		prov:          p,
 		curr:          &PosInfo{pos: -1, line: 1},
 		next:          []*PosInfo{},
 		preLineCount:  3,
@@ -157,9 +166,17 @@ func From(pp bwrune.ProviderProvider, opt ...map[string]interface{}) (result *P)
 				result.postLineCount = i
 			}
 			if unexpectedKeys := bwmap.MustUnexpectedKeys(m, keys); len(unexpectedKeys) > 0 {
-				bwerr.Panic(ansiOptHasUnexpectedKeys, bwjson.Pretty(m), unexpectedKeys)
+				err = bwerr.From(ansiOptHasUnexpectedKeys, bwjson.Pretty(m), unexpectedKeys)
 			}
 		}
+	}
+	return
+}
+
+func MustFrom(pp bwrune.ProviderProvider, opt ...map[string]interface{}) (result *P) {
+	var err error
+	if result, err = From(pp, opt...); err != nil {
+		bwerr.PanicErr(err)
 	}
 	return
 }
@@ -316,7 +333,7 @@ func IsDigit(r rune) bool {
 }
 
 func IsLetter(r rune) bool {
-	return unicode.IsLetter(r) || r == '_'
+	return r == '_' || unicode.IsLetter(r)
 }
 
 func IsPunctOrSymbol(r rune) bool {
@@ -702,13 +719,20 @@ func Path(p I, optOpt ...PathOpt) (result bw.ValPath, status Status) {
 	return
 }
 
-func MustPathFrom(s string, bases ...bw.ValPath) (result bw.ValPath) {
-	var err error
-	p := From(bwrune.S{s})
+func PathFrom(s string, bases ...bw.ValPath) (result bw.ValPath, err error) {
+	var p *P
+	if p, err = From(bwrune.S{s}); err != nil {
+		return
+	}
 	if result, err = PathContent(p, PathOpt{Bases: bases}); err == nil {
 		_, err = SkipSpace(p, TillEOF)
 	}
-	if err != nil {
+	return
+}
+
+func MustPathFrom(s string, bases ...bw.ValPath) (result bw.ValPath) {
+	var err error
+	if result, err = PathFrom(s, bases...); err != nil {
 		bwerr.PanicErr(err)
 	}
 	return
@@ -737,6 +761,10 @@ func PathContent(p I, optOpt ...PathOpt) (bw.ValPath, error) {
 				vpi = bw.ValPathItem{Type: bw.ValPathItemIdx, Idx: idx}
 				return
 			}},
+			onString{opt: opt.Opt, f: func(s string, start *Start) (err error) {
+				vpi = bw.ValPathItem{Type: bw.ValPathItemKey, Key: s}
+				return
+			}},
 			onId{opt: opt.Opt, f: func(s string, start *Start) (err error) {
 				vpi = bw.ValPathItem{Type: bw.ValPathItemKey, Key: s}
 				return
@@ -763,6 +791,10 @@ func PathContent(p I, optOpt ...PathOpt) (bw.ValPath, error) {
 						return
 					}},
 					onId{opt: opt.Opt, f: func(s string, start *Start) (err error) {
+						result = append(result, bw.ValPathItem{Type: bw.ValPathItemVar, Key: s})
+						return
+					}},
+					onString{opt: opt.Opt, f: func(s string, start *Start) (err error) {
 						result = append(result, bw.ValPathItem{Type: bw.ValPathItemVar, Key: s})
 						return
 					}},

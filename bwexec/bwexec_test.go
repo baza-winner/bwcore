@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/baza-winner/bwcore/bwdebug"
 	"github.com/baza-winner/bwcore/bwexec"
 	"github.com/baza-winner/bwcore/bwtesting"
 	"github.com/baza-winner/bwcore/bwval"
@@ -24,13 +23,13 @@ func TestMain(m *testing.M) { // https://stackoverflow.com/questions/23729790/ho
 var installOpt, testOpt interface{}
 
 func init() {
-	installOpt = bwval.From(bwval.S{S: `{
+	installOpt = bwval.MustFrom(bwval.S{S: `{
 		verbosity "err"
 		exitOnError true
 		silent "none"
 	}`}).Val
-	bwdebug.Print("installOpt:#v", installOpt)
-	testOpt = bwval.From(bwval.S{S: `{
+	// bwdebug.Print("installOpt:#v", installOpt)
+	testOpt = bwval.MustFrom(bwval.S{S: `{
 		captureStdout true
 		captureStderr true
 	}`}).Val

@@ -64,6 +64,10 @@ func (v Error) Error() string {
 	return ansiErrPrefix + v.S + ansiAt + suffix
 }
 
+func (v Error) JustError() string {
+	return ansiErrPrefix + v.S
+}
+
 var findRefineRegexp = regexp.MustCompile("{Error}")
 
 func Refine(err error, fmtString string, fmtArgs ...interface{}) Error {
