@@ -16,3 +16,4 @@ go get github.com/baza-winner/bwcore/bwtesting
 go get github.com/baza-winner/bwcore/bwtype
 go get github.com/baza-winner/bwcore/bwval
 go get github.com/mohae/deepcopy
+go get github.com/urfave/cli 
