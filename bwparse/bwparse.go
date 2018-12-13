@@ -70,6 +70,10 @@ type ValidateMapKeyFunc func(on On, m map[string]interface{}, key string) (err e
 type ParseMapElemFunc func(on On, m map[string]interface{}, key string) (status Status)
 type ValidateMapFunc func(on On, m map[string]interface{}) (err error)
 
+type ValidateOrderedMapKeyFunc func(on On, m *bwmap.Ordered, key string) (err error)
+type ParseOrderedMapElemFunc func(on On, m *bwmap.Ordered, key string) (status Status)
+type ValidateOrderedMapFunc func(on On, m *bwmap.Ordered) (err error)
+
 type ParseArrayElemFunc func(on On, vals []interface{}) (outVals []interface{}, status Status)
 type ValidateArrayFunc func(on On, vals []interface{}) (err error)
 
@@ -111,6 +115,10 @@ type Opt struct {
 	OnValidateMapKey ValidateMapKeyFunc
 	OnParseMapElem   ParseMapElemFunc
 	OnValidateMap    ValidateMapFunc
+
+	OnValidateOrderedMapKey ValidateOrderedMapKeyFunc
+	OnParseOrderedMapElem   ParseOrderedMapElemFunc
+	OnValidateOrderedMap    ValidateOrderedMapFunc
 
 	OnParseArrayElem ParseArrayElemFunc
 	OnValidateArray  ValidateArrayFunc
@@ -682,6 +690,93 @@ func Map(p I, optOpt ...Opt) (result map[string]interface{}, status Status) {
 
 // ============================================================================
 
+func OrderedMap(p I, optOpt ...Opt) (result *bwmap.Ordered, status Status) {
+	opt := getOpt(optOpt)
+	var path bw.ValPath
+	if status = parseDelimitedOptionalCommaSeparated(p, '{', '}', opt, func(on On, base bw.ValPath) error {
+		if result == nil {
+			result = bwmap.OrderedNew()
+			path = append(base, bw.ValPathItem{Type: bw.ValPathItemKey})
+		}
+		var (
+			key string
+		)
+		onKey := func(s string, start *Start) (err error) {
+			key = s
+			if opt.OnValidateMapKey != nil {
+				on.Opt.Path = base
+				on.Start = start
+				if _, b := result.Get(key); b {
+					err = p.Error(E{
+						Start: start,
+						Fmt:   bw.Fmt(ansi.String("duplicate key <ansiErr>%s<ansi>"), start.Suffix()),
+					})
+				} else {
+					err = opt.OnValidateOrderedMapKey(on, result, key)
+				}
+			}
+			return
+		}
+		var st Status
+		if st = processOn(p,
+			onString{opt: opt, f: onKey},
+			onId{opt: opt, f: onKey},
+		); st.IsOK() {
+			var isSpaceSkipped bool
+			if isSpaceSkipped, st.Err = SkipSpace(p, TillNonEOF); st.Err == nil {
+
+				var isSeparatorSkipped bool
+				if SkipRunes(p, ':') {
+					isSeparatorSkipped = true
+				} else if SkipRunes(p, '=') {
+					if SkipRunes(p, '>') {
+						isSeparatorSkipped = true
+					} else {
+						return Expects(p, nil, fmt.Sprintf(ansiVal, string('>')))
+					}
+				}
+
+				if st.Err == nil {
+					if isSeparatorSkipped {
+						_, st.Err = SkipSpace(p, TillNonEOF)
+					}
+					if !(isSpaceSkipped || isSeparatorSkipped) {
+						st.Err = ExpectsSpace(p)
+					} else {
+						path[len(path)-1].Key = key
+						on.Opt.Path = path
+						on.Start = p.Start()
+						defer func() { p.Stop(on.Start) }()
+
+						st.OK = false
+						if opt.OnParseMapElem != nil {
+							st = opt.OnParseOrderedMapElem(on, result, key)
+						}
+						if st.Err == nil && !st.OK {
+							var val interface{}
+							val, st = Val(p, opt)
+							if st.IsOK() {
+								result.Set(key, val)
+							}
+						}
+					}
+				}
+			}
+		}
+		if !st.OK && st.Err == nil {
+			st.Err = Unexpected(p)
+		}
+		return st.Err
+	}); status.IsOK() {
+		if result == nil {
+			result = bwmap.OrderedNew()
+		}
+	}
+	return
+}
+
+// ============================================================================
+
 type PathA struct {
 	Bases     []bw.ValPath
 	isSubPath bool
@@ -897,7 +992,7 @@ func Val(p I, optOpt ...Opt) (result interface{}, status Status) {
 	opt := getOpt(optOpt)
 	var onArgs []on
 	kinds := []bwtype.ValKind{}
-	kindSetIsEmpty := len(opt.KindSet) == 0 //|| len(opt.KindSet) == 1 && opt.KindSet.has(ValUn)
+	kindSetIsEmpty := len(opt.KindSet) == 0
 	hasKind := func(kind bwtype.ValKind) (result bool) {
 		if kindSetIsEmpty {
 			result = true

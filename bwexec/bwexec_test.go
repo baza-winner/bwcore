@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/baza-winner/bwcore/bwdebug"
 	"github.com/baza-winner/bwcore/bwexec"
 	"github.com/baza-winner/bwcore/bwtesting"
 	"github.com/baza-winner/bwcore/bwval"
@@ -29,7 +28,6 @@ func init() {
 		exitOnError true
 		silent "none"
 	}`}).Val
-	bwdebug.Print("installOpt:#v", installOpt)
 	testOpt = bwval.From(bwval.S{S: `{
 		captureStdout true
 		captureStderr true

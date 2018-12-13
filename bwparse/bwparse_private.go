@@ -10,6 +10,7 @@ import (
 	"github.com/baza-winner/bwcore/ansi"
 	"github.com/baza-winner/bwcore/bw"
 	"github.com/baza-winner/bwcore/bwerr"
+	"github.com/baza-winner/bwcore/bwmap"
 	"github.com/baza-winner/bwcore/bwos"
 	"github.com/baza-winner/bwcore/bwrune"
 	"github.com/baza-winner/bwcore/bwset"
@@ -145,14 +146,6 @@ func suffix(p I, start Start, postLineCount uint) (suffix string) {
 		separator = " "
 	}
 	if fileSpec := p.FileSpec(); fileSpec != "" {
-		// if homeDir := os.Getenv("HOME"); homeDir != "" {
-		// 	if homeDir[len(homeDir)-1] != '/' {
-		// 		homeDir += string('/')
-		// 	}
-		// 	if len(fileSpec) >= len(homeDir) && fileSpec[:len(homeDir)] == homeDir {
-		// 		fileSpec = "~/" + fileSpec[len(homeDir):]
-		// 	}
-		// }
 		suffix += fmt.Sprintf(" of <ansiPath>%s<ansi>", bwos.ShortenFileSpec(fileSpec))
 	}
 	suffix += ":" + separator + ansiOK + start.ps.prefix
@@ -343,6 +336,13 @@ type onMap struct {
 
 func (onMap) IsOn() {}
 
+type onOrderedMap struct {
+	f   func(m *bwmap.Ordered, start *Start) (err error)
+	opt Opt
+}
+
+func (onOrderedMap) IsOn() {}
+
 type onNil struct {
 	f   func(start *Start) (err error)
 	opt Opt
@@ -368,6 +368,7 @@ func processOn(p I, processors ...on) (status Status) {
 		path bw.ValPath
 		vals []interface{}
 		m    map[string]interface{}
+		o    *bwmap.Ordered
 		b    bool
 		rng  bwtype.Range
 	)
@@ -396,6 +397,8 @@ func processOn(p I, processors ...on) (status Status) {
 			vals, status = parseArrayOfString(p, t.opt, false)
 		case onMap:
 			m, status = Map(p, t.opt)
+		case onOrderedMap:
+			o, status = OrderedMap(p, t.opt)
 		case onNil:
 			status = Nil(p, t.opt)
 		case onBool:
@@ -428,6 +431,8 @@ func processOn(p I, processors ...on) (status Status) {
 				status.Err = t.f(vals, status.Start)
 			case onMap:
 				status.Err = t.f(m, status.Start)
+			case onOrderedMap:
+				status.Err = t.f(o, status.Start)
 			case onNil:
 				status.Err = t.f(status.Start)
 			case onBool:
