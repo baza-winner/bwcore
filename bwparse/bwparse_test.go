@@ -671,7 +671,7 @@ func TestVal(t *testing.T) {
 				{in: "nil", out: nil},
 				{in: "true", out: true},
 				{in: "false", out: false},
-				{in: "0", out: bwtype.MustNumberFrom(0)},
+				{in: "0", out: 0},
 
 				{in: "-273",
 					opt: bwparse.Opt{
@@ -716,10 +716,10 @@ func TestVal(t *testing.T) {
 					},
 				})},
 
-				{in: "-1_000_000", out: bwtype.MustNumberFrom(-1000000)},
-				{in: "+3.14", out: bwtype.MustNumberFrom(3.14)},
-				{in: "+2.0", out: bwtype.MustNumberFrom(2)},
-				{in: "[0, 1]", out: []interface{}{bwtype.MustNumberFrom(0), bwtype.MustNumberFrom(1)}},
+				{in: "-1_000_000", out: -1000000},
+				{in: "+3.14", out: 3.14},
+				{in: "+2.0", out: 2},
+				{in: "[0, 1]", out: []interface{}{0, 1}},
 				{in: `"a"`, out: "a"},
 				{in: `<a b c>`, out: []interface{}{"a", "b", "c"}},
 				{in: `[<a b c>]`, out: []interface{}{"a", "b", "c"}},
@@ -784,7 +784,7 @@ func TestVal(t *testing.T) {
 				out string
 			}{
 				{in: "",
-					out: "expects one of [\x1b[97;1mArray\x1b[0m, \x1b[97;1mString\x1b[0m, \x1b[97;1mRange\x1b[0m, \x1b[97;1mPath\x1b[0m, \x1b[97;1mMap\x1b[0m, \x1b[97;1mNumber\x1b[0m, \x1b[97;1mNil\x1b[0m, \x1b[97;1mBool\x1b[0m] instead of unexpected end of string at pos \x1b[38;5;252;1m0\x1b[0m: \x1b[32m\n",
+					out: "expects one of [\n  \x1b[97;1mArray\x1b[0m\n  \x1b[97;1mString\x1b[0m\n  \x1b[97;1mRange\x1b[0m\n  \x1b[97;1mPath\x1b[0m\n  \x1b[97;1mOrderedMap\x1b[0m\n  \x1b[97;1mNumber\x1b[0m\n  \x1b[97;1mNil\x1b[0m\n  \x1b[97;1mBool\x1b[0m\n] instead of unexpected end of string at pos \x1b[38;5;252;1m0\x1b[0m: \x1b[32m\n",
 				},
 				{in: `"some" "thing"`,
 					out: "unexpected char \x1b[96;1m'\"'\x1b[0m (\x1b[38;5;201;1mcharCode\x1b[0m: \x1b[96;1m34\x1b[0m)\x1b[0m at pos \x1b[38;5;252;1m7\x1b[0m: \x1b[32m\"some\" \x1b[91m\"\x1b[0mthing\"\n",
@@ -816,14 +816,14 @@ func TestVal(t *testing.T) {
 				},
 				{in: `!`,
 					opt: bwparse.Opt{IdVals: map[string]interface{}{"Int": "Int", "Number": "Number"}},
-					out: "expects one of [\n  \x1b[97;1mArray\x1b[0m\n  \x1b[97;1mString\x1b[0m\n  \x1b[97;1mRange\x1b[0m\n  \x1b[97;1mPath\x1b[0m\n  \x1b[97;1mMap\x1b[0m\n  \x1b[97;1mNumber\x1b[0m\n  \x1b[97;1mNil\x1b[0m\n  \x1b[97;1mBool\x1b[0m\n  \x1b[97;1mId\x1b[0m(\x1b[96;1mInt\x1b[0m or \x1b[96;1mNumber\x1b[0m)\n] instead of unexpected char \x1b[96;1m'!'\x1b[0m (\x1b[38;5;201;1mcharCode\x1b[0m: \x1b[96;1m33\x1b[0m)\x1b[0m at pos \x1b[38;5;252;1m0\x1b[0m: \x1b[32m\x1b[91m!\x1b[0m\n",
+					out: "expects one of [\n  \x1b[97;1mArray\x1b[0m\n  \x1b[97;1mString\x1b[0m\n  \x1b[97;1mRange\x1b[0m\n  \x1b[97;1mPath\x1b[0m\n  \x1b[97;1mOrderedMap\x1b[0m\n  \x1b[97;1mNumber\x1b[0m\n  \x1b[97;1mNil\x1b[0m\n  \x1b[97;1mBool\x1b[0m\n  \x1b[97;1mId\x1b[0m(\x1b[96;1mInt\x1b[0m or \x1b[96;1mNumber\x1b[0m)\n] instead of unexpected char \x1b[96;1m'!'\x1b[0m (\x1b[38;5;201;1mcharCode\x1b[0m: \x1b[96;1m33\x1b[0m)\x1b[0m at pos \x1b[38;5;252;1m0\x1b[0m: \x1b[32m\x1b[91m!\x1b[0m\n",
 				},
 				{in: `! `,
 					opt: bwparse.Opt{
 						IdVals: map[string]interface{}{"Int": "Int", "Number": "Number", "String": "String"},
 						OnId:   func(on bwparse.On, s string) (val interface{}, ok bool, err error) { return },
 					},
-					out: "expects one of [\n  \x1b[97;1mArray\x1b[0m\n  \x1b[97;1mString\x1b[0m\n  \x1b[97;1mRange\x1b[0m\n  \x1b[97;1mPath\x1b[0m\n  \x1b[97;1mMap\x1b[0m\n  \x1b[97;1mNumber\x1b[0m\n  \x1b[97;1mNil\x1b[0m\n  \x1b[97;1mBool\x1b[0m\n  \x1b[97;1mId\x1b[0m(one of [\x1b[96;1mInt\x1b[0m, \x1b[96;1mNumber\x1b[0m, \x1b[96;1mString\x1b[0m] or \x1b[38;5;201;1mcustom\x1b[0m)\n] instead of unexpected char \x1b[96;1m'!'\x1b[0m (\x1b[38;5;201;1mcharCode\x1b[0m: \x1b[96;1m33\x1b[0m)\x1b[0m at pos \x1b[38;5;252;1m0\x1b[0m: \x1b[32m\x1b[91m!\x1b[0m \n",
+					out: "expects one of [\n  \x1b[97;1mArray\x1b[0m\n  \x1b[97;1mString\x1b[0m\n  \x1b[97;1mRange\x1b[0m\n  \x1b[97;1mPath\x1b[0m\n  \x1b[97;1mOrderedMap\x1b[0m\n  \x1b[97;1mNumber\x1b[0m\n  \x1b[97;1mNil\x1b[0m\n  \x1b[97;1mBool\x1b[0m\n  \x1b[97;1mId\x1b[0m(one of [\x1b[96;1mInt\x1b[0m, \x1b[96;1mNumber\x1b[0m, \x1b[96;1mString\x1b[0m] or \x1b[38;5;201;1mcustom\x1b[0m)\n] instead of unexpected char \x1b[96;1m'!'\x1b[0m (\x1b[38;5;201;1mcharCode\x1b[0m: \x1b[96;1m33\x1b[0m)\x1b[0m at pos \x1b[38;5;252;1m0\x1b[0m: \x1b[32m\x1b[91m!\x1b[0m \n",
 				},
 				{in: `{ key: 1_000_000_000_000_000_000_000_000 }`,
 					out: "strconv.ParseUint: parsing \"1000000000000000000000000\": value out of range at pos \x1b[38;5;252;1m7\x1b[0m: \x1b[32m{ key: \x1b[91m1_000_000_000_000_000_000_000_000\x1b[0m }\n",
@@ -912,7 +912,7 @@ func TestVal(t *testing.T) {
 				{in: `-1`,
 					opt: bwparse.Opt{
 						ExcludeKinds: true,
-						KindSet:      bwtype.ValKindSetFrom(bwtype.ValMap, bwtype.ValArray),
+						KindSet:      bwtype.ValKindSetFrom(bwtype.ValMap, bwtype.ValOrderedMap, bwtype.ValArray),
 						NonNegativeNumber: func(rlk bwparse.RangeLimitKind) (result bool) {
 							if rlk == bwparse.RangeLimitNone {
 								result = true

@@ -720,7 +720,7 @@ func OrderedMap(p I, optOpt ...Opt) (result *bwmap.Ordered, status Status) {
 		)
 		onKey := func(s string, start *Start) (err error) {
 			key = s
-			if opt.OnValidateMapKey != nil {
+			if opt.OnValidateOrderedMapKey != nil {
 				on.Opt.Path = base
 				on.Start = start
 				if _, b := result.Get(key); b {
@@ -766,7 +766,7 @@ func OrderedMap(p I, optOpt ...Opt) (result *bwmap.Ordered, status Status) {
 						defer func() { p.Stop(on.Start) }()
 
 						st.OK = false
-						if opt.OnParseMapElem != nil {
+						if opt.OnParseOrderedMapElem != nil {
 							st = opt.OnParseOrderedMapElem(on, result, key)
 						}
 						if st.Err == nil && !st.OK {
@@ -1091,7 +1091,18 @@ func Val(p I, optOpt ...Opt) (result interface{}, status Status) {
 			return
 		}})
 	}
-	if hasKind(bwtype.ValMap) {
+
+	if hasKind(bwtype.ValOrderedMap) {
+		onArgs = append(onArgs, onOrderedMap{opt: opt, f: func(m *bwmap.Ordered, start *Start) (err error) {
+			if opt.OnValidateOrderedMap != nil {
+				err = opt.OnValidateOrderedMap(On{p, start, &opt}, m)
+			}
+			if err == nil {
+				result = m
+			}
+			return
+		}})
+	} else if hasKind(bwtype.ValMap) {
 		onArgs = append(onArgs, onMap{opt: opt, f: func(m map[string]interface{}, start *Start) (err error) {
 			if opt.OnValidateMap != nil {
 				err = opt.OnValidateMap(On{p, start, &opt}, m)
@@ -1102,13 +1113,21 @@ func Val(p I, optOpt ...Opt) (result interface{}, status Status) {
 			return
 		}})
 	}
+
 	if hasKind(bwtype.ValNumber) {
 		onArgs = append(onArgs, onNumber{opt: opt, f: func(n bwtype.Number, start *Start) (err error) {
 			if opt.OnValidateNumber != nil {
 				err = opt.OnValidateNumber(On{p, start, &opt}, n)
 			}
 			if err == nil {
-				result = n
+				val := n.Val()
+				if i, b := bwtype.Int(val); b {
+					result = i
+				} else if u, b := bwtype.Uint(val); b {
+					result = u
+				} else {
+					result = val
+				}
 			}
 			return
 		}})

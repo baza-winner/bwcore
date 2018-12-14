@@ -128,7 +128,7 @@ type F struct {
 
 func (v F) getVal() (result interface{}, err error) {
 	var template Template
-	if template, err = TemplateFrom(bwrune.F{S: v.S}); err != nil {
+	if template, err = TemplateFrom(bwrune.F{S: v.S}, v.Def); err != nil {
 		return
 	}
 	return FromTemplate(template, v.Vars)
@@ -206,21 +206,6 @@ func (v V) getPath() (result bw.ValPath) {
 
 // =====================================
 
-type J struct {
-	S   string
-	Def *Def
-}
-
-func (v J) getVal() (result interface{}, err error) {
-	return bwjson.FromFile(v.S)
-}
-
-func (v J) getPath() bw.ValPath {
-	return bw.ValPath{bw.ValPathItem{Type: bw.ValPathItemVar, Key: bwos.ShortenFileSpec(v.S)}}
-}
-
-// =====================================
-
 func From(a FromProvider, optPathProvider ...bw.ValPathProvider) (result Holder, err error) {
 	result = Holder{}
 	if result.Val, err = a.getVal(); err != nil {
@@ -263,6 +248,7 @@ func TemplateFrom(pp bwrune.ProviderProvider, optDef ...*Def) (result Template, 
 		err = bwerr.Refine(err, "failed to TemplateFrom: {Error}")
 		return
 	}
+	// bwdebug.Print("def", def)
 	var st bwparse.Status
 	if def != nil {
 		val, st = ParseValByDef(p, *def)

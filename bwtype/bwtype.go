@@ -555,6 +555,7 @@ const (
 	ValRange
 	ValMap
 	ValOrderedMap
+	ValMapIntf
 	ValArray
 	ValNil
 )
@@ -626,6 +627,7 @@ func Kind(val interface{}, optExpects ...ValKindSet) (result interface{}, kind V
 			return
 		}
 		var needRecall bool
+		// bwdebug.Print("!HI", "val:#v", val)
 		switch t := val.(type) {
 		case bool:
 			if expectsAny || expects.Has(ValBool) {
@@ -637,16 +639,6 @@ func Kind(val interface{}, optExpects ...ValKindSet) (result interface{}, kind V
 				result = t
 				kind = ValString
 			}
-		case map[string]interface{}:
-			if expectsAny || expects.Has(ValMap) {
-				if !reflect.ValueOf(t).IsNil() {
-					result = t
-					kind = ValMap
-				} else if expectsAny || expects.Has(ValNil) {
-					result = nil
-					kind = ValNil
-				}
-			}
 		case []interface{}:
 			if expectsAny || expects.Has(ValArray) {
 				if !reflect.ValueOf(t).IsNil() {
@@ -657,10 +649,36 @@ func Kind(val interface{}, optExpects ...ValKindSet) (result interface{}, kind V
 					kind = ValNil
 				}
 			}
-		case bwmap.Ordered:
+		case map[string]interface{}:
+			if expectsAny || expects.Has(ValMap) || expects.Has(ValMapIntf) {
+				if !reflect.ValueOf(t).IsNil() {
+					if expectsAny || expects.Has(ValMap) {
+						result = t
+						kind = ValMap
+					} else {
+						result = bwmap.M(t)
+						kind = ValMapIntf
+					}
+				} else if expectsAny || expects.Has(ValNil) {
+					result = nil
+					kind = ValNil
+				}
+			}
+		case *bwmap.Ordered:
 			if expectsAny || expects.Has(ValOrderedMap) {
 				result = t
 				kind = ValOrderedMap
+			} else if expects.Has(ValMap) {
+				result = t.Map()
+				kind = ValMap
+			} else if expects.Has(ValMapIntf) {
+				result = t
+				kind = ValMapIntf
+			}
+		case bwmap.I:
+			if expectsAny || expects.Has(ValMapIntf) {
+				result = t
+				kind = ValMapIntf
 			}
 		case bw.ValPath:
 			if expectsAny || expects.Has(ValPath) {
@@ -761,7 +779,7 @@ func Kind(val interface{}, optExpects ...ValKindSet) (result interface{}, kind V
 					}
 				}
 			case reflect.Map:
-				if expectsAny || expects.Has(ValMap) {
+				if expectsAny || expects.Has(ValMap) || expects.Has(ValMapIntf) {
 					if reflect.TypeOf(val).Key().Kind() == reflect.String {
 						if !reflect.ValueOf(t).IsNil() {
 							m := map[string]interface{}{}
@@ -771,8 +789,13 @@ func Kind(val interface{}, optExpects ...ValKindSet) (result interface{}, kind V
 								keyValue := keyValues[i]
 								m[keyValue.String()] = value.MapIndex(keyValue).Interface()
 							}
-							result = m
-							kind = ValMap
+							if expectsAny || expects.Has(ValMap) {
+								result = m
+								kind = ValMap
+							} else {
+								result = bwmap.M(m)
+								kind = ValMapIntf
+							}
 						} else if expectsAny || expects.Has(ValNil) {
 							result = nil
 							kind = ValNil

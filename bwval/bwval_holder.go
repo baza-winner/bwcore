@@ -168,13 +168,25 @@ func (v *Holder) SetPathVal(val interface{}, path bw.ValPath, optVars ...map[str
 		for i, vpi := range simplePath[:len(simplePath)-1] {
 			switch vpi.Type {
 			case bw.ValPathItemKey:
-				m, _ := result.(map[string]interface{})
-				result, err = Holder{result, path[:i+1]}.KeyVal(
+				hVal := Holder{result, path[:i+1]}
+				result, err = hVal.KeyVal(
 					vpi.Key,
 					func() (result interface{}, ok bool) {
 						if ok = simplePath[i+1].Type == bw.ValPathItemKey; ok {
-							result = map[string]interface{}{}
-							m[vpi.Key] = result
+							_, _ = hVal.KindSwitch(map[bwtype.ValKind]KindCase{
+								bwtype.ValMap: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+									m, _ := val.(map[string]interface{})
+									result = map[string]interface{}{}
+									m[vpi.Key] = result
+									return nil, nil
+								},
+								bwtype.ValOrderedMap: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+									o, _ := val.(*bwmap.Ordered)
+									result = bwmap.OrderedNew()
+									o.Set(vpi.Key, result)
+									return nil, nil
+								},
+							})
 						}
 						return
 					},
@@ -193,6 +205,7 @@ func (v *Holder) SetPathVal(val interface{}, path bw.ValPath, optVars ...map[str
 	vpi := simplePath[len(simplePath)-1]
 	switch vpi.Type {
 	case bw.ValPathItemKey:
+		// bwdebug.Print("!LOOK AT ME", "vpi.Key", vpi.Key, "val", val)
 		err = rh.SetKeyVal(vpi.Key, val)
 	case bw.ValPathItemIdx:
 		err = rh.SetIdxVal(vpi.Idx, val)
@@ -347,16 +360,151 @@ func (v Holder) MustMap(optDefault ...map[string]interface{}) (result map[string
 	return
 }
 
+func (v Holder) OrderedMap() (result *bwmap.Ordered, ok bool) {
+	if t, kind := bwtype.Kind(v.Val, bwtype.ValKindSetFrom(bwtype.ValOrderedMap)); kind == bwtype.ValOrderedMap {
+		result, _ = t.(*bwmap.Ordered)
+		ok = true
+	}
+	return
+}
+
+func (v Holder) MustOrderedMap(optDefault ...*bwmap.Ordered) (result *bwmap.Ordered) {
+	var ok bool
+	if result, ok = v.OrderedMap(); !ok {
+		if len(optDefault) > 0 {
+			result = optDefault[0]
+		} else {
+			bwerr.PanicErr(v.notOfValKindError(bwtype.ValKindSetFrom(bwtype.ValOrderedMap)))
+		}
+	}
+	return
+}
+
+func (v Holder) MapIntf() (result bwmap.I, ok bool) {
+	if t, kind := bwtype.Kind(v.Val, bwtype.ValKindSetFrom(bwtype.ValMapIntf)); kind == bwtype.ValMapIntf {
+		result, _ = t.(bwmap.I)
+		ok = true
+	}
+	return
+}
+
+func (v Holder) MustMapIntf(optDefault ...bwmap.I) (result bwmap.I) {
+	var ok bool
+	if result, ok = v.MapIntf(); !ok {
+		if len(optDefault) > 0 {
+			result = optDefault[0]
+		} else {
+			bwerr.PanicErr(v.notOfValKindError(bwtype.ValKindSetFrom(bwtype.ValMapIntf)))
+		}
+	}
+	return
+}
+
 // ============================================================================
 
-func (v Holder) HasKey(key string) (result bool) {
-	if v.Val == nil {
-		return
-	}
+type ForEachBody func(idx int, key string, hVal Holder) (needBreak bool, err error)
+
+func (v Holder) ForEach(body ForEachBody) (err error) {
+	var needBreak bool
+	_, err = v.KindSwitch(map[bwtype.ValKind]KindCase{
+		bwtype.ValMapIntf: func(val interface{}, kind bwtype.ValKind) (result interface{}, err error) {
+			o, _ := val.(bwmap.I)
+			for idx, key := range o.Keys() {
+				hVal := v.MustKey(key)
+				if needBreak, err = body(idx, key, hVal); needBreak || err != nil {
+					break
+				}
+			}
+			return
+		},
+		// bwtype.ValOrderedMap: func(val interface{}, kind bwtype.ValKind) (result interface{}, err error) {
+		// 	o, _ := val.(*bwmap.Ordered)
+		// 	for idx, key := range o.Keys() {
+		// 		hVal := v.MustKey(key)
+		// 		if needBreak, err = body(idx, key, hVal); needBreak || err != nil {
+		// 			break
+		// 		}
+		// 	}
+		// 	return
+		// },
+		// bwtype.ValMap: func(val interface{}, kind bwtype.ValKind) (result interface{}, err error) {
+		// 	idx := 0
+		// 	m, _ := val.(map[string]interface{})
+		// 	for key, _ := range m {
+		// 		hVal := v.MustKey(key)
+		// 		if needBreak, err = body(idx, key, hVal); needBreak || err != nil {
+		// 			break
+		// 		}
+		// 		idx++
+		// 	}
+		// 	return
+		// },
+		bwtype.ValArray: func(val interface{}, kind bwtype.ValKind) (result interface{}, err error) {
+			vals, _ := val.([]interface{})
+			for idx, _ := range vals {
+				hVal := v.MustIdx(idx)
+				if needBreak, err = body(idx, "", hVal); needBreak || err != nil {
+					break
+				}
+			}
+			return
+		},
+	})
+	return
+}
+
+// ============================================================================
+
+func (v Holder) Keys(optFilter ...bwmap.KeysFilter) (result []string, err error) {
 	_, _ = v.KindSwitch(map[bwtype.ValKind]KindCase{
-		bwtype.ValMap: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
-			m, _ := val.(map[string]interface{})
-			_, result = m[key]
+		bwtype.ValMapIntf: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+			m, _ := val.(bwmap.I)
+			result = m.Keys(optFilter...)
+			return nil, nil
+		},
+		// bwtype.ValOrderedMap: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+		// 	o, _ := val.(*bwmap.Ordered)
+		// 	result = o.Keys(optFilter...)
+		// 	return nil, nil
+		// },
+	})
+	return
+}
+
+func (v Holder) MustKeys(optFilter ...bwmap.KeysFilter) (result []string) {
+	var err error
+	if result, err = v.Keys(optFilter...); err != nil {
+		bwerr.PanicErr(err)
+	}
+	return
+}
+
+func (v Holder) HasKey(key string) (result bool) {
+	_, _ = v.KindSwitch(map[bwtype.ValKind]KindCase{
+		// bwtype.ValMapIntf: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+		// 	m, _ := val.(bwmap.I)
+		// 	_, result = m[key]
+		// 	return nil, nil
+		// },
+		bwtype.ValMapIntf: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+			o, _ := val.(bwmap.I)
+			result = o.HasKey(key)
+			return nil, nil
+		},
+	})
+	return
+}
+
+func (v Holder) DelKey(key string) (result bool) {
+	_, _ = v.KindSwitch(map[bwtype.ValKind]KindCase{
+		// bwtype.ValMap: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+		// 	m, _ := val.(map[string]interface{})
+		// 	_, result = m[key]
+		// 	return nil, nil
+		// },
+		bwtype.ValMapIntf: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+			o, _ := val.(bwmap.I)
+			o.DelKey(key)
 			return nil, nil
 		},
 	})
@@ -364,21 +512,57 @@ func (v Holder) HasKey(key string) (result bool) {
 }
 
 func (v Holder) KeyVal(key string, optDefaultValProvider ...defaultValProvider) (result interface{}, err error) {
-	if v.Val == nil {
-		var ok bool
-		if result, ok = defaultVal(optDefaultValProvider); !ok {
-			err = v.wrongValError()
-		}
-		return
-	}
+	// if v.Val == nil {
+	// 	var ok bool
+	// 	if result, ok = defaultVal(optDefaultValProvider); !ok {
+	// 		err = v.wrongValError()
+	// 	}
+	// 	return
+	// }
 	_, err = v.KindSwitch(map[bwtype.ValKind]KindCase{
-		bwtype.ValMap: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
-			m, _ := val.(map[string]interface{})
+		bwtype.ValNil: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
 			var (
 				ok  bool
 				err error
 			)
-			if result, ok = m[key]; !ok {
+			if result, ok = defaultVal(optDefaultValProvider); !ok {
+				err = v.wrongValError()
+			}
+			return val, err
+		},
+		// bwtype.ValMap: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+		// 	m, _ := val.(map[string]interface{})
+		// 	var (
+		// 		ok  bool
+		// 		err error
+		// 	)
+		// 	if result, ok = m[key]; !ok {
+		// 		if result, ok = defaultVal(optDefaultValProvider); !ok {
+		// 			err = v.hasNoKeyError(key)
+		// 		}
+		// 	}
+		// 	return val, err
+		// },
+		// bwtype.ValOrderedMap: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+		// 	o, _ := val.(*bwmap.Ordered)
+		// 	var (
+		// 		ok  bool
+		// 		err error
+		// 	)
+		// 	if result, ok = o.Get(key); !ok {
+		// 		if result, ok = defaultVal(optDefaultValProvider); !ok {
+		// 			err = v.hasNoKeyError(key)
+		// 		}
+		// 	}
+		// 	return val, err
+		// },
+		bwtype.ValMapIntf: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+			o, _ := val.(bwmap.I)
+			var (
+				ok  bool
+				err error
+			)
+			if result, ok = o.Get(key); !ok {
 				if result, ok = defaultVal(optDefaultValProvider); !ok {
 					err = v.hasNoKeyError(key)
 				}
@@ -390,7 +574,6 @@ func (v Holder) KeyVal(key string, optDefaultValProvider ...defaultValProvider) 
 }
 
 func (v Holder) MustKeyVal(key string, optDefaultValProvider ...defaultValProvider) (result interface{}) {
-	// bwdebug.Print("optDefaultValProvider", optDefaultValProvider)
 	var err error
 	if result, err = v.KeyVal(key, optDefaultValProvider...); err != nil {
 		bwerr.PanicErr(err)
@@ -415,12 +598,23 @@ func (v Holder) MustKey(key string, optDefaultValProvider ...defaultValProvider)
 }
 
 func (v *Holder) SetKeyVal(key string, val interface{}) (err error) {
-	if m, ok := v.Map(); !ok {
-		err = v.notOfValKindError(bwtype.ValKindSetFrom(bwtype.ValMap))
-	} else {
-		m[key] = val
-		// bwdebug.Print("m", m)
-	}
+	_, err = v.KindSwitch(map[bwtype.ValKind]KindCase{
+		// bwtype.ValMap: func(valMap interface{}, kind bwtype.ValKind) (interface{}, error) {
+		// 	m, _ := valMap.(map[string]interface{})
+		// 	m[key] = val
+		// 	return nil, nil
+		// },
+		// bwtype.ValOrderedMap: func(valOrdered interface{}, kind bwtype.ValKind) (interface{}, error) {
+		// 	o, _ := valOrdered.(*bwmap.Ordered)
+		// 	o.Set(key, val)
+		// 	return nil, nil
+		// },
+		bwtype.ValMapIntf: func(valOrdered interface{}, kind bwtype.ValKind) (interface{}, error) {
+			o, _ := valOrdered.(bwmap.I)
+			o.Set(key, val)
+			return nil, nil
+		},
+	})
 	return
 }
 
@@ -583,23 +777,6 @@ func (v Holder) MustKindSwitch(kindCases map[bwtype.ValKind]KindCase, optDefault
 // ============================================================================
 
 func (v Holder) validVal(def Def, skipArrayOf bool) (result interface{}, err error) {
-	// if v.Val == nil || reflect.ValueOf() {
-	// 	if !skipArrayOf {
-	// 		if def.Default != nil {
-	// 			result = def.Default
-	// 			return
-	// 		}
-	// 		if def.IsOptional {
-	// 			return
-	// 		}
-	// 	}
-	// 	if def.Types.Has(bwtype.ValMap) {
-	// 		v.Val = map[string]interface{}{}
-	// 	} else {
-	// 		err = v.notOfValKindError(def.Types)
-	// 		return
-	// 	}
-	// }
 	var (
 		defKind    bwtype.ValKind
 		val        interface{}
@@ -611,6 +788,7 @@ func (v Holder) validVal(def Def, skipArrayOf bool) (result interface{}, err err
 		}
 		return val, nil
 	}
+	// // bwdebug.Print("v.Val:#v", v.Val)
 	if val, err = v.KindSwitch(map[bwtype.ValKind]KindCase{
 		bwtype.ValNil: func(val interface{}, kind bwtype.ValKind) (result interface{}, err error) {
 			result = val
@@ -631,11 +809,23 @@ func (v Holder) validVal(def Def, skipArrayOf bool) (result interface{}, err err
 			} else {
 				err = v.notOfValKindError(def.Types)
 			}
-			// bwdebug.Print("result", result, "defKind", defKind)
+			// // bwdebug.Print("result", result, "defKind", defKind)
 			return
 		},
-		bwtype.ValBool:   setKind,
-		bwtype.ValMap:    setKind,
+		bwtype.ValBool: setKind,
+		bwtype.ValMap:  setKind,
+		bwtype.ValOrderedMap: func(val interface{}, kind bwtype.ValKind) (result interface{}, err error) {
+			// // bwdebug.Print("!HERE")
+			if def.Types.Has(kind) {
+				defKind = kind
+				result = val
+			} else if def.Types.Has(bwtype.ValMap) {
+				defKind = bwtype.ValMap
+				o, _ := val.(*bwmap.Ordered)
+				result = o.Map()
+			}
+			return
+		},
 		bwtype.ValString: setKind,
 		bwtype.ValInt: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
 			if def.Types.Has(bwtype.ValInt) {
@@ -659,7 +849,6 @@ func (v Holder) validVal(def Def, skipArrayOf bool) (result interface{}, err err
 		},
 	}, nil); err != nil || needReturn {
 		result = val
-		// bwdebug.Print("val", val)
 		return
 	}
 
@@ -667,8 +856,6 @@ func (v Holder) validVal(def Def, skipArrayOf bool) (result interface{}, err err
 		err = v.notOfValKindError(def.Types)
 		return
 	}
-
-	// bwdebug.Print("val", val, "defKind", defKind)
 
 	switch defKind {
 	case bwtype.ValBool:
@@ -686,15 +873,20 @@ func (v Holder) validVal(def Def, skipArrayOf bool) (result interface{}, err err
 			return
 		}
 
-	case bwtype.ValMap:
-		m, _ := val.(map[string]interface{})
+	case bwtype.ValMap, bwtype.ValOrderedMap:
+		var m map[string]interface{}
+		if defKind == bwtype.ValMap {
+			m, _ = val.(map[string]interface{})
+		} else {
+			o, _ := val.(bwmap.Ordered)
+			m = o.Map()
+		}
 		if def.Keys != nil {
 			unexpectedKeys := bwmap.MustUnexpectedKeys(val, def.Keys)
 			for key, keyDef := range def.Keys {
 				if err = mapHelper(v.Pth, m, key, keyDef); err != nil {
 					return
 				}
-				// bwdebug.Print("m", m, "key", key)
 			}
 			if unexpectedKeys != nil {
 				if def.Elem == nil {
@@ -709,14 +901,12 @@ func (v Holder) validVal(def Def, skipArrayOf bool) (result interface{}, err err
 				}
 			}
 		} else if def.Elem != nil {
-			m, _ := val.(map[string]interface{})
 			for k := range m {
 				if err = mapHelper(v.Pth, m, k, *(def.Elem)); err != nil {
 					return
 				}
 			}
 		}
-		val = m
 	case bwtype.ValArray:
 		if !skipArrayOf && def.IsArrayOf {
 			v.Val = val
@@ -742,7 +932,6 @@ func (v Holder) validVal(def Def, skipArrayOf bool) (result interface{}, err err
 	}
 
 	result = val
-	// bwdebug.Print("result", result)
 	return
 }
 
@@ -753,7 +942,7 @@ func mapHelper(path bw.ValPath, m map[string]interface{}, key string, elemDef De
 		return
 	} else if val != nil {
 		m[key] = val
-		// bwdebug.Print("m", m)
+		// // bwdebug.Print("m", m)
 	}
 	return
 }

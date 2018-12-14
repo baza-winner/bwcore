@@ -72,14 +72,14 @@ func TestOrderedMap(t *testing.T) {
 		}
 	}
 	// delete
-	o.Delete("strings")
-	o.Delete("not a key being used")
+	o.DelKey("strings")
+	o.DelKey("not a key being used")
 	if len(o.Keys()) != 3 {
-		t.Error("Delete method")
+		t.Error("DelKey method")
 	}
 	_, ok := o.Get("strings")
 	if ok {
-		t.Error("Delete did not remove 'strings' key")
+		t.Error("DelKey did not remove 'strings' key")
 	}
 }
 

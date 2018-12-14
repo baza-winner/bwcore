@@ -44,73 +44,108 @@ func (a ByPair) Swap(i, j int)      { a.Pairs[i], a.Pairs[j] = a.Pairs[j], a.Pai
 func (a ByPair) Less(i, j int) bool { return a.LessFunc(a.Pairs[i], a.Pairs[j]) }
 
 type Ordered struct {
-	keys   []string
-	values map[string]interface{}
+	ss []string
+	m  map[string]interface{}
 }
 
 func OrderedNew() *Ordered {
 	o := Ordered{}
-	o.keys = []string{}
-	o.values = map[string]interface{}{}
+	o.ss = []string{}
+	o.m = map[string]interface{}{}
 	return &o
 }
 
+func (o *Ordered) HasKey(key string) bool {
+	_, exists := o.m[key]
+	return exists
+}
+
 func (o *Ordered) Get(key string) (interface{}, bool) {
-	val, exists := o.values[key]
+	val, exists := o.m[key]
 	return val, exists
 }
 
-func (o *Ordered) Set(key string, value interface{}) {
-	_, exists := o.values[key]
+func (o *Ordered) Set(key string, val interface{}) {
+	_, exists := o.m[key]
 	if !exists {
-		o.keys = append(o.keys, key)
+		o.ss = append(o.ss, key)
 	}
-	o.values[key] = value
+	o.m[key] = val
 }
 
-func (o *Ordered) Delete(key string) {
+func (o *Ordered) DelKey(key string) {
 	// check key is in use
-	_, ok := o.values[key]
+	_, ok := o.m[key]
 	if !ok {
 		return
 	}
-	// remove from keys
-	for i, k := range o.keys {
+	// remove from ss
+	for i, k := range o.ss {
 		if k == key {
-			o.keys = append(o.keys[:i], o.keys[i+1:]...)
+			o.ss = append(o.ss[:i], o.ss[i+1:]...)
 			break
 		}
 	}
-	// remove from values
-	delete(o.values, key)
+	// remove from m
+	delete(o.m, key)
 }
 
-func (o *Ordered) Keys() []string {
-	return o.keys
+func (o *Ordered) Keys(optFilter ...KeysFilter) (result []string) {
+	var filter KeysFilter
+	if len(optFilter) > 0 {
+		filter = optFilter[0]
+	}
+	if filter == nil {
+		result = o.ss
+	} else {
+		for _, key := range o.ss {
+			if filter(key) {
+				result = append(result, key)
+			}
+		}
+	}
+	return
 }
 
-// SortKeys Sort the map keys using your sort func
-func (o *Ordered) SortKeys(sortFunc func(keys []string)) {
-	sortFunc(o.keys)
+func (o *Ordered) Map() map[string]interface{} {
+	return o.m
+}
+
+// type ForEachBody func(idx int, key string, val interface{}) (needBreak bool, err error)
+
+// func (o *Ordered) ForEach(body ForEachBody) (err error) {
+// 	var needBreak bool
+// 	for idx, key := range o.Keys() {
+// 		val, _ := o.m[key]
+// 		if needBreak, err = body(idx, key, val); needBreak || err != nil {
+// 			break
+// 		}
+// 	}
+// 	return
+// }
+
+// SortKeys Sort the map ss using your sort func
+func (o *Ordered) SortKeys(sortFunc func(ss []string)) {
+	sortFunc(o.ss)
 }
 
 // Sort Sort the map using your sort func
 func (o *Ordered) Sort(lessFunc func(a *Pair, b *Pair) bool) {
-	pairs := make([]*Pair, len(o.keys))
-	for i, key := range o.keys {
-		pairs[i] = &Pair{key, o.values[key]}
+	pairs := make([]*Pair, len(o.ss))
+	for i, key := range o.ss {
+		pairs[i] = &Pair{key, o.m[key]}
 	}
 
 	sort.Sort(ByPair{pairs, lessFunc})
 
 	for i, pair := range pairs {
-		o.keys[i] = pair.key
+		o.ss[i] = pair.key
 	}
 }
 
 func (o *Ordered) UnmarshalJSON(b []byte) error {
-	if o.values == nil {
-		o.values = map[string]interface{}{}
+	if o.m == nil {
+		o.m = map[string]interface{}{}
 	}
 	var err error
 	err = mapStringToOrderedMap(string(b), o)
@@ -127,7 +162,7 @@ func mapStringToOrderedMap(s string, o *Ordered) error {
 	if err != nil {
 		return err
 	}
-	// Get the order of the keys
+	// Get the order of the ss
 	orderedKeys := []KeyIndex{}
 	for k, _ := range m {
 		kEscaped := strings.Replace(k, `"`, `\"`, -1)
@@ -186,7 +221,7 @@ func mapStringToOrderedMap(s string, o *Ordered) error {
 						i = i + 1
 					}
 					// convert to orderedmap
-					// this may be recursive it values in the map are also maps
+					// this may be recursive it m in the map are also maps
 					if hasValidJson {
 						newMap := OrderedNew()
 						err := mapStringToOrderedMap(valueStr, newMap)
@@ -218,7 +253,7 @@ func mapStringToOrderedMap(s string, o *Ordered) error {
 					}
 					// convert to slice with any map items converted to
 					// orderedmaps
-					// this may be recursive if values in the slice are slices
+					// this may be recursive if m in the slice are slices
 					if hasValidJson {
 						var newSlice []interface{}
 						err := sliceStringToSliceWithOrderedMaps(valueStr, &newSlice)
@@ -234,16 +269,16 @@ func mapStringToOrderedMap(s string, o *Ordered) error {
 			}
 		}
 	}
-	// Sort the keys
+	// Sort the ss
 	sort.Sort(ByIndex(orderedKeys))
-	// Convert sorted keys to string slice
+	// Convert sorted ss to string slice
 	k := []string{}
 	for _, ki := range orderedKeys {
 		k = append(k, ki.Key)
 	}
-	// Set the Ordered values
-	o.values = m
-	o.keys = k
+	// Set the Ordered m
+	o.m = m
+	o.ss = k
 	return nil
 }
 
@@ -311,19 +346,19 @@ func sliceStringToSliceWithOrderedMaps(valueStr string, newSlice *[]interface{})
 
 func (o Ordered) MarshalJSON() ([]byte, error) {
 	s := "{"
-	for _, k := range o.keys {
+	for _, k := range o.ss {
 		// add key
 		kEscaped := strings.Replace(k, `"`, `\"`, -1)
 		s = s + `"` + kEscaped + `":`
 		// add value
-		v := o.values[k]
+		v := o.m[k]
 		vBytes, err := json.Marshal(v)
 		if err != nil {
 			return []byte{}, err
 		}
 		s = s + string(vBytes) + ","
 	}
-	if len(o.keys) > 0 {
+	if len(o.ss) > 0 {
 		s = s[0 : len(s)-1]
 	}
 	s = s + "}"

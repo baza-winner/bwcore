@@ -79,7 +79,7 @@ func TestHolderMustSetKeyVal(t *testing.T) {
 						bwval.Holder{Val: nil, Pth: bwval.MustPath(bwval.PathS{S: "1.some"})},
 						"thing", "good",
 					},
-					Panic: "\x1b[38;5;252;1m1.some\x1b[0m (\x1b[96;1mnull\x1b[0m)\x1b[0m is not \x1b[97;1mMap\x1b[0m",
+					Panic: "\x1b[38;5;252;1m1.some\x1b[0m (\x1b[96;1mnull\x1b[0m)\x1b[0m is not \x1b[97;1mMapIntf\x1b[0m",
 				},
 			}
 			return tests
@@ -94,8 +94,6 @@ func TestHolderMustKeyVal(t *testing.T) {
 				return v.MustKeyVal(key)
 			} else {
 				return v.MustKeyVal(key, nil)
-				// } else {
-				// bwdebug.Print("opt:#v", opt, "opt[0] == nil", opt[0] == interface{}(nil), "opt[0]:#v", opt[0])
 			}
 			return nil
 		},
@@ -540,7 +538,7 @@ func TestHolderValidVal(t *testing.T) {
 				"{ val: nil def: Array}":                 "\x1b[96;1mnull\x1b[0m::\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1mnull\x1b[0m)\x1b[0m is not \x1b[97;1mArray\x1b[0m\x1b[0m",
 				"{ val: { key: <some thing> } def: { type Map elem { type <ArrayOf String> enum <some good>}} }": "\x1b[96;1m{\n  \"key\": [\n    \"some\",\n    \"thing\"\n  ]\n}\x1b[0m::\x1b[38;5;252;1mkey.1\x1b[0m: expected one of \x1b[96;1m[\n  \"good\",\n  \"some\"\n]\x1b[0m instead of \x1b[91;1m\"thing\"\x1b[0m\x1b[0m",
 				"{ val: { some: 0 thing: 1 } def: { type Map keys { some Int } } }":                              "\x1b[96;1m{\n  \"some\": 0,\n  \"thing\": 1\n}\x1b[0m::\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1m{\n  \"some\": 0,\n  \"thing\": 1\n}\x1b[0m)\x1b[0m has unexpected key \x1b[96;1m\"thing\"\x1b[0m\x1b[0m",
-				"{ val: { some: 0 thing: 1 good: 2 } def: { type Map keys { some Int } } }":                      "\x1b[96;1m{\n  \"good\": 2,\n  \"some\": 0,\n  \"thing\": 1\n}\x1b[0m::\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1m{\n  \"good\": 2,\n  \"some\": 0,\n  \"thing\": 1\n}\x1b[0m)\x1b[0m has unexpected keys: [\x1b[96;1m\"good\"\x1b[0m, \x1b[96;1m\"thing\"\x1b[0m]\x1b[0m",
+				"{ val: { some: 0 thing: 1 good: 2 } def: { type Map keys { some Int } } }":                      "\x1b[96;1m{\n  \"some\": 0,\n  \"thing\": 1,\n  \"good\": 2\n}\x1b[0m::\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1m{\n  \"some\": 0,\n  \"thing\": 1,\n  \"good\": 2\n}\x1b[0m)\x1b[0m has unexpected keys: [\x1b[96;1m\"good\"\x1b[0m, \x1b[96;1m\"thing\"\x1b[0m]\x1b[0m",
 				"{ val: { some: 0 thing: 1 } def: { type Map keys { some Int } elem Bool } }":                    "\x1b[96;1m{\n  \"some\": 0,\n  \"thing\": 1\n}\x1b[0m::\x1b[38;5;252;1mthing\x1b[0m (\x1b[96;1m1\x1b[0m)\x1b[0m is not \x1b[97;1mBool\x1b[0m\x1b[0m",
 				"{ val: { some: 0 } def: { type Map keys { some Bool } } }":                                      "\x1b[96;1m{\n  \"some\": 0\n}\x1b[0m::\x1b[38;5;252;1msome\x1b[0m (\x1b[96;1m0\x1b[0m)\x1b[0m is not \x1b[97;1mBool\x1b[0m\x1b[0m",
 				"{ val: [0, true] def: { type Array elem Int } }":                                                "\x1b[96;1m[\n  0,\n  true\n]\x1b[0m::\x1b[38;5;252;1m1\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m is not \x1b[97;1mInt\x1b[0m\x1b[0m",
@@ -551,31 +549,5 @@ func TestHolderValidVal(t *testing.T) {
 			}
 			return tests
 		}(),
-		// `
-		// 			{
-		// 			 	val: nil
-		// 			 	def:
-		// 			 	  {
-		// 						type Map
-		// 						keys {
-		// 							v {
-		// 								type String
-		// 								enum <all err ok none>
-		// 								default "none"
-		// 							}
-		// 							s {
-		// 								type String
-		// 								enum <none stderr stdout all>
-		// 								default "all"
-		// 							}
-		// 							exitOnError {
-		// 								type Bool
-		// 								default false
-		// 							}
-		// 						}
-		// 					}
-		// 			}
-		// 		`,
-		// "{ val: nil def: { type Map keys { some {type Int default 273} } } }",
 	)
 }

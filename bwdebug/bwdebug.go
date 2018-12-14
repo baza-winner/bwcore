@@ -14,25 +14,70 @@ import (
 )
 
 var (
-	ansiDebugVarValue              string
-	ansiDebugVarValueAsVerboseHash string
-	ansiDebugVarValueAsString      string
-	ansiDebugMark                  string
-	ansiDebugVarName               string
-	ansiExpectsVarVal              string
-	ansiMustBeString               string
-	ansiMustBeNonEmptyString       string
-	ansiMustBeNonEmptyVarName      string
+	ansiDebugMark             string
+	ansiDebugVarName          string
+	ansiExpectsVarVal         string
+	ansiMustBeString          string
+	ansiMustBeNonEmptyString  string
+	ansiMustBeNonEmptyVarName string
 )
 
+type printCase struct {
+	suffixRegex *regexp.Regexp
+	getString   func(arg interface{}) (result string)
+	// ansiString  string
+	// getArg      func(arg interface{}) interface{}
+}
+
+var printCases []printCase
+
+func initPrintCases() {
+	printCases = []printCase{
+		{
+			suffixRegex: regexp.MustCompile(":v$"),
+			getString: func(arg interface{}) string {
+				return bw.Spew.Sprintf(ansi.String("<ansiVal>%v<ansi>"), arg)
+			},
+		},
+		{
+			suffixRegex: regexp.MustCompile(":#v$"),
+			getString: func(arg interface{}) string {
+				return bw.Spew.Sprintf(ansi.String("<ansiVal>%#v<ansi>"), arg)
+			},
+		},
+		{
+			suffixRegex: regexp.MustCompile(":T$"),
+			getString: func(arg interface{}) string {
+				return fmt.Sprintf(ansi.String("<ansiVal>%T<ansi>"), arg)
+			},
+		},
+		{
+			suffixRegex: regexp.MustCompile(":s$"),
+			getString: func(arg interface{}) string {
+				switch t := arg.(type) {
+				case rune:
+					arg = string(t)
+				case fmt.Stringer:
+					arg = t.String()
+				}
+				return fmt.Sprintf(ansi.String("<ansiVal>%s<ansi>"), arg)
+			},
+		},
+		{
+			suffixRegex: regexp.MustCompile(":json$"),
+			getString: func(arg interface{}) string {
+				return fmt.Sprintf(ansi.String("<ansiVal>%s<ansi>"), bwjson.Pretty(arg))
+			},
+		},
+	}
+}
+
 func init() {
+	initPrintCases()
 	ansi.MustAddTag("ansiDebugMark",
 		ansi.MustSGRCodeOfColor8(ansi.Color8{Color: ansi.SGRColorYellow, Bright: true}),
 		ansi.MustSGRCodeOfCmd(ansi.SGRCmdBold),
 	)
-	ansiDebugVarValue = ansi.String("<ansiVal>%v<ansi>")
-	ansiDebugVarValueAsVerboseHash = ansi.String("<ansiVal>%#v<ansi>")
-	ansiDebugVarValueAsString = ansi.String("<ansiVal>%s<ansi>")
 	ansiDebugMark = ansi.String("<ansiDebugMark>%s<ansi>, ")
 	ansiDebugVarName = ansi.String("<ansiVar>%s<ansi>: ")
 	ansiExpectsVarVal = ansi.String("expects val for <ansiVar>%s")
@@ -48,56 +93,35 @@ func Print(args ...interface{}) {
 	}
 }
 
-var asJSONSuffix = regexp.MustCompile(":json$")
-var asStringSuffix = regexp.MustCompile(":s$")
-var asVerboseSuffix = regexp.MustCompile(":v$")
-var asVerboseHashSuffix = regexp.MustCompile(":#v$")
-
 func stringToPrint(depth uint, args ...interface{}) (result string, err error) {
 	markPrefix := ""
-	fmtString := ""
-	fmtArgs := []interface{}{}
+	// fmtString := ""
+	// fmtArgs := []interface{}{}
 	expectsVal := false
 	lastVar := ""
 	i := 0
-	type valueFormat uint8
-	const (
-		vfVerbose valueFormat = iota
-		vfVerboseHash
-		vfString
-		vfJSON
-	)
-	vfDefault := vfVerbose
-	var vf valueFormat
-	// var fmtDebugVarValue string
+	// type valueFormat uint8
+	// const (
+	// 	vfVerbose valueFormat = iota
+	// 	vfVerboseHash
+	// 	vfString
+	// 	vfType
+	// 	vfJSON
+	// )
+	var pcToUse *printCase
+	pcDefault := &printCases[0]
 	for _, arg := range args {
 		i++
 		if expectsVal == true {
-			// fmt.Printf("vf: %d\n", vf)
-			switch vf {
-			case vfString:
-				fmtString += ansiDebugVarValueAsString
-				switch t := arg.(type) {
-				case rune:
-					fmtArgs = append(fmtArgs, string(t))
-				case fmt.Stringer:
-					// fmt.Printf("typeof(arg): %T\n", arg)
-					// fmt.Printf("t.String(): %s\n", t.String())
-					fmtArgs = append(fmtArgs, t.String())
-				default:
-					// fmt.Printf("typeof(arg): %T\n", arg)
-					fmtArgs = append(fmtArgs, arg)
-				}
-			case vfJSON:
-				fmtString += ansiDebugVarValueAsString
-				fmtArgs = append(fmtArgs, bwjson.Pretty(arg))
-			case vfVerboseHash:
-				fmtString += ansiDebugVarValueAsVerboseHash
-				fmtArgs = append(fmtArgs, arg)
-			default:
-				fmtString += ansiDebugVarValue
-				fmtArgs = append(fmtArgs, arg)
+			pc := pcToUse
+			if pc == nil {
+				pc = pcDefault
 			}
+			result += pc.getString(arg)
+			// if pc.getArg != nil {
+			// 	arg = pc.getArg(arg)
+			// }
+			// fmtArgs = append(fmtArgs, arg)
 			expectsVal = false
 		} else if valueOf := reflect.ValueOf(arg); valueOf.Kind() != reflect.String {
 			err = bwerr.FromA(bwerr.A{Depth: 1, Fmt: ansiMustBeString, Args: bw.Args(i, arg)})
@@ -108,30 +132,22 @@ func stringToPrint(depth uint, args ...interface{}) (result string, err error) {
 		} else if s[0:1] == "!" {
 			markPrefix += fmt.Sprintf(ansiDebugMark, s)
 		} else {
-			if len(fmtArgs) > 0 {
-				fmtString += ", "
+			if len(result) > 0 {
+				result += ", "
 			}
-			if asJSONSuffix.MatchString(s) {
-				s = s[:len(s)-5]
-				vf = vfJSON
-			} else if asStringSuffix.MatchString(s) {
-				s = s[:len(s)-2]
-				vf = vfString
-			} else if asVerboseSuffix.MatchString(s) {
-				s = s[:len(s)-2]
-				vf = vfVerbose
-			} else if asVerboseHashSuffix.MatchString(s) {
-				s = s[:len(s)-3]
-				vf = vfVerboseHash
-			} else {
-				vf = vfDefault
+			pcToUse = nil
+			for i, v := range printCases {
+				if s = v.suffixRegex.ReplaceAllStringFunc(s, func(string) string {
+					pcToUse = &printCases[i]
+					return ""
+				}); pcToUse != nil {
+					break
+				}
 			}
 			if len(s) == 0 {
-				vfDefault = vf
-				// err = bwerr.FromA(bwerr.A{Depth: 1, Fmt: ansiMustBeNonEmptyVarName, Args: bw.Args(i)})
-				// return
+				pcDefault = pcToUse
 			} else {
-				fmtString += fmt.Sprintf(ansiDebugVarName, s)
+				result += fmt.Sprintf(ansiDebugVarName, s)
 				lastVar = s
 				expectsVal = true
 			}
@@ -144,6 +160,8 @@ func stringToPrint(depth uint, args ...interface{}) (result string, err error) {
 	result = markPrefix +
 		where.MustFrom(1+depth).String() +
 		": " +
-		ansi.String(bw.Spew.Sprintf(fmtString, fmtArgs...))
+		result
+		// ansi.String(bw.Spew.Sprintf(fmtString, fmtArgs...))
+		// ansi.String(fmt.Sprintf(fmtString, fmtArgs...))
 	return
 }

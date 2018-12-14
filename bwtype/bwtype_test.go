@@ -569,9 +569,10 @@ func TestValKindString(t *testing.T) {
 				bwtype.ValRange:      "Range",
 				bwtype.ValMap:        "Map",
 				bwtype.ValOrderedMap: "OrderedMap",
+				bwtype.ValMapIntf:    "MapIntf",
 				bwtype.ValArray:      "Array",
 				bwtype.ValNil:        "Nil",
-				bwtype.ValNil + 1:    "ValKind(14)",
+				bwtype.ValNil + 1:    "ValKind(15)",
 			} {
 				tests[v] = bwtesting.Case{
 					V:   k,

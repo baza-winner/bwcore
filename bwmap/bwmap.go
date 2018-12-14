@@ -11,6 +11,17 @@ import (
 	"github.com/baza-winner/bwcore/bwset"
 )
 
+type I interface {
+	HasKey(key string) bool
+	Get(key string) (interface{}, bool)
+	Set(key string, val interface{})
+	Keys(optFilter ...KeysFilter) (result []string)
+	DelKey(key string)
+	Map() map[string]interface{}
+}
+
+type M map[string]interface{}
+
 var (
 	ansiMustBeMap       string
 	ansiMustBeMapString string
@@ -79,6 +90,46 @@ func MustUnexpectedKeys(m interface{}, expected ...interface{}) (result bwset.St
 	}
 	return
 }
+
+type KeysFilter func(key string) (ok bool)
+
+func (m M) Keys(optFilter ...KeysFilter) (result []string) {
+	var filter KeysFilter
+	if len(optFilter) > 0 {
+		filter = optFilter[0]
+	}
+	for key, _ := range m {
+		if filter == nil || filter(key) {
+			result = append(result, key)
+		}
+	}
+	return
+}
+
+func (m M) HasKey(key string) bool {
+	_, exists := m[key]
+	return exists
+}
+
+func (m M) Get(key string) (interface{}, bool) {
+	val, exists := m[key]
+	return val, exists
+}
+
+func (m M) Set(key string, val interface{}) {
+	m[key] = val
+}
+
+func (m M) DelKey(key string) {
+	delete(m, key)
+}
+
+func (m M) Map() map[string]interface{} {
+	return m
+}
+
+// func ForEach(m map[string]interface{}, body ForEachBody) (err error) {
+// }
 
 // func CropMap(m interface{}, crop ...interface{}) {
 // 	if unexpectedKeys, err := UnexpectedKeys(m, crop...); err != nil {

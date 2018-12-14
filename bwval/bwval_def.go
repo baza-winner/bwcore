@@ -6,6 +6,7 @@ import (
 	"github.com/baza-winner/bwcore/ansi"
 	"github.com/baza-winner/bwcore/bw"
 	"github.com/baza-winner/bwcore/bwerr"
+	"github.com/baza-winner/bwcore/bwmap"
 	"github.com/baza-winner/bwcore/bwparse"
 	"github.com/baza-winner/bwcore/bwset"
 	"github.com/baza-winner/bwcore/bwtype"
@@ -70,6 +71,7 @@ func init() {
 		bwtype.ValInt,
 		bwtype.ValNumber,
 		bwtype.ValMap,
+		bwtype.ValOrderedMap,
 		bwtype.ValArray,
 	)
 }
@@ -216,7 +218,7 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 							validKeys.Add("enum")
 						case bwtype.ValInt, bwtype.ValNumber:
 							validKeys.Add("range")
-						case bwtype.ValMap:
+						case bwtype.ValMap, bwtype.ValOrderedMap:
 							validKeys.Add("keys")
 							validKeys.Add("elem")
 						case bwtype.ValArray:
@@ -348,6 +350,7 @@ func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (res
 
 	opt := bwparse.Opt{KindSet: bwtype.ValKindSet{}}
 	opt.KindSet.AddSet(def.Types)
+	// bwdebug.Print("def.Types:json", def.Types)
 
 	if opt.KindSet.Has(bwtype.ValMap) {
 		opt.OnValidateMapKey = func(on bwparse.On, m map[string]interface{}, key string) (err error) {
@@ -377,6 +380,39 @@ func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (res
 			var val interface{}
 			if val, status = parseValByDef(p, *keyDef, base.AppendKey(key), skipArrayOf); status.IsOK() {
 				m[key] = val
+			}
+			return
+		}
+	}
+
+	if opt.KindSet.Has(bwtype.ValOrderedMap) {
+		opt.OnValidateOrderedMapKey = func(on bwparse.On, m *bwmap.Ordered, key string) (err error) {
+			if def.Elem == nil && def.Keys != nil {
+				if _, ok := def.Keys[key]; !ok {
+					err = p.Error(bwparse.E{
+						Start: on.Start,
+						Fmt:   bw.Fmt(ansi.String("unexpected key `<ansiErr>%s<ansi>`"), on.Start.Suffix()),
+					})
+				}
+			}
+			return
+		}
+		opt.OnParseOrderedMapElem = func(on bwparse.On, m *bwmap.Ordered, key string) (status bwparse.Status) {
+			var keyDef *Def
+			if def.Keys != nil {
+				if v, ok := def.Keys[key]; ok {
+					keyDef = &v
+				}
+			}
+			if keyDef == nil {
+				keyDef = def.Elem
+			}
+			if keyDef == nil {
+				keyDef = &Def{Types: defSupportedTypes}
+			}
+			var val interface{}
+			if val, status = parseValByDef(p, *keyDef, base.AppendKey(key), skipArrayOf); status.IsOK() {
+				m.Set(key, val)
 			}
 			return
 		}
