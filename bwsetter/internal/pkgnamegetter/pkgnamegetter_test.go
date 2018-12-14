@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/baza-winner/bwcore/bwerr"
-	"github.com/baza-winner/bwcore/bwmap"
 	"github.com/baza-winner/bwcore/bwtesting"
 )
 
@@ -51,84 +50,83 @@ func mySetupFunction() {
 }
 
 func TestGetPackageNameFromFile(t *testing.T) {
-	tests := map[string]bwtesting.Case{
-		"package main": {
-			In: []interface{}{getTestFileSpec("package main")},
-			Out: []interface{}{
-				"main",
-				nil,
+	bwtesting.BwRunTests(t,
+		GetPackageName,
+		map[string]bwtesting.Case{
+			"package main": {
+				In: []interface{}{getTestFileSpec("package main")},
+				Out: []interface{}{
+					"main",
+					nil,
+				},
+			},
+			"package some": {
+				In: []interface{}{getTestFileSpec("package some")},
+				Out: []interface{}{
+					"some",
+					nil,
+				},
+			},
+			"pack age main": {
+				In: []interface{}{getTestFileSpec("pack age main")},
+				Out: []interface{}{
+					"",
+					bwerr.From(
+						"unexpected word <ansiVal>%s<ansi> at line <ansiPath>%d<ansi>, col <ansiPath>%d<ansi> (pos <ansiPath>%d<ansi>) in file <ansiPath>%s",
+						"pac", 1, 3, 2, getTestFileSpec("pack age main"),
+					),
+				},
+			},
+			"some": {
+				In: []interface{}{getTestFileSpec("some")},
+				Out: []interface{}{
+					"",
+					bwerr.From(
+						"unexpected rune <ansiVal>%q<ansi> at line <ansiPath>%d<ansi>, col <ansiPath>%d<ansi> (pos <ansiPath>%d<ansi>) in file <ansiPath>%s",
+						's', 2, 2, 4, getTestFileSpec("some"),
+					),
+				},
+			},
+			"package 3": {
+				In: []interface{}{getTestFileSpec("package 3")},
+				Out: []interface{}{
+					"",
+					bwerr.From(
+						"unexpected rune <ansiVal>%q<ansi> at line <ansiPath>%d<ansi>, col <ansiPath>%d<ansi> (pos <ansiPath>%d<ansi>) in file <ansiPath>%s",
+						'3', 2, 10, 12, getTestFileSpec("package 3"),
+					),
+				},
+			},
+			"invalid comment start": {
+				In: []interface{}{getTestFileSpec("invalid comment start")},
+				Out: []interface{}{
+					"",
+					bwerr.From(
+						"unexpected rune <ansiVal>%q<ansi> at line <ansiPath>%d<ansi>, col <ansiPath>%d<ansi> (pos <ansiPath>%d<ansi>) in file <ansiPath>%s",
+						'=', 2, 3, 5, getTestFileSpec("invalid comment start"),
+					),
+				},
+			},
+			"invalid infix comment": {
+				In: []interface{}{getTestFileSpec("invalid infix comment")},
+				Out: []interface{}{
+					"",
+					bwerr.From(
+						"unexpected end of file at line <ansiPath>%d<ansi>, col <ansiPath>%d<ansi> (pos <ansiPath>%d<ansi>) in file <ansiPath>%s",
+						3, 9, 10, getTestFileSpec("invalid infix comment"),
+					),
+				},
+			},
+			"non existent": {
+				In: []interface{}{getTestFileSpec("non existent")},
+				Out: []interface{}{
+					"",
+					bwerr.From(
+						"open %s: no such file or directory",
+						getTestFileSpec("non existent"),
+					),
+				},
 			},
 		},
-		"package some": {
-			In: []interface{}{getTestFileSpec("package some")},
-			Out: []interface{}{
-				"some",
-				nil,
-			},
-		},
-		"pack age main": {
-			In: []interface{}{getTestFileSpec("pack age main")},
-			Out: []interface{}{
-				"",
-				bwerr.From(
-					"unexpected word <ansiVal>%s<ansi> at line <ansiPath>%d<ansi>, col <ansiPath>%d<ansi> (pos <ansiPath>%d<ansi>) in file <ansiPath>%s",
-					"pac", 1, 3, 2, getTestFileSpec("pack age main"),
-				),
-			},
-		},
-		"some": {
-			In: []interface{}{getTestFileSpec("some")},
-			Out: []interface{}{
-				"",
-				bwerr.From(
-					"unexpected rune <ansiVal>%q<ansi> at line <ansiPath>%d<ansi>, col <ansiPath>%d<ansi> (pos <ansiPath>%d<ansi>) in file <ansiPath>%s",
-					's', 2, 2, 4, getTestFileSpec("some"),
-				),
-			},
-		},
-		"package 3": {
-			In: []interface{}{getTestFileSpec("package 3")},
-			Out: []interface{}{
-				"",
-				bwerr.From(
-					"unexpected rune <ansiVal>%q<ansi> at line <ansiPath>%d<ansi>, col <ansiPath>%d<ansi> (pos <ansiPath>%d<ansi>) in file <ansiPath>%s",
-					'3', 2, 10, 12, getTestFileSpec("package 3"),
-				),
-			},
-		},
-		"invalid comment start": {
-			In: []interface{}{getTestFileSpec("invalid comment start")},
-			Out: []interface{}{
-				"",
-				bwerr.From(
-					"unexpected rune <ansiVal>%q<ansi> at line <ansiPath>%d<ansi>, col <ansiPath>%d<ansi> (pos <ansiPath>%d<ansi>) in file <ansiPath>%s",
-					'=', 2, 3, 5, getTestFileSpec("invalid comment start"),
-				),
-			},
-		},
-		"invalid infix comment": {
-			In: []interface{}{getTestFileSpec("invalid infix comment")},
-			Out: []interface{}{
-				"",
-				bwerr.From(
-					"unexpected end of file at line <ansiPath>%d<ansi>, col <ansiPath>%d<ansi> (pos <ansiPath>%d<ansi>) in file <ansiPath>%s",
-					3, 9, 10, getTestFileSpec("invalid infix comment"),
-				),
-			},
-		},
-		"non existent": {
-			In: []interface{}{getTestFileSpec("non existent")},
-			Out: []interface{}{
-				"",
-				bwerr.From(
-					"open %s: no such file or directory",
-					getTestFileSpec("non existent"),
-				),
-			},
-		},
-	}
-	testsToRun := tests
-	bwmap.CropMap(testsToRun)
-	// bwmap.CropMap(testsToRun, "[qw/one two three/]")
-	bwtesting.BwRunTests(t, GetPackageName, testsToRun)
+	)
 }

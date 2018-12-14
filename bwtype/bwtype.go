@@ -8,6 +8,7 @@ import (
 	"github.com/baza-winner/bwcore/ansi"
 	"github.com/baza-winner/bwcore/bw"
 	"github.com/baza-winner/bwcore/bwerr"
+	"github.com/baza-winner/bwcore/bwmap"
 )
 
 // ============================================================================
@@ -233,7 +234,6 @@ func NumberFrom(val interface{}) (result Number, ok bool) {
 		i int
 		u uint
 		f float64
-		// rl RangeLimit
 	)
 	if i, ok = Int(val); ok {
 		result = Number{i}
@@ -241,10 +241,6 @@ func NumberFrom(val interface{}) (result Number, ok bool) {
 		result = Number{u}
 	} else if f, ok = Float64(val); ok {
 		result = Number{f}
-		// } else if rl, ok = val.(RangeLimit); ok {
-		// 	result, ok = NumberFrom(rl.val)
-		// } else {
-		// 	result, ok = val.(Number)
 	}
 	return
 }
@@ -558,8 +554,8 @@ const (
 	ValPath
 	ValRange
 	ValMap
+	ValOrderedMap
 	ValArray
-	// ValArrayOf
 	ValNil
 )
 
@@ -660,6 +656,11 @@ func Kind(val interface{}, optExpects ...ValKindSet) (result interface{}, kind V
 					result = nil
 					kind = ValNil
 				}
+			}
+		case bwmap.Ordered:
+			if expectsAny || expects.Has(ValOrderedMap) {
+				result = t
+				kind = ValOrderedMap
 			}
 		case bw.ValPath:
 			if expectsAny || expects.Has(ValPath) {

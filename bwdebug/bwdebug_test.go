@@ -3,7 +3,6 @@ package bwdebug
 import (
 	"testing"
 
-	"github.com/baza-winner/bwcore/bwmap"
 	"github.com/baza-winner/bwcore/bwtesting"
 )
 
@@ -12,24 +11,24 @@ func TestPrint(t *testing.T) {
 		S string
 		N int
 	}{"string value", 273}
-	tests := map[string]bwtesting.Case{
-		"zero number": {
-			In: []interface{}{
-				uint(5),
-				"!HERE", "varA", varA,
-			},
-			Out: []interface{}{
-				// fmt.Sprintf(
-				"\u001b[93;1m!HERE\u001b[0m, \u001b[0m\u001b[32;1mgithub.com/baza-winner/bwcore/bwdebug.TestPrint\u001b[38;5;243m@\u001b[97;1mbwdebug_test.go:32\u001b[0m: \u001b[38;5;201;1mvarA\u001b[0m: \u001b[0m\u001b[96;1m{string value 273}\u001b[0m",
-				// 33,
-				// ),
-				nil,
+	bwtesting.BwRunTests(t,
+		stringToPrint,
+		map[string]bwtesting.Case{
+			"zero number": {
+				In: []interface{}{
+					uint(5),
+					"!HERE", "varA", varA,
+				},
+				Out: []interface{}{
+					// fmt.Sprintf(
+					"\u001b[93;1m!HERE\u001b[0m, \u001b[0m\u001b[32;1mgithub.com/baza-winner/bwcore/bwdebug.TestPrint\u001b[38;5;243m@\u001b[97;1mbwdebug_test.go:14\u001b[0m: \u001b[38;5;201;1mvarA\u001b[0m: \u001b[0m\u001b[96;1m{string value 273}\u001b[0m",
+					// 33,
+					// ),
+					nil,
+				},
 			},
 		},
-	}
-	bwmap.CropMap(tests)
-	// bwmap.CropMap(tests, "UnexpectedItem")
-	bwtesting.BwRunTests(t, stringToPrint, tests)
+	)
 
 	// type Out struct {
 	// 	result string

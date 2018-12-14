@@ -80,13 +80,13 @@ func MustUnexpectedKeys(m interface{}, expected ...interface{}) (result bwset.St
 	return
 }
 
-func CropMap(m interface{}, crop ...interface{}) {
-	if unexpectedKeys, err := UnexpectedKeys(m, crop...); err != nil {
-		bwerr.PanicErr(err)
-	} else if unexpectedKeys != nil {
-		for k, _ := range unexpectedKeys {
-			v := reflect.ValueOf(m)
-			v.SetMapIndex(reflect.ValueOf(k), reflect.Value{})
-		}
-	}
-}
+// func CropMap(m interface{}, crop ...interface{}) {
+// 	if unexpectedKeys, err := UnexpectedKeys(m, crop...); err != nil {
+// 		bwerr.PanicErr(err)
+// 	} else if unexpectedKeys != nil {
+// 		for k, _ := range unexpectedKeys {
+// 			v := reflect.ValueOf(m)
+// 			v.SetMapIndex(reflect.ValueOf(k), reflect.Value{})
+// 		}
+// 	}
+// }

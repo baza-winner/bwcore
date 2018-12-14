@@ -28,7 +28,6 @@ func init() {
 		exitOnError true
 		silent "none"
 	}`}).Val
-	// bwdebug.Print("installOpt:#v", installOpt)
 	testOpt = bwval.MustFrom(bwval.S{S: `{
 		captureStdout true
 		captureStderr true

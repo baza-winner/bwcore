@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/baza-winner/bwcore/bwerr"
-	"github.com/baza-winner/bwcore/bwmap"
 	"github.com/baza-winner/bwcore/bwrune"
 	"github.com/baza-winner/bwcore/bwtesting"
 )
@@ -46,65 +45,62 @@ func myTeardownFunction() {
 	}
 }
 
-func getFirstLine(fileSpec string) (result string, err error) {
-	var p bwrune.Provider
-	p, err = bwrune.FromFile(fileSpec)
-	if err != nil {
-		err = bwerr.FromA(bwerr.E{Error: err})
-	} else {
-		defer p.Close()
-		for {
-			var currRunePtr *rune
-			currRunePtr, err = p.PullRune()
-			if currRunePtr == nil || err != nil || *currRunePtr == '\n' {
-				break
-			} else {
-				result += string(*currRunePtr)
-			}
-		}
-	}
-	return
-}
-
 func TestGetFirstLine(t *testing.T) {
-	tests := map[string]bwtesting.Case{
-		"no newline": {
-			In: []interface{}{getTestFileSpec("no newline")},
-			Out: []interface{}{
-				"Радость",
-				nil,
+	bwtesting.BwRunTests(t,
+		func(fileSpec string) (result string, err error) {
+			var p bwrune.Provider
+			p, err = bwrune.FromFile(fileSpec)
+			if err != nil {
+				err = bwerr.FromA(bwerr.E{Error: err})
+			} else {
+				defer p.Close()
+				for {
+					var currRunePtr *rune
+					currRunePtr, err = p.PullRune()
+					if currRunePtr == nil || err != nil || *currRunePtr == '\n' {
+						break
+					} else {
+						result += string(*currRunePtr)
+					}
+				}
+			}
+			return
+		},
+		map[string]bwtesting.Case{
+			"no newline": {
+				In: []interface{}{getTestFileSpec("no newline")},
+				Out: []interface{}{
+					"Радость",
+					nil,
+				},
+			},
+			"newline": {
+				In: []interface{}{getTestFileSpec("newline")},
+				Out: []interface{}{
+					"Радость",
+					nil,
+				},
+			},
+			"invalid utf8": {
+				In: []interface{}{getTestFileSpec("invalid utf8")},
+				Out: []interface{}{
+					"Рад",
+					bwerr.From(
+						"utf-8 encoding <ansiVal>%#v<ansi> is invalid at pos <ansiPath>%d<ansi> of file <ansiPath>%s",
+						5, 2, getTestFileSpec("invalid utf8"),
+					),
+				},
+			},
+			"non existent": {
+				In: []interface{}{getTestFileSpec("non existent")},
+				Out: []interface{}{
+					"",
+					bwerr.From(
+						"open %s: no such file or directory",
+						getTestFileSpec("non existent"),
+					),
+				},
 			},
 		},
-		"newline": {
-			In: []interface{}{getTestFileSpec("newline")},
-			Out: []interface{}{
-				"Радость",
-				nil,
-			},
-		},
-		"invalid utf8": {
-			In: []interface{}{getTestFileSpec("invalid utf8")},
-			Out: []interface{}{
-				"Рад",
-				bwerr.From(
-					"utf-8 encoding <ansiVal>%#v<ansi> is invalid at pos <ansiPath>%d<ansi> of file <ansiPath>%s",
-					5, 2, getTestFileSpec("invalid utf8"),
-				),
-			},
-		},
-		"non existent": {
-			In: []interface{}{getTestFileSpec("non existent")},
-			Out: []interface{}{
-				"",
-				bwerr.From(
-					"open %s: no such file or directory",
-					getTestFileSpec("non existent"),
-				),
-			},
-		},
-	}
-	testsToRun := tests
-	bwmap.CropMap(testsToRun)
-	// bwmap.CropMap(testsToRun, "[qw/one two three/]")
-	bwtesting.BwRunTests(t, getFirstLine, testsToRun)
+	)
 }
