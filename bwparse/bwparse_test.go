@@ -8,6 +8,7 @@ import (
 	"github.com/baza-winner/bwcore/bw"
 	"github.com/baza-winner/bwcore/bwerr"
 	"github.com/baza-winner/bwcore/bwjson"
+	"github.com/baza-winner/bwcore/bwmap"
 	"github.com/baza-winner/bwcore/bwparse"
 	"github.com/baza-winner/bwcore/bwrune"
 	"github.com/baza-winner/bwcore/bwset"
@@ -355,33 +356,40 @@ func TestOptEvents(t *testing.T) {
 				result = []eventLogItem{}
 				var val interface{}
 				if val, st = bwparse.Val(p, bwparse.Opt{
+					KindSet: bwtype.ValKindSetFrom(bwtype.ValOrderedMap), ExcludeKinds: true,
 					Path: base,
-					OnValidateMapKey: func(on bwparse.On, m map[string]interface{}, key string) (err error) {
+					OnValidateMapKey: func(on bwparse.On, m bwmap.I, key string) (err error) {
 						result = append(result, eventLogItem{on.Opt.Path.String(), key, "OnValidateMapKey", on.Start.Suffix()})
 						return
 					},
-					OnParseMapElem: func(on bwparse.On, m map[string]interface{}, key string) (status bwparse.Status) {
+					OnParseMapElem: func(on bwparse.On, m bwmap.I, key string) (status bwparse.Status) {
 						var val interface{}
 						var kindSet bwtype.ValKindSet
+						var excludeKinds bool
 						var pathStr string
 						switch pathStr = on.Opt.Path.String(); pathStr {
 						case "enum.0.keys.int":
 							kindSet = bwtype.ValKindSetFrom(bwtype.ValInt)
 						case "enum.0.keys.uint":
 							kindSet = bwtype.ValKindSetFrom(bwtype.ValUint)
+						default:
+							kindSet = bwtype.ValKindSetFrom(bwtype.ValOrderedMap)
+							excludeKinds = true
 						}
 						origKindSet := on.Opt.KindSet
+						origExcludeKinds := on.Opt.ExcludeKinds
 						on.Opt.KindSet = kindSet
+						on.Opt.ExcludeKinds = excludeKinds
 						// bwdebug.Print("pathStr", pathStr, "on.Opt.KindSet:s", on.Opt.KindSet)
-						defer func() { on.Opt.KindSet = origKindSet }()
+						defer func() { on.Opt.KindSet = origKindSet; on.Opt.ExcludeKinds = origExcludeKinds }()
 						if val, status = bwparse.Val(on.P, *on.Opt); status.IsOK() {
 							// bwdebug.Print("on.Start:json", on.Start)
 							result = append(result, eventLogItem{pathStr, val, "OnParseMapElem", status.Start.Suffix()})
-							m[key] = val
+							m.Set(key, val)
 						}
 						return
 					},
-					OnValidateMap: func(on bwparse.On, m map[string]interface{}) (err error) {
+					OnValidateMap: func(on bwparse.On, m bwmap.I) (err error) {
 						result = append(result, eventLogItem{on.Opt.Path.String(), m, "OnValidateMap", on.Start.Suffix()})
 						return
 					},
@@ -484,7 +492,7 @@ func TestOptEvents(t *testing.T) {
 
 						{"enum.0.keys", "number", "OnValidateMapKey", `number`},
 						{"enum.0.keys.number", bwtype.MustNumberFrom(273), "OnValidateNumber", `273`},
-						{"enum.0.keys.number", bwtype.MustNumberFrom(273), "OnParseMapElem", `273`},
+						{"enum.0.keys.number", 273, "OnParseMapElem", `273`},
 
 						{"enum.0.keys", "range", "OnValidateMapKey", `range`},
 						{"enum.0.keys.range", bwtype.MustRangeFrom(bwtype.A{Min: 1, Max: 1000}), "OnValidateRange", `1..1000`},
@@ -503,8 +511,8 @@ func TestOptEvents(t *testing.T) {
 						{"enum.0.keys.path", bwparse.MustPathFrom("some"), "OnParseMapElem", `{{some}}`},
 
 						{"enum.0.keys",
-							map[string]interface{}{
-								"number": bwtype.MustNumberFrom(273),
+							bwmap.M{
+								"number": 273,
 								"range":  bwtype.MustRangeFrom(bwtype.A{Min: 1, Max: 1000}),
 								"int":    -100,
 								"uint":   uint(100),
@@ -515,7 +523,7 @@ func TestOptEvents(t *testing.T) {
 						},
 						{"enum.0.keys",
 							map[string]interface{}{
-								"number": bwtype.MustNumberFrom(273),
+								"number": 273,
 								"range":  bwtype.MustRangeFrom(bwtype.A{Min: 1, Max: 1000}),
 								"int":    -100,
 								"uint":   uint(100),
@@ -526,9 +534,9 @@ func TestOptEvents(t *testing.T) {
 						},
 
 						{"enum.0",
-							map[string]interface{}{
+							bwmap.M{
 								"keys": map[string]interface{}{
-									"number": bwtype.MustNumberFrom(273),
+									"number": 273,
 									"range":  bwtype.MustRangeFrom(bwtype.A{Min: 1, Max: 1000}),
 									"int":    -100,
 									"uint":   uint(100),
@@ -541,7 +549,7 @@ func TestOptEvents(t *testing.T) {
 						{"enum.0",
 							map[string]interface{}{
 								"keys": map[string]interface{}{
-									"number": bwtype.MustNumberFrom(273),
+									"number": 273,
 									"range":  bwtype.MustRangeFrom(bwtype.A{Min: 1, Max: 1000}),
 									"int":    -100,
 									"uint":   uint(100),
@@ -558,7 +566,7 @@ func TestOptEvents(t *testing.T) {
 						{"enum", []interface{}{
 							map[string]interface{}{
 								"keys": map[string]interface{}{
-									"number": bwtype.MustNumberFrom(273),
+									"number": 273,
 									"range":  bwtype.MustRangeFrom(bwtype.A{Min: 1, Max: 1000}),
 									"int":    -100,
 									"uint":   uint(100),
@@ -572,7 +580,7 @@ func TestOptEvents(t *testing.T) {
 						{"enum", []interface{}{
 							map[string]interface{}{
 								"keys": map[string]interface{}{
-									"number": bwtype.MustNumberFrom(273),
+									"number": 273,
 									"range":  bwtype.MustRangeFrom(bwtype.A{Min: 1, Max: 1000}),
 									"int":    -100,
 									"uint":   uint(100),
@@ -585,14 +593,14 @@ func TestOptEvents(t *testing.T) {
 						},
 
 						{".",
-							map[string]interface{}{
+							bwmap.M{
 								"some": "thing",
 								"not":  "bad",
 								"type": []interface{}{"Bool", "Int"},
 								"enum": []interface{}{
 									map[string]interface{}{
 										"keys": map[string]interface{}{
-											"number": bwtype.MustNumberFrom(273),
+											"number": 273,
 											"range":  bwtype.MustRangeFrom(bwtype.A{Min: 1, Max: 1000}),
 											"int":    -100,
 											"uint":   uint(100),
@@ -613,7 +621,7 @@ func TestOptEvents(t *testing.T) {
 								"enum": []interface{}{
 									map[string]interface{}{
 										"keys": map[string]interface{}{
-											"number": bwtype.MustNumberFrom(273),
+											"number": 273,
 											"range":  bwtype.MustRangeFrom(bwtype.A{Min: 1, Max: 1000}),
 											"int":    -100,
 											"uint":   uint(100),
@@ -724,12 +732,19 @@ func TestVal(t *testing.T) {
 				{in: `<a b c>`, out: []interface{}{"a", "b", "c"}},
 				{in: `[<a b c>]`, out: []interface{}{"a", "b", "c"}},
 				{in: `["x" <a b c> "z"]`, out: []interface{}{"x", "a", "b", "c", "z"}},
-				{in: `{ key "value" bool true }`, out: map[string]interface{}{
-					"key":  "value",
-					"bool": true,
-				}},
+				{
+					in:  `{ key "value" bool true }`,
+					opt: bwparse.Opt{KindSet: bwtype.ValKindSetFrom(bwtype.ValOrderedMap), ExcludeKinds: true},
+					out: map[string]interface{}{
+						"key":  "value",
+						"bool": true,
+					},
+				},
 				{in: `{ key => "\"value\n", 'bool': true keyword Bool}`,
-					opt: bwparse.Opt{IdVals: map[string]interface{}{"Bool": "Bool"}},
+					opt: bwparse.Opt{
+						KindSet: bwtype.ValKindSetFrom(bwtype.ValOrderedMap), ExcludeKinds: true,
+						IdVals: map[string]interface{}{"Bool": "Bool"},
+					},
 					out: map[string]interface{}{
 						"key":     "\"value\n",
 						"bool":    true,
@@ -737,32 +752,59 @@ func TestVal(t *testing.T) {
 					}},
 				{in: `[ qw/a b c/ qw{ d e f} qw(g i j ) qw<h k l> qw[ m n ogo ]]`, out: []interface{}{"a", "b", "c", "d", "e", "f", "g", "i", "j", "h", "k", "l", "m", "n", "ogo"}},
 				{in: `{{$a}}`, out: bw.ValPath{{Type: bw.ValPathItemVar, Key: "a"}}},
-				{in: `{ some {{ $a }} }`, out: map[string]interface{}{
-					"some": bw.ValPath{{Type: bw.ValPathItemVar, Key: "a"}},
-				}},
-				{in: `{ some $a.thing }`, out: map[string]interface{}{
-					"some": bw.ValPath{
-						{Type: bw.ValPathItemVar, Key: "a"},
-						{Type: bw.ValPathItemKey, Key: "thing"},
+				{
+					in:  `{ some {{ $a }} }`,
+					opt: bwparse.Opt{KindSet: bwtype.ValKindSetFrom(bwtype.ValOrderedMap), ExcludeKinds: true},
+					out: map[string]interface{}{
+						"some": bw.ValPath{{Type: bw.ValPathItemVar, Key: "a"}},
 					},
-				}},
-				{in: `{ some: {} }`, out: map[string]interface{}{
-					"some": map[string]interface{}{},
-				}},
-				{in: `{ some: [] }`, out: map[string]interface{}{
-					"some": []interface{}{},
-				}},
-				{in: `{ some: /* comment */ [] }`, out: map[string]interface{}{
-					"some": []interface{}{},
-				}},
-
-				{in: `{ some: // comment
-					[] }`, out: map[string]interface{}{
-					"some": []interface{}{},
-				}},
-				{in: `{ some: <> }`, out: map[string]interface{}{
-					"some": []interface{}{},
-				}},
+				},
+				{
+					in:  `{ some $a.thing }`,
+					opt: bwparse.Opt{KindSet: bwtype.ValKindSetFrom(bwtype.ValOrderedMap), ExcludeKinds: true},
+					out: map[string]interface{}{
+						"some": bw.ValPath{
+							{Type: bw.ValPathItemVar, Key: "a"},
+							{Type: bw.ValPathItemKey, Key: "thing"},
+						},
+					},
+				},
+				{
+					in:  `{ some: {} }`,
+					opt: bwparse.Opt{KindSet: bwtype.ValKindSetFrom(bwtype.ValOrderedMap), ExcludeKinds: true},
+					out: map[string]interface{}{
+						"some": map[string]interface{}{},
+					},
+				},
+				{
+					in:  `{ some: [] }`,
+					opt: bwparse.Opt{KindSet: bwtype.ValKindSetFrom(bwtype.ValOrderedMap), ExcludeKinds: true},
+					out: map[string]interface{}{
+						"some": []interface{}{},
+					},
+				},
+				{
+					in:  `{ some: /* comment */ [] }`,
+					opt: bwparse.Opt{KindSet: bwtype.ValKindSetFrom(bwtype.ValOrderedMap), ExcludeKinds: true},
+					out: map[string]interface{}{
+						"some": []interface{}{},
+					},
+				},
+				{
+					in: `{ some: // comment
+					[] }`,
+					opt: bwparse.Opt{KindSet: bwtype.ValKindSetFrom(bwtype.ValOrderedMap), ExcludeKinds: true},
+					out: map[string]interface{}{
+						"some": []interface{}{},
+					},
+				},
+				{
+					in:  `{ some: <> }`,
+					opt: bwparse.Opt{KindSet: bwtype.ValKindSetFrom(bwtype.ValOrderedMap), ExcludeKinds: true},
+					out: map[string]interface{}{
+						"some": []interface{}{},
+					},
+				},
 				{in: "$idx.3", out: bw.ValPath{
 					bw.ValPathItem{Type: bw.ValPathItemVar, Key: "idx"},
 					bw.ValPathItem{Type: bw.ValPathItemIdx, Idx: 3},
@@ -980,6 +1022,11 @@ func TestVal(t *testing.T) {
 			}
 			return tests
 		}(),
+		// `{ some {{ $a }} }`,
+		// `{ key => "\"value\n", 'bool': true keyword Bool}`,
+		// `{ some: // comment
+		// 			[] }`,
+		// `{ key "value" bool true }`,
 		// `<a b c>`,
 	)
 }

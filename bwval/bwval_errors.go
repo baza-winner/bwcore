@@ -69,6 +69,10 @@ func (v Holder) hasNoKeyError(key string) error {
 // ============================================================================
 
 func (v Holder) notOfValKindError(vk bwtype.ValKindSet) (result error) {
+	if vk.Has(bwtype.ValMapIntf) {
+		vk.Del(bwtype.ValMapIntf)
+		vk.Add(bwtype.ValMap, bwtype.ValOrderedMap)
+	}
 	vks := vk.ToSlice()
 	expectedTypes := ""
 	for i, elem := range vks {

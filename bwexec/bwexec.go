@@ -97,7 +97,7 @@ func Cmd(a A, optOpt ...interface{}) (result CmdResult, err error) {
 	optCaptureStderr := hOpt.MustPathStr("captureStderr").MustBool()
 	optCaptureOutput := hOpt.MustPathStr("captureOutput").MustBool()
 	optVerbosity := hOpt.MustPathStr("verbosity").MustString()
-	optWorkDir := hOpt.MustPathStr("workDir?").MustString("")
+	optWorkDir := hOpt.MustPathStr("workDir?").MustString()
 	var pwd string
 	if optWorkDir != "" {
 		if pwd, err = os.Getwd(); err != nil {

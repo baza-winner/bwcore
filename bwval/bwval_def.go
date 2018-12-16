@@ -176,7 +176,7 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 	if val, status = bwparse.Val(p, setForType(bwparse.Opt{
 		ValFalse: true,
 		KindSet:  bwtype.ValKindSetFrom(bwtype.ValMap),
-		OnValidateMapKey: func(on bwparse.On, m map[string]interface{}, key string) (err error) {
+		OnValidateMapKey: func(on bwparse.On, m bwmap.I, key string) (err error) {
 			if !validKeys.Has(key) {
 				err = p.Error(bwparse.E{
 					Start: on.Start,
@@ -207,7 +207,7 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 			}
 			return
 		},
-		OnParseMapElem: func(on bwparse.On, m map[string]interface{}, key string) (status bwparse.Status) {
+		OnParseMapElem: func(on bwparse.On, m bwmap.I, key string) (status bwparse.Status) {
 			switch key {
 			case "type":
 				if _, status = bwparse.Val(p, setForType(bwparse.Opt{KindSet: bwtype.ValKindSet{}})); status.IsOK() {
@@ -289,14 +289,14 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 				}
 			case "keys":
 				if _, status = bwparse.Map(p, bwparse.Opt{
-					OnParseMapElem: func(on bwparse.On, m map[string]interface{}, key string) (status bwparse.Status) {
+					OnParseMapElem: func(on bwparse.On, m bwmap.I, key string) (status bwparse.Status) {
 						if result.Keys == nil {
 							result.Keys = map[string]Def{}
 						}
 						var def *Def
 						if def, status = ParseDef(p, base.AppendKey(key)); status.IsOK() {
 							result.Keys[key] = *def
-							m[key] = nil
+							m.Set(key, nil)
 						} else if status.Err == nil {
 							status.Err = bwparse.Expects(p, nil, "<ansiType>Def<ansi>")
 						}
@@ -325,7 +325,7 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 					result.IsOptional = true
 				}
 			}
-			m[key] = nil
+			m.Set(key, nil)
 			return
 		},
 	})); status.IsOK() {
@@ -352,8 +352,8 @@ func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (res
 	opt.KindSet.AddSet(def.Types)
 	// bwdebug.Print("def.Types:json", def.Types)
 
-	if opt.KindSet.Has(bwtype.ValMap) {
-		opt.OnValidateMapKey = func(on bwparse.On, m map[string]interface{}, key string) (err error) {
+	if opt.KindSet.Has(bwtype.ValMap) || opt.KindSet.Has(bwtype.ValOrderedMap) {
+		opt.OnValidateMapKey = func(on bwparse.On, m bwmap.I, key string) (err error) {
 			if def.Elem == nil && def.Keys != nil {
 				if _, ok := def.Keys[key]; !ok {
 					err = p.Error(bwparse.E{
@@ -364,40 +364,7 @@ func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (res
 			}
 			return
 		}
-		opt.OnParseMapElem = func(on bwparse.On, m map[string]interface{}, key string) (status bwparse.Status) {
-			var keyDef *Def
-			if def.Keys != nil {
-				if v, ok := def.Keys[key]; ok {
-					keyDef = &v
-				}
-			}
-			if keyDef == nil {
-				keyDef = def.Elem
-			}
-			if keyDef == nil {
-				keyDef = &Def{Types: defSupportedTypes}
-			}
-			var val interface{}
-			if val, status = parseValByDef(p, *keyDef, base.AppendKey(key), skipArrayOf); status.IsOK() {
-				m[key] = val
-			}
-			return
-		}
-	}
-
-	if opt.KindSet.Has(bwtype.ValOrderedMap) {
-		opt.OnValidateOrderedMapKey = func(on bwparse.On, m *bwmap.Ordered, key string) (err error) {
-			if def.Elem == nil && def.Keys != nil {
-				if _, ok := def.Keys[key]; !ok {
-					err = p.Error(bwparse.E{
-						Start: on.Start,
-						Fmt:   bw.Fmt(ansi.String("unexpected key `<ansiErr>%s<ansi>`"), on.Start.Suffix()),
-					})
-				}
-			}
-			return
-		}
-		opt.OnParseOrderedMapElem = func(on bwparse.On, m *bwmap.Ordered, key string) (status bwparse.Status) {
+		opt.OnParseMapElem = func(on bwparse.On, m bwmap.I, key string) (status bwparse.Status) {
 			var keyDef *Def
 			if def.Keys != nil {
 				if v, ok := def.Keys[key]; ok {
@@ -413,10 +380,44 @@ func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (res
 			var val interface{}
 			if val, status = parseValByDef(p, *keyDef, base.AppendKey(key), skipArrayOf); status.IsOK() {
 				m.Set(key, val)
+				// m[key] = val
 			}
 			return
 		}
 	}
+
+	// if opt.KindSet.Has(bwtype.ValOrderedMap) {
+	// 	opt.OnValidateeredMapKey = func(on bwparse.On, m *bwmap.Ordered, key string) (err error) {
+	// 		if def.Elem == nil && def.Keys != nil {
+	// 			if _, ok := def.Keys[key]; !ok {
+	// 				err = p.Error(bwparse.E{
+	// 					Start: on.Start,
+	// 					Fmt:   bw.Fmt(ansi.String("unexpected key `<ansiErr>%s<ansi>`"), on.Start.Suffix()),
+	// 				})
+	// 			}
+	// 		}
+	// 		return
+	// 	}
+	// 	opt.OnParseOrderedMapElem = func(on bwparse.On, m *bwmap.Ordered, key string) (status bwparse.Status) {
+	// 		var keyDef *Def
+	// 		if def.Keys != nil {
+	// 			if v, ok := def.Keys[key]; ok {
+	// 				keyDef = &v
+	// 			}
+	// 		}
+	// 		if keyDef == nil {
+	// 			keyDef = def.Elem
+	// 		}
+	// 		if keyDef == nil {
+	// 			keyDef = &Def{Types: defSupportedTypes}
+	// 		}
+	// 		var val interface{}
+	// 		if val, status = parseValByDef(p, *keyDef, base.AppendKey(key), skipArrayOf); status.IsOK() {
+	// 			m.Set(key, val)
+	// 		}
+	// 		return
+	// 	}
+	// }
 
 	if hasArray := opt.KindSet.Has(bwtype.ValArray); hasArray || !skipArrayOf && def.IsArrayOf {
 		elemDef := func() Def {

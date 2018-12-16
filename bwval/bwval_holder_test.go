@@ -2,12 +2,14 @@ package bwval_test
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/baza-winner/bwcore/ansi"
 	"github.com/baza-winner/bwcore/bw"
 	"github.com/baza-winner/bwcore/bwerr"
 	"github.com/baza-winner/bwcore/bwjson"
+	"github.com/baza-winner/bwcore/bwmap"
 	"github.com/baza-winner/bwcore/bwparse"
 	"github.com/baza-winner/bwcore/bwrune"
 	"github.com/baza-winner/bwcore/bwset"
@@ -79,7 +81,7 @@ func TestHolderMustSetKeyVal(t *testing.T) {
 						bwval.Holder{Val: nil, Pth: bwval.MustPath(bwval.PathS{S: "1.some"})},
 						"thing", "good",
 					},
-					Panic: "\x1b[38;5;252;1m1.some\x1b[0m (\x1b[96;1mnull\x1b[0m)\x1b[0m is not \x1b[97;1mMapIntf\x1b[0m",
+					Panic: "\x1b[38;5;252;1m1.some\x1b[0m (\x1b[96;1mnull\x1b[0m)\x1b[0m neither \x1b[97;1mMap\x1b[0m nor \x1b[97;1mOrderedMap\x1b[0m",
 				},
 			}
 			return tests
@@ -241,49 +243,93 @@ func TestHolderMarshalJSON(t *testing.T) {
 
 func TestHolderMustBool(t *testing.T) {
 	bwtesting.BwRunTests(t,
-		"MustBool",
+		func(h bwval.Holder, optDefault ...interface{}) bool {
+			var opt []func() bool
+			fn := h.MustBool
+			if len(optDefault) > 0 {
+				if d, ok := optDefault[0].(bool); ok {
+					opt = append(opt, func() bool { return d })
+				} else {
+					opt = append(opt, nil)
+				}
+			}
+			return fn(opt...)
+		},
 		map[string]bwtesting.Case{
 			"true": {
-				V:   bwval.Holder{Val: true},
+				In:  []interface{}{bwval.Holder{Val: true}},
 				Out: []interface{}{true},
 			},
 			"false": {
-				V:   bwval.Holder{Val: false},
+				In:  []interface{}{bwval.Holder{Val: false}},
 				Out: []interface{}{false},
 			},
-			"non Bool, but true by default": {
-				V:   bwval.Holder{Val: "s"},
-				In:  []interface{}{true},
+			"nil, has no default": {
+				In:  []interface{}{bwval.Holder{Val: nil}},
+				Out: []interface{}{false},
+			},
+			"nil, has non nil default": {
+				In:  []interface{}{bwval.Holder{Val: nil}, true},
 				Out: []interface{}{true},
 			},
-			"non Bool, but false by default": {
-				V:   bwval.Holder{Val: "s"},
-				In:  []interface{}{false},
-				Out: []interface{}{false},
+			"nil, has nil default": {
+				In:    []interface{}{bwval.Holder{Val: nil}, nil},
+				Panic: "\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1mnull\x1b[0m)\x1b[0m is not \x1b[97;1mBool\x1b[0m",
 			},
-			"non Bool, no default": {
-				V:     bwval.Holder{Val: "s", Pth: bwval.MustPath(bwval.PathS{S: "some.1.boolKey"})},
-				Panic: "\x1b[38;5;252;1msome.1.boolKey\x1b[0m (\x1b[96;1m\"s\"\x1b[0m)\x1b[0m is not \x1b[97;1mBool\x1b[0m",
+			"273": {
+				In:    []interface{}{bwval.Holder{Val: "s", Pth: bwval.MustPath(bwval.PathS{S: "some.1.boolKey"})}},
+				Panic: "\x1b[38;5;252;1msome.1.boolKey\x1b[0m (\x1b[96;1m\"s\"\x1b[0m)\x1b[0m neither \x1b[97;1mBool\x1b[0m nor \x1b[97;1mNil\x1b[0m",
 			},
 		},
 	)
 }
 
 func TestHolderMustString(t *testing.T) {
-	bwtesting.BwRunTests(t, "MustString",
+	bwtesting.BwRunTests(t,
+		func(h bwval.Holder, optDefault ...interface{}) string {
+			var opt []func() string
+			fn := h.MustString
+			if len(optDefault) > 0 {
+				if d, ok := optDefault[0].(string); ok {
+					opt = append(opt, func() string { return d })
+				} else {
+					opt = append(opt, nil)
+				}
+			}
+			return fn(opt...)
+		},
 		map[string]bwtesting.Case{
 			"String": {
-				V:   bwval.Holder{Val: "value"},
+				In: []interface{}{
+					bwval.Holder{Val: "value"},
+				},
 				Out: []interface{}{"value"},
 			},
-			"non String, but has default": {
-				V:   bwval.Holder{Val: true},
-				In:  []interface{}{"good"},
+			"nil, has no default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+				},
+				Out: []interface{}{""},
+			},
+			"nil, has non nil default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+					"good",
+				},
 				Out: []interface{}{"good"},
 			},
-			"non String": {
-				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
-				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m is not \x1b[97;1mString\x1b[0m",
+			"nil, has nil default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+					nil,
+				},
+				Panic: "\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1mnull\x1b[0m)\x1b[0m is not \x1b[97;1mString\x1b[0m",
+			},
+			"true": {
+				In: []interface{}{
+					bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
+				},
+				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m neither \x1b[97;1mString\x1b[0m nor \x1b[97;1mNil\x1b[0m",
 			},
 		},
 	)
@@ -291,41 +337,72 @@ func TestHolderMustString(t *testing.T) {
 
 func TestHolderMustInt(t *testing.T) {
 	bwtesting.BwRunTests(t,
-		"MustInt",
+		func(h bwval.Holder, optDefault ...interface{}) int {
+			var opt []func() int
+			fn := h.MustInt
+			if len(optDefault) > 0 {
+				if d, ok := optDefault[0].(int); ok {
+					opt = append(opt, func() int { return d })
+				} else {
+					opt = append(opt, nil)
+				}
+			}
+			return fn(opt...)
+		},
 		map[string]bwtesting.Case{
 			"-273": {
-				V:   bwval.Holder{Val: -273},
+				In:  []interface{}{bwval.Holder{Val: -273}},
 				Out: []interface{}{-273},
 			},
 			"273": {
-				V:   bwval.Holder{Val: 273},
+				In:  []interface{}{bwval.Holder{Val: 273}},
 				Out: []interface{}{273},
 			},
 			"float64(273)": {
-				V:   bwval.Holder{Val: float64(273)},
+				In:  []interface{}{bwval.Holder{Val: float64(273)}},
 				Out: []interface{}{273},
 			},
 			"bwtype.MustNumberFrom(float64(273))": {
-				V:   bwval.Holder{Val: bwtype.MustNumberFrom(float64(273))},
+				In:  []interface{}{bwval.Holder{Val: bwtype.MustNumberFrom(float64(273))}},
 				Out: []interface{}{273},
 			},
 			"non Int: bwtype.MustNumberFrom(bw.MaxUint)": {
-				V:     bwval.Holder{Val: bwtype.MustNumberFrom(bw.MaxUint), Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
-				Panic: fmt.Sprintf("\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1m%d\x1b[0m)\x1b[0m is not \x1b[97;1mInt\x1b[0m", bw.MaxUint),
+				In: []interface{}{
+					bwval.Holder{Val: bwtype.MustNumberFrom(bw.MaxUint), Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
+				},
+				Panic: fmt.Sprintf("\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1m%d\x1b[0m)\x1b[0m neither \x1b[97;1mInt\x1b[0m nor \x1b[97;1mNil\x1b[0m", bw.MaxUint),
 			},
 			"non Int: bwtype.MustNumberFrom(bw.MaxUint), but has default": {
-				V:   bwval.Holder{Val: bwtype.MustNumberFrom(bw.MaxUint)},
-				In:  []interface{}{273},
-				Out: []interface{}{273},
+				In:    []interface{}{bwval.Holder{Val: bwtype.MustNumberFrom(bw.MaxUint)}, 273},
+				Panic: "\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1m18446744073709551615\x1b[0m)\x1b[0m neither \x1b[97;1mInt\x1b[0m nor \x1b[97;1mNil\x1b[0m",
 			},
 			"non Int: true": {
-				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
-				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m is not \x1b[97;1mInt\x1b[0m",
+				In:    []interface{}{bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})}},
+				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m neither \x1b[97;1mInt\x1b[0m nor \x1b[97;1mNil\x1b[0m",
 			},
 			"non Int: true, but has default": {
-				V:   bwval.Holder{Val: true},
-				In:  []interface{}{273},
+				In:    []interface{}{bwval.Holder{Val: true}, 273},
+				Panic: "\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m neither \x1b[97;1mInt\x1b[0m nor \x1b[97;1mNil\x1b[0m",
+			},
+			"nil, has no default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+				},
+				Out: []interface{}{0},
+			},
+			"nil, has non nil default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+					273,
+				},
 				Out: []interface{}{273},
+			},
+			"nil, has nil default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+					nil,
+				},
+				Panic: "\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1mnull\x1b[0m)\x1b[0m is not \x1b[97;1mInt\x1b[0m",
 			},
 		},
 	)
@@ -333,112 +410,246 @@ func TestHolderMustInt(t *testing.T) {
 
 func TestHolderMustUint(t *testing.T) {
 	bwtesting.BwRunTests(t,
-		"MustUint",
+		func(h bwval.Holder, optDefault ...interface{}) uint {
+			var opt []func() uint
+			fn := h.MustUint
+			if len(optDefault) > 0 {
+				if d, ok := optDefault[0].(uint); ok {
+					opt = append(opt, func() uint { return d })
+				} else {
+					opt = append(opt, nil)
+				}
+			}
+			return fn(opt...)
+		},
 		map[string]bwtesting.Case{
 			"273": {
-				V:   bwval.Holder{Val: 273},
+				In:  []interface{}{bwval.Holder{Val: 273}},
 				Out: []interface{}{uint(273)},
 			},
 			"float64(273)": {
-				V:   bwval.Holder{Val: float64(273)},
+				In:  []interface{}{bwval.Holder{Val: float64(273)}},
 				Out: []interface{}{uint(273)},
 			},
 			"bwtype.MustNumberFrom(float64(273))": {
-				V:   bwval.Holder{Val: bwtype.MustNumberFrom(float64(273))},
+				In:  []interface{}{bwval.Holder{Val: bwtype.MustNumberFrom(float64(273))}},
 				Out: []interface{}{uint(273)},
 			},
 			"non Uint: bwtype.MustNumberFrom(float64(-273))": {
-				V:     bwval.Holder{Val: bwtype.MustNumberFrom(float64(-273)), Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
-				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1m-273\x1b[0m)\x1b[0m is not \x1b[97;1mUint\x1b[0m",
+				In:    []interface{}{bwval.Holder{Val: bwtype.MustNumberFrom(float64(-273)), Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})}},
+				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1m-273\x1b[0m)\x1b[0m neither \x1b[97;1mUint\x1b[0m nor \x1b[97;1mNil\x1b[0m",
 			},
 			"non Uint: true": {
-				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
-				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m is not \x1b[97;1mUint\x1b[0m",
+				In:    []interface{}{bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})}},
+				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m neither \x1b[97;1mUint\x1b[0m nor \x1b[97;1mNil\x1b[0m",
 			},
 			"non Uint: bwtype.MustNumberFrom(float64(-273)), but has default": {
-				V:   bwval.Holder{Val: bwtype.MustNumberFrom(float64(-273))},
-				In:  []interface{}{uint(273)},
-				Out: []interface{}{uint(273)},
+				In:    []interface{}{bwval.Holder{Val: bwtype.MustNumberFrom(float64(-273))}, uint(273)},
+				Panic: "\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1m-273\x1b[0m)\x1b[0m neither \x1b[97;1mUint\x1b[0m nor \x1b[97;1mNil\x1b[0m",
 			},
 			"non Uint: true, but has default": {
-				V:   bwval.Holder{Val: true},
-				In:  []interface{}{uint(273)},
+				In:    []interface{}{bwval.Holder{Val: true}, uint(273)},
+				Panic: "\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m neither \x1b[97;1mUint\x1b[0m nor \x1b[97;1mNil\x1b[0m",
+			},
+			"nil, has no default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+				},
+				Out: []interface{}{uint(0)},
+			},
+			"nil, has non nil default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+					uint(273),
+				},
 				Out: []interface{}{uint(273)},
+			},
+			"nil, has nil default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+					nil,
+				},
+				Panic: "\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1mnull\x1b[0m)\x1b[0m is not \x1b[97;1mUint\x1b[0m",
 			},
 		},
 	)
 }
 
 func TestHolderMustFloat64(t *testing.T) {
-	bwtesting.BwRunTests(t, "MustFloat64",
+	bwtesting.BwRunTests(t,
+		func(h bwval.Holder, optDefault ...interface{}) float64 {
+			var opt []func() float64
+			fn := h.MustFloat64
+			if len(optDefault) > 0 {
+				if d, ok := optDefault[0].(float64); ok {
+					opt = append(opt, func() float64 { return d })
+				} else {
+					opt = append(opt, nil)
+				}
+			}
+			return fn(opt...)
+		},
 		map[string]bwtesting.Case{
 			"273": {
-				V:   bwval.Holder{Val: 273},
+				In:  []interface{}{bwval.Holder{Val: 273}},
 				Out: []interface{}{float64(273)},
 			},
 			"uint(273)": {
-				V:   bwval.Holder{Val: uint(273)},
+				In:  []interface{}{bwval.Holder{Val: uint(273)}},
 				Out: []interface{}{float64(273)},
 			},
 			"float32(273)": {
-				V:   bwval.Holder{Val: float32(273)},
+				In:  []interface{}{bwval.Holder{Val: float32(273)}},
 				Out: []interface{}{float64(273)},
 			},
 			"float64(273)": {
-				V:   bwval.Holder{Val: float64(273)},
+				In:  []interface{}{bwval.Holder{Val: float64(273)}},
 				Out: []interface{}{float64(273)},
 			},
 			"non Float64": {
-				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
-				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m is not \x1b[97;1mFloat64\x1b[0m",
+				In:    []interface{}{bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})}},
+				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m neither \x1b[97;1mFloat64\x1b[0m nor \x1b[97;1mNil\x1b[0m",
 			},
 			"non Float64, but has default": {
-				V:   bwval.Holder{Val: true},
-				In:  []interface{}{float64(273)},
+				In:    []interface{}{bwval.Holder{Val: true}, float64(273)},
+				Panic: "\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m neither \x1b[97;1mFloat64\x1b[0m nor \x1b[97;1mNil\x1b[0m",
+			},
+			"nil, has no default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+				},
+				Out: []interface{}{float64(0)},
+			},
+			"nil, has non nil default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+					float64(273),
+				},
 				Out: []interface{}{float64(273)},
+			},
+			"nil, has nil default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+					nil,
+				},
+				Panic: "\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1mnull\x1b[0m)\x1b[0m is not \x1b[97;1mFloat64\x1b[0m",
 			},
 		},
 	)
 }
 
 func TestHolderMustArray(t *testing.T) {
-	bwtesting.BwRunTests(t, "MustArray",
+	bwtesting.BwRunTests(t,
+		func(h bwval.Holder, optDefault ...interface{}) []interface{} {
+			var opt []func() []interface{}
+			fn := h.MustArray
+			if len(optDefault) > 0 {
+				if d, ok := optDefault[0].([]interface{}); ok && !reflect.ValueOf(optDefault[0]).IsNil() {
+					opt = append(opt, func() []interface{} { return d })
+				} else {
+					opt = append(opt, nil)
+				}
+			}
+			return fn(opt...)
+		},
 		map[string]bwtesting.Case{
 			"[0 1]": {
-				V:   bwval.Holder{Val: []interface{}{0, 1}},
+				In:  []interface{}{bwval.Holder{Val: []interface{}{0, 1}}},
 				Out: []interface{}{[]interface{}{0, 1}},
 			},
 			"<some thing>": {
-				V:   bwval.Holder{Val: []string{"some", "thing"}},
+				In:  []interface{}{bwval.Holder{Val: []string{"some", "thing"}}},
 				Out: []interface{}{[]interface{}{"some", "thing"}},
 			},
 			"non Array": {
-				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
-				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m is not \x1b[97;1mArray\x1b[0m",
+				In:    []interface{}{bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})}},
+				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m neither \x1b[97;1mArray\x1b[0m nor \x1b[97;1mNil\x1b[0m",
 			},
 			"non Array, but has default": {
-				V:   bwval.Holder{Val: true},
-				In:  []interface{}{[]interface{}{}},
+				In:    []interface{}{bwval.Holder{Val: true}, []interface{}{}},
+				Panic: "\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m neither \x1b[97;1mArray\x1b[0m nor \x1b[97;1mNil\x1b[0m",
+			},
+			"nil, has no default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+				},
 				Out: []interface{}{[]interface{}{}},
 			},
+			"nil, has non nil default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+					[]interface{}{float64(273)},
+				},
+				Out: []interface{}{[]interface{}{float64(273)}},
+			},
+			"nil, has nil default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+					nil,
+				},
+				Panic: "\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1mnull\x1b[0m)\x1b[0m is not \x1b[97;1mArray\x1b[0m",
+			},
 		},
+		// "nil, has nil default",
 	)
 }
 
 func TestHolderMustMap(t *testing.T) {
-	bwtesting.BwRunTests(t, "MustMap",
+	bwtesting.BwRunTests(t,
+		func(h bwval.Holder, optDefault ...interface{}) map[string]interface{} {
+			var opt []func() map[string]interface{}
+			fn := h.MustMap
+			if len(optDefault) > 0 {
+				if d, ok := optDefault[0].(map[string]interface{}); ok && !reflect.ValueOf(optDefault[0]).IsNil() {
+					opt = append(opt, func() map[string]interface{} { return d })
+				} else {
+					opt = append(opt, nil)
+				}
+			}
+			return fn(opt...)
+		},
 		map[string]bwtesting.Case{
+			"*bwmap.Ordered": {
+				In: []interface{}{
+					func() bwval.Holder {
+						o := bwmap.OrderedNew()
+						o.Set("a", 1)
+						return bwval.Holder{Val: o}
+					},
+				},
+				Out: []interface{}{map[string]interface{}{"a": 1}},
+			},
 			"map[string]interface{}": {
-				V:   bwval.Holder{Val: map[string]interface{}{"a": 1}},
+				In:  []interface{}{bwval.Holder{Val: map[string]interface{}{"a": 1}}},
 				Out: []interface{}{map[string]interface{}{"a": 1}},
 			},
 			"map[string]string": {
-				V:   bwval.Holder{Val: map[string]string{"a": "some"}},
+				In:  []interface{}{bwval.Holder{Val: map[string]string{"a": "some"}}},
 				Out: []interface{}{map[string]interface{}{"a": "some"}},
 			},
 			"non Map": {
-				V:     bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
-				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m is not \x1b[97;1mMap\x1b[0m",
+				In:    []interface{}{bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})}},
+				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m neither \x1b[97;1mMap\x1b[0m nor \x1b[97;1mNil\x1b[0m",
+			},
+			"nil, has no default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+				},
+				Out: []interface{}{map[string]interface{}{}},
+			},
+			"nil, has non nil default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+					map[string]interface{}{"num": float64(273)},
+				},
+				Out: []interface{}{map[string]interface{}{"num": float64(273)}},
+			},
+			"nil, has nil default": {
+				In: []interface{}{
+					bwval.Holder{Val: nil},
+					nil,
+				},
+				Panic: "\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1mnull\x1b[0m)\x1b[0m is not \x1b[97;1mMap\x1b[0m",
 			},
 		},
 	)
@@ -456,7 +667,7 @@ func TestHolderValidVal(t *testing.T) {
 					bwerr.PanicErr(err)
 				}
 				bwparse.Map(p, bwparse.Opt{
-					OnValidateMapKey: func(on bwparse.On, m map[string]interface{}, key string) (err error) {
+					OnValidateMapKey: func(on bwparse.On, m bwmap.I, key string) (err error) {
 						if !bwset.StringFrom("val", "def").Has(key) {
 							err = on.P.Error(bwparse.E{
 								Start: on.Start,
@@ -465,7 +676,7 @@ func TestHolderValidVal(t *testing.T) {
 						}
 						return
 					},
-					OnParseMapElem: func(on bwparse.On, m map[string]interface{}, key string) (status bwparse.Status) {
+					OnParseMapElem: func(on bwparse.On, m bwmap.I, key string) (status bwparse.Status) {
 						switch on.Opt.Path.String() {
 						case "val":
 							var val interface{}
@@ -478,7 +689,8 @@ func TestHolderValidVal(t *testing.T) {
 								test.In = []interface{}{*def}
 							}
 						}
-						m[key] = nil
+						m.Set(key, nil)
+						// m[key] = nil
 						return
 					},
 				})

@@ -66,13 +66,17 @@ type On struct {
 type NonNegativeNumberFunc func(rangeLimitKind RangeLimitKind) bool
 type IdFunc func(on On, s string) (val interface{}, ok bool, err error)
 
-type ValidateMapKeyFunc func(on On, m map[string]interface{}, key string) (err error)
-type ParseMapElemFunc func(on On, m map[string]interface{}, key string) (status Status)
-type ValidateMapFunc func(on On, m map[string]interface{}) (err error)
+type ValidateMapKeyFunc func(on On, m bwmap.I, key string) (err error)
+type ParseMapElemFunc func(on On, m bwmap.I, key string) (status Status)
+type ValidateMapFunc func(on On, m bwmap.I) (err error)
 
-type ValidateOrderedMapKeyFunc func(on On, m *bwmap.Ordered, key string) (err error)
-type ParseOrderedMapElemFunc func(on On, m *bwmap.Ordered, key string) (status Status)
-type ValidateOrderedMapFunc func(on On, m *bwmap.Ordered) (err error)
+// type ValidateMapKeyFunc func(on On, m map[string]interface{}, key string) (err error)
+// type ParseMapElemFunc func(on On, m map[string]interface{}, key string) (status Status)
+// type ValidateMapFunc func(on On, m map[string]interface{}) (err error)
+
+// type ValidateOrderedMapKeyFunc func(on On, m *bwmap.Ordered, key string) (err error)
+// type ParseOrderedMapElemFunc func(on On, m *bwmap.Ordered, key string) (status Status)
+// type ValidateOrderedMapFunc func(on On, m *bwmap.Ordered) (err error)
 
 type ParseArrayElemFunc func(on On, vals []interface{}) (outVals []interface{}, status Status)
 type ValidateArrayFunc func(on On, vals []interface{}) (err error)
@@ -116,9 +120,9 @@ type Opt struct {
 	OnParseMapElem   ParseMapElemFunc
 	OnValidateMap    ValidateMapFunc
 
-	OnValidateOrderedMapKey ValidateOrderedMapKeyFunc
-	OnParseOrderedMapElem   ParseOrderedMapElemFunc
-	OnValidateOrderedMap    ValidateOrderedMapFunc
+	// OnValidateOrderedMapKey ValidateOrderedMapKeyFunc
+	// OnParseOrderedMapElem   ParseOrderedMapElemFunc
+	// OnValidateOrderedMap    ValidateOrderedMapFunc
 
 	OnParseArrayElem ParseArrayElemFunc
 	OnValidateArray  ValidateArrayFunc
@@ -646,6 +650,89 @@ func Map(p I, optOpt ...Opt) (result map[string]interface{}, status Status) {
 						Fmt:   bw.Fmt(ansi.String("duplicate key <ansiErr>%s<ansi>"), start.Suffix()),
 					})
 				} else {
+					err = opt.OnValidateMapKey(on, bwmap.M(result), key)
+				}
+			}
+			return
+		}
+		var st Status
+		if st = processOn(p,
+			onString{opt: opt, f: onKey},
+			onId{opt: opt, f: onKey},
+		); st.IsOK() {
+			var isSpaceSkipped bool
+			if isSpaceSkipped, st.Err = SkipSpace(p, TillNonEOF); st.Err == nil {
+
+				var isSeparatorSkipped bool
+				if SkipRunes(p, ':') {
+					isSeparatorSkipped = true
+				} else if SkipRunes(p, '=') {
+					if SkipRunes(p, '>') {
+						isSeparatorSkipped = true
+					} else {
+						return Expects(p, nil, fmt.Sprintf(ansiVal, string('>')))
+					}
+				}
+
+				if st.Err == nil {
+					if isSeparatorSkipped {
+						_, st.Err = SkipSpace(p, TillNonEOF)
+					}
+					if !(isSpaceSkipped || isSeparatorSkipped) {
+						st.Err = ExpectsSpace(p)
+					} else {
+						path[len(path)-1].Key = key
+						on.Opt.Path = path
+						on.Start = p.Start()
+						defer func() { p.Stop(on.Start) }()
+
+						st.OK = false
+						if opt.OnParseMapElem != nil {
+							st = opt.OnParseMapElem(on, bwmap.M(result), key)
+						}
+						if st.Err == nil && !st.OK {
+							result[key], st = Val(p, opt)
+						}
+					}
+				}
+			}
+		}
+		if !st.OK && st.Err == nil {
+			st.Err = Unexpected(p)
+		}
+		return st.Err
+	}); status.IsOK() {
+		if result == nil {
+			result = map[string]interface{}{}
+		}
+	}
+	return
+}
+
+// ============================================================================
+
+func OrderedMap(p I, optOpt ...Opt) (result *bwmap.Ordered, status Status) {
+	opt := getOpt(optOpt)
+	var path bw.ValPath
+	if status = parseDelimitedOptionalCommaSeparated(p, '{', '}', opt, func(on On, base bw.ValPath) error {
+		if result == nil {
+			result = bwmap.OrderedNew()
+			path = append(base, bw.ValPathItem{Type: bw.ValPathItemKey})
+		}
+		var (
+			key string
+		)
+		onKey := func(s string, start *Start) (err error) {
+			key = s
+			if opt.OnValidateMapKey != nil {
+				on.Opt.Path = base
+				on.Start = start
+				if _, b := result.Get(key); b {
+					err = p.Error(E{
+						Start: start,
+						Fmt:   bw.Fmt(ansi.String("duplicate key <ansiErr>%s<ansi>"), start.Suffix()),
+					})
+				} else {
 					err = opt.OnValidateMapKey(on, result, key)
 				}
 			}
@@ -685,89 +772,6 @@ func Map(p I, optOpt ...Opt) (result map[string]interface{}, status Status) {
 						st.OK = false
 						if opt.OnParseMapElem != nil {
 							st = opt.OnParseMapElem(on, result, key)
-						}
-						if st.Err == nil && !st.OK {
-							result[key], st = Val(p, opt)
-						}
-					}
-				}
-			}
-		}
-		if !st.OK && st.Err == nil {
-			st.Err = Unexpected(p)
-		}
-		return st.Err
-	}); status.IsOK() {
-		if result == nil {
-			result = map[string]interface{}{}
-		}
-	}
-	return
-}
-
-// ============================================================================
-
-func OrderedMap(p I, optOpt ...Opt) (result *bwmap.Ordered, status Status) {
-	opt := getOpt(optOpt)
-	var path bw.ValPath
-	if status = parseDelimitedOptionalCommaSeparated(p, '{', '}', opt, func(on On, base bw.ValPath) error {
-		if result == nil {
-			result = bwmap.OrderedNew()
-			path = append(base, bw.ValPathItem{Type: bw.ValPathItemKey})
-		}
-		var (
-			key string
-		)
-		onKey := func(s string, start *Start) (err error) {
-			key = s
-			if opt.OnValidateOrderedMapKey != nil {
-				on.Opt.Path = base
-				on.Start = start
-				if _, b := result.Get(key); b {
-					err = p.Error(E{
-						Start: start,
-						Fmt:   bw.Fmt(ansi.String("duplicate key <ansiErr>%s<ansi>"), start.Suffix()),
-					})
-				} else {
-					err = opt.OnValidateOrderedMapKey(on, result, key)
-				}
-			}
-			return
-		}
-		var st Status
-		if st = processOn(p,
-			onString{opt: opt, f: onKey},
-			onId{opt: opt, f: onKey},
-		); st.IsOK() {
-			var isSpaceSkipped bool
-			if isSpaceSkipped, st.Err = SkipSpace(p, TillNonEOF); st.Err == nil {
-
-				var isSeparatorSkipped bool
-				if SkipRunes(p, ':') {
-					isSeparatorSkipped = true
-				} else if SkipRunes(p, '=') {
-					if SkipRunes(p, '>') {
-						isSeparatorSkipped = true
-					} else {
-						return Expects(p, nil, fmt.Sprintf(ansiVal, string('>')))
-					}
-				}
-
-				if st.Err == nil {
-					if isSeparatorSkipped {
-						_, st.Err = SkipSpace(p, TillNonEOF)
-					}
-					if !(isSpaceSkipped || isSeparatorSkipped) {
-						st.Err = ExpectsSpace(p)
-					} else {
-						path[len(path)-1].Key = key
-						on.Opt.Path = path
-						on.Start = p.Start()
-						defer func() { p.Stop(on.Start) }()
-
-						st.OK = false
-						if opt.OnParseOrderedMapElem != nil {
-							st = opt.OnParseOrderedMapElem(on, result, key)
 						}
 						if st.Err == nil && !st.OK {
 							var val interface{}
@@ -1094,8 +1098,8 @@ func Val(p I, optOpt ...Opt) (result interface{}, status Status) {
 
 	if hasKind(bwtype.ValOrderedMap) {
 		onArgs = append(onArgs, onOrderedMap{opt: opt, f: func(m *bwmap.Ordered, start *Start) (err error) {
-			if opt.OnValidateOrderedMap != nil {
-				err = opt.OnValidateOrderedMap(On{p, start, &opt}, m)
+			if opt.OnValidateMap != nil {
+				err = opt.OnValidateMap(On{p, start, &opt}, m)
 			}
 			if err == nil {
 				result = m
@@ -1105,7 +1109,7 @@ func Val(p I, optOpt ...Opt) (result interface{}, status Status) {
 	} else if hasKind(bwtype.ValMap) {
 		onArgs = append(onArgs, onMap{opt: opt, f: func(m map[string]interface{}, start *Start) (err error) {
 			if opt.OnValidateMap != nil {
-				err = opt.OnValidateMap(On{p, start, &opt}, m)
+				err = opt.OnValidateMap(On{p, start, &opt}, bwmap.M(m))
 			}
 			if err == nil {
 				result = m
