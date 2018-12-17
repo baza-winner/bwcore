@@ -19,15 +19,32 @@ import (
 func ShortenFileSpec(fileSpec string) string {
 	fileSpec = filepath.Clean(fileSpec)
 	if homeDir := os.Getenv("HOME"); homeDir != "" {
-		homeDir = filepath.Clean(homeDir)
-		if homeDir[len(homeDir)-1] != '/' {
-			homeDir += string('/')
-		}
+		homeDir = AppendPathSeparator(filepath.Clean(homeDir))
 		if len(fileSpec) >= len(homeDir) && fileSpec[:len(homeDir)] == homeDir {
 			fileSpec = "~/" + fileSpec[len(homeDir):]
 		}
 	}
 	return fileSpec
+}
+
+func IsInPath(dirSpec, fileSpec string) (ok bool, err error) {
+	if dirSpec, err = filepath.Abs(dirSpec); err != nil {
+		return
+	}
+	if fileSpec, err = filepath.Abs(fileSpec); err != nil {
+		return
+	}
+	dirSpec = AppendPathSeparator(dirSpec)
+	fileSpec = AppendPathSeparator(fileSpec)
+	ok = len(fileSpec) >= len(dirSpec) && fileSpec[:len(dirSpec)] == dirSpec
+	return
+}
+
+func AppendPathSeparator(dirSpec string) string {
+	if len(dirSpec) > 0 && dirSpec[len(dirSpec)-1] != os.PathSeparator {
+		dirSpec += string(os.PathSeparator)
+	}
+	return dirSpec
 }
 
 func Exit(exitCode int, fmtString string, fmtArgs ...interface{}) {
@@ -76,6 +93,24 @@ func ResolveSymlink(fileSpec string, optDepth ...uint) (result string, err error
 		}
 	}
 	result = fileSpec
+	return
+}
+
+func IsSymlink(fileSpec string) (ok bool, err error) {
+	var fi os.FileInfo
+	if fi, err = os.Lstat(fileSpec); err == nil {
+		ok = fi.Mode()&os.ModeSymlink != 0
+	}
+	return
+}
+
+func Exists(fileSpec string) (ok bool, err error) {
+	if _, err = os.Stat(fileSpec); err == nil {
+		ok = true
+	} else if os.IsNotExist(err) {
+		ok = false
+		err = nil
+	}
 	return
 }
 

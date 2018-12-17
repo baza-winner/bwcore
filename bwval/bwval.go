@@ -114,73 +114,72 @@ func MustSetPathVal(val interface{}, v bw.Val, pathProvider bw.ValPathProvider, 
 // ============================================================================
 
 type FromProvider interface {
-	getVal() (interface{}, error)
-	getPath() bw.ValPath
+	getVal(def *Def) (interface{}, error)
+	getPath() (bw.ValPath, bool)
 }
 
 // =====================================
 
 type F struct {
 	S    string
-	Def  *Def
 	Vars map[string]interface{}
 }
 
-func (v F) getVal() (result interface{}, err error) {
+func (v F) getVal(def *Def) (result interface{}, err error) {
 	var template Template
-	if template, err = TemplateFrom(bwrune.F{S: v.S}, v.Def); err != nil {
+	if template, err = TemplateFrom(bwrune.F{S: v.S}, def); err != nil {
 		return
 	}
 	return FromTemplate(template, v.Vars)
 }
 
-func (v F) getPath() bw.ValPath {
-	return bw.ValPath{bw.ValPathItem{Type: bw.ValPathItemVar, Key: bwos.ShortenFileSpec(v.S)}}
+func (v F) getPath() (bw.ValPath, bool) {
+	return bw.ValPath{bw.ValPathItem{Type: bw.ValPathItemVar, Key: bwos.ShortenFileSpec(v.S)}}, true
 }
 
 // =====================================
 
 type S struct {
-	S    string
-	Def  *Def
+	S string
+	// Def  *Def
 	Vars map[string]interface{}
 }
 
-func (v S) getVal() (result interface{}, err error) {
+func (v S) getVal(def *Def) (result interface{}, err error) {
 	var template Template
-	if template, err = TemplateFrom(bwrune.S{S: v.S}, v.Def); err != nil {
+	if template, err = TemplateFrom(bwrune.S{S: v.S}, def); err != nil {
 		return
 	}
 	result, err = FromTemplate(template, v.Vars)
-	if v.Def != nil {
-		result, err = Holder{Val: result}.ValidVal(*v.Def)
+	if def != nil {
+		result, err = Holder{Val: result}.ValidVal(*def)
 	}
 	return
 }
 
-func (v S) getPath() (result bw.ValPath) {
+func (v S) getPath() (result bw.ValPath, ok bool) {
 	return
 }
 
 // =====================================
 
 type T struct {
-	T    Template
-	Def  *Def
+	T Template
+	// Def  *Def
 	Vars map[string]interface{}
 }
 
-func (v T) getVal() (result interface{}, err error) {
+func (v T) getVal(def *Def) (result interface{}, err error) {
 	if result, err = FromTemplate(v.T, v.Vars); err != nil {
 		return
 	}
-	if v.Def != nil {
-		result, err = Holder{Val: result}.ValidVal(*v.Def)
+	if def != nil {
+		result, err = Holder{Val: result}.ValidVal(*def)
 	}
 	return
 }
 
-func (v T) getPath() (result bw.ValPath) {
+func (v T) getPath() (result bw.ValPath, ok bool) {
 	return
 }
 
@@ -188,40 +187,54 @@ func (v T) getPath() (result bw.ValPath) {
 
 type V struct {
 	Val interface{}
-	Def *Def
+	// Def *Def
 }
 
-func (v V) getVal() (result interface{}, err error) {
-	if v.Def == nil {
+func (v V) getVal(def *Def) (result interface{}, err error) {
+	if def == nil {
 		result = v.Val
 	} else {
-		result, err = Holder{Val: v.Val}.ValidVal(*v.Def)
+		result, err = Holder{Val: v.Val}.ValidVal(*def)
 	}
 	return
 }
 
-func (v V) getPath() (result bw.ValPath) {
+func (v V) getPath() (result bw.ValPath, ok bool) {
 	return
 }
 
 // =====================================
 
-func From(a FromProvider, optPathProvider ...bw.ValPathProvider) (result Holder, err error) {
+type O struct {
+	PathProvider bw.ValPathProvider
+	OverridePath bool
+	Def          *Def
+}
+
+func From(fromProvider FromProvider, optOpt ...O) (result Holder, err error) {
 	result = Holder{}
-	if result.Val, err = a.getVal(); err != nil {
+	var opt O
+	if len(optOpt) > 0 {
+		opt = optOpt[0]
+	}
+	if result.Val, err = fromProvider.getVal(opt.Def); err != nil {
 		return
 	}
-	if len(optPathProvider) > 0 {
-		result.Pth, err = optPathProvider[0].Path()
-	} else {
-		result.Pth = a.getPath()
+	var ok bool
+	var path bw.ValPath
+	if path, ok = fromProvider.getPath(); ok && !opt.OverridePath {
+		result.Pth = path
+	} else if opt.PathProvider != nil {
+		if path, err = opt.PathProvider.Path(); err == nil {
+			result.Pth = path
+		}
 	}
 	return
 }
 
-func MustFrom(a FromProvider, optPathProvider ...bw.ValPathProvider) (result Holder) {
+func MustFrom(fromProvider FromProvider, optOpt ...O) (result Holder) {
 	var err error
-	if result, err = From(a, optPathProvider...); err != nil {
+	if result, err = From(fromProvider, optOpt...); err != nil {
 		bwerr.PanicErr(err)
 	}
 	return

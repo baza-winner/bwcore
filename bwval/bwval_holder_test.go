@@ -325,11 +325,18 @@ func TestHolderMustString(t *testing.T) {
 				},
 				Panic: "\x1b[38;5;252;1m.\x1b[0m (\x1b[96;1mnull\x1b[0m)\x1b[0m is not \x1b[97;1mString\x1b[0m",
 			},
+			"273": {
+				In: []interface{}{
+					bwval.Holder{Val: 273},
+					nil,
+				},
+				Out: []interface{}{"273"},
+			},
 			"true": {
 				In: []interface{}{
 					bwval.Holder{Val: true, Pth: bwval.MustPath(bwval.PathS{S: "some.1.key"})},
 				},
-				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m neither \x1b[97;1mString\x1b[0m nor \x1b[97;1mNil\x1b[0m",
+				Panic: "\x1b[38;5;252;1msome.1.key\x1b[0m (\x1b[96;1mtrue\x1b[0m)\x1b[0m neither \x1b[97;1mString\x1b[0m nor \x1b[97;1mNumber\x1b[0m nor \x1b[97;1mNil\x1b[0m",
 			},
 		},
 	)

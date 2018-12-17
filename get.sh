@@ -19,3 +19,4 @@ go get github.com/mohae/deepcopy
 go get github.com/urfave/cli 
 go get github.com/maruel/panicparse/cmd/pp
 go get golang.org/x/tools/cmd/stringer
+go get github.com/iancoleman/strcase

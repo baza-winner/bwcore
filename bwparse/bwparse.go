@@ -70,14 +70,6 @@ type ValidateMapKeyFunc func(on On, m bwmap.I, key string) (err error)
 type ParseMapElemFunc func(on On, m bwmap.I, key string) (status Status)
 type ValidateMapFunc func(on On, m bwmap.I) (err error)
 
-// type ValidateMapKeyFunc func(on On, m map[string]interface{}, key string) (err error)
-// type ParseMapElemFunc func(on On, m map[string]interface{}, key string) (status Status)
-// type ValidateMapFunc func(on On, m map[string]interface{}) (err error)
-
-// type ValidateOrderedMapKeyFunc func(on On, m *bwmap.Ordered, key string) (err error)
-// type ParseOrderedMapElemFunc func(on On, m *bwmap.Ordered, key string) (status Status)
-// type ValidateOrderedMapFunc func(on On, m *bwmap.Ordered) (err error)
-
 type ParseArrayElemFunc func(on On, vals []interface{}) (outVals []interface{}, status Status)
 type ValidateArrayFunc func(on On, vals []interface{}) (err error)
 
@@ -120,16 +112,11 @@ type Opt struct {
 	OnParseMapElem   ParseMapElemFunc
 	OnValidateMap    ValidateMapFunc
 
-	// OnValidateOrderedMapKey ValidateOrderedMapKeyFunc
-	// OnParseOrderedMapElem   ParseOrderedMapElemFunc
-	// OnValidateOrderedMap    ValidateOrderedMapFunc
-
 	OnParseArrayElem ParseArrayElemFunc
 	OnValidateArray  ValidateArrayFunc
 
 	OnValidateString            ValidateStringFunc
 	OnValidateArrayOfStringElem ValidateArrayOfStringElemFunc
-	// OnValidateArrayOfString     ValidateArrayOfStringFunc
 
 	OnValidateNumber ValidateNumberFunc
 	OnValidateRange  ValidateRangeFunc

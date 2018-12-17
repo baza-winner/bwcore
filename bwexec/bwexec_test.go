@@ -20,18 +20,18 @@ func TestMain(m *testing.M) { // https://stackoverflow.com/questions/23729790/ho
 // var installOpt = defparse.MustParseMap("{v: 'err', exitOnError: true, s: 'none'}")
 // var installOpt map[string]interface{}
 
-var installOpt, testOpt interface{}
+var installOpt, testOpt bwexec.CmdOpt
 
 func init() {
-	installOpt = bwval.MustFrom(bwval.S{S: `{
+	installOpt = bwexec.MustCmdOpt(bwval.S{S: `{
 		verbosity "err"
 		exitOnError true
 		silent "none"
-	}`}).Val
-	testOpt = bwval.MustFrom(bwval.S{S: `{
+	}`})
+	testOpt = bwexec.MustCmdOpt(bwval.S{S: `{
 		captureStdout true
 		captureStderr true
-	}`}).Val
+	}`})
 }
 
 func mySetupFunction() {

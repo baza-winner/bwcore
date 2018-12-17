@@ -10,6 +10,7 @@ import (
 	_ "github.com/baza-winner/bwcore/ansi/tags"
 	"github.com/baza-winner/bwcore/bwexec"
 	"github.com/baza-winner/bwcore/bwos"
+	"github.com/baza-winner/bwcore/bwval"
 )
 
 func init() {
@@ -37,13 +38,17 @@ func main() {
 
 	ret := bwexec.MustCmd(
 		bwexec.Args(argsWithoutProg[0], argsWithoutProg[1:]...),
-		map[string]interface{}{
-			"verbosity":     *verbosityFlag,
-			"exitOnError":   *exitOnErrorFlag,
-			"silent":        *silentFlag,
-			"captureStdout": true,
-			"captureStderr": true,
-		},
+		bwexec.MustCmdOpt(
+			bwval.V{
+				Val: map[string]interface{}{
+					"verbosity":     *verbosityFlag,
+					"exitOnError":   *exitOnErrorFlag,
+					"silent":        *silentFlag,
+					"captureStdout": true,
+					"captureStderr": true,
+				},
+			},
+		),
 	)
 	if display {
 		ansiExitCode := `<ansiOK>`

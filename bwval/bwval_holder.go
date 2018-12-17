@@ -263,6 +263,11 @@ func (v Holder) String(optDefaultProvider ...func() string) (result string, err 
 			}
 			return nil, nil
 		},
+		bwtype.ValNumber: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+			n, _ := val.(bwtype.Number)
+			result = n.String()
+			return nil, nil
+		},
 	})
 	return
 }

@@ -610,6 +610,9 @@ func Kind(val interface{}, optExpects ...ValKindSet) (result interface{}, kind V
 			} else if expectsAny || expects.Has(ValFloat64) {
 				result = float64(i)
 				kind = ValFloat64
+			} else if expects.Has(ValNumber) {
+				result = MustNumberFrom(i)
+				kind = ValNumber
 			}
 			return
 		}
@@ -623,11 +626,13 @@ func Kind(val interface{}, optExpects ...ValKindSet) (result interface{}, kind V
 			} else if expectsAny || expects.Has(ValFloat64) {
 				result = float64(u)
 				kind = ValFloat64
+			} else if expects.Has(ValNumber) {
+				result = MustNumberFrom(u)
+				kind = ValNumber
 			}
 			return
 		}
 		var needRecall bool
-		// bwdebug.Print("!HI", "val:#v", val)
 		switch t := val.(type) {
 		case bool:
 			if expectsAny || expects.Has(ValBool) {
@@ -718,6 +723,9 @@ func Kind(val interface{}, optExpects ...ValKindSet) (result interface{}, kind V
 			} else if expectsAny || expects.Has(ValFloat64) {
 				result = float64(t)
 				kind = ValFloat64
+			} else if expects.Has(ValNumber) {
+				result = MustNumberFrom(t)
+				kind = ValNumber
 			}
 		case float64:
 			if (expectsAny || expects.Has(ValInt)) && (float64(int(t)) == t) {
@@ -729,10 +737,18 @@ func Kind(val interface{}, optExpects ...ValKindSet) (result interface{}, kind V
 			} else if expectsAny || expects.Has(ValFloat64) {
 				result = t
 				kind = ValFloat64
+			} else if expects.Has(ValNumber) {
+				result = MustNumberFrom(t)
+				kind = ValNumber
 			}
 		case Number:
-			val = t.val
-			needRecall = true
+			if expects.Has(ValNumber) {
+				result = t
+				kind = ValNumber
+			} else {
+				val = t.val
+				needRecall = true
+			}
 		case RangeLimit:
 			val = t.val
 			needRecall = true

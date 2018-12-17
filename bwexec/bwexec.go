@@ -21,7 +21,7 @@ const defaultFailedCode = 1
 var cmdOptDef *bwval.Def
 
 func init() {
-	cmdOptDef = bwval.MustDefFrom(bwrune.S{`
+	cmdOptDef = bwval.MustDefFrom(bwrune.S{S: `
 		{
 			type Map
 			keys {
@@ -60,22 +60,23 @@ func init() {
 	`})
 }
 
+func CmdOptDef() *bwval.Def {
+	return cmdOptDef
+}
+
+// ============================================================================
+
 type A struct {
 	Cmd  string
 	Args []string
 }
 
+// ============================================================================
 func Args(cmdName string, cmdArgs ...string) A {
 	return A{Cmd: cmdName, Args: cmdArgs}
 }
 
-func MustCmd(a A, optOpt ...interface{}) (result CmdResult) {
-	var err error
-	if result, err = Cmd(a, optOpt...); err != nil {
-		bwerr.PanicErr(err)
-	}
-	return
-}
+// ============================================================================
 
 type CmdResult struct {
 	ExitCode int
@@ -84,20 +85,69 @@ type CmdResult struct {
 	Output   []string
 }
 
-func Cmd(a A, optOpt ...interface{}) (result CmdResult, err error) {
-	var opt interface{}
+// ============================================================================
+
+type CmdOpt struct {
+	h bwval.Holder
+}
+
+func MustCmdOpt(a bwval.FromProvider) CmdOpt {
+	return CmdOpt{bwval.MustFrom(a, bwval.O{
+		Def:          cmdOptDef,
+		PathProvider: bwval.PathS{S: "CmdOpt"},
+	})}
+}
+
+func cmdOpt(optOpt []CmdOpt) (result CmdOpt) {
 	if len(optOpt) > 0 {
-		opt = optOpt[0]
+		result = optOpt[0]
+	} else {
+		result = CmdOpt{bwval.MustFrom(
+			bwval.V{},
+			bwval.O{
+				Def:          cmdOptDef,
+				PathProvider: bwval.PathS{S: "CmdOpt"},
+			},
+		)}
 	}
-	hOpt := bwval.MustFrom(bwval.V{Val: opt}, bwval.PathS{S: "Cmd.opt"}).MustValid(*cmdOptDef)
+	return
+}
+
+func Cmd(a A, optOpt ...CmdOpt) (result CmdResult, err error) {
+	opt := cmdOpt(optOpt)
+	// var optFromProvider bwval.FromProvider
+	// var opt.h CmdOpt
+	// if len(optOpt) > 0 {
+	// } else {
+
+	// }
+
+	// var opt bwval.FromProvider
+	// if len(optOpt) > 0 {
+	// 	opt = optOpt[0]
+	// 	// if s, ok := opt.(string) {
+	// 	// 	opt = bwval.
+	// 	// } else {
+	// 	// 	optFromProvider
+	// 	// }
+	// }
+	// if opt == nil {
+	// 	opt = bwval.V{Val: nil}
+	// }
+	// // var opt interface{}
+	// // opt.h := bwval.MustFrom(bwval.V{Val: opt, Def: cmdOptDef}, bwval.PathS{S: "Cmd.opt"})
+	// opt.h := bwval.MustFrom(opt, bwval.CmdOpt{
+	// 	Def:          cmdOptDef,
+	// 	PathProvider: bwval.PathS{S: "Cmd.opt"},
+	// })
 
 	cmdTitle := bwstr.SmartQuote(append([]string{a.Cmd}, a.Args...)...)
-	optSilent := hOpt.MustPathStr("silent").MustString()
-	optCaptureStdout := hOpt.MustPathStr("captureStdout").MustBool()
-	optCaptureStderr := hOpt.MustPathStr("captureStderr").MustBool()
-	optCaptureOutput := hOpt.MustPathStr("captureOutput").MustBool()
-	optVerbosity := hOpt.MustPathStr("verbosity").MustString()
-	optWorkDir := hOpt.MustPathStr("workDir?").MustString()
+	optSilent := opt.h.MustPathStr("silent").MustString()
+	optCaptureStdout := opt.h.MustPathStr("captureStdout").MustBool()
+	optCaptureStderr := opt.h.MustPathStr("captureStderr").MustBool()
+	optCaptureOutput := opt.h.MustPathStr("captureOutput").MustBool()
+	optVerbosity := opt.h.MustPathStr("verbosity").MustString()
+	optWorkDir := opt.h.MustPathStr("workDir?").MustString()
 	var pwd string
 	if optWorkDir != "" {
 		if pwd, err = os.Getwd(); err != nil {
@@ -190,7 +240,7 @@ func Cmd(a A, optOpt ...interface{}) (result CmdResult, err error) {
 	if len(prefix) > 0 {
 		fmt.Println(ansi.StringA(ansi.A{Default: ansi.MustTag(ansiName), S: prefix + `: <ansiPath>` + cmdTitle}))
 	}
-	if hOpt.MustPathStr("exitOnError").MustBool() && result.ExitCode != 0 {
+	if opt.h.MustPathStr("exitOnError").MustBool() && result.ExitCode != 0 {
 		os.Exit(result.ExitCode)
 	}
 	if pwd != "" {
@@ -200,3 +250,15 @@ func Cmd(a A, optOpt ...interface{}) (result CmdResult, err error) {
 	}
 	return
 }
+
+// ============================================================================
+
+func MustCmd(a A, optOpt ...CmdOpt) (result CmdResult) {
+	var err error
+	if result, err = Cmd(a, optOpt...); err != nil {
+		bwerr.PanicErr(err)
+	}
+	return
+}
+
+// ============================================================================
