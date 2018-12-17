@@ -100,6 +100,7 @@ type Opt struct {
 
 	Path bw.ValPath
 
+	StrictId          bool
 	IdVals            map[string]interface{}
 	OnId              IdFunc
 	NonNegativeNumber NonNegativeNumberFunc
@@ -456,14 +457,31 @@ func Bool(p I, optOpt ...Opt) (result bool, status Status) {
 // ============================================================================
 
 func Id(p I, optOpt ...Opt) (result string, status Status) {
+	opt := getOpt(optOpt)
 	r := p.Curr().rune
-	if status.OK = IsLetter(r); status.OK {
-		status.Start = p.Start()
-		defer func() { p.Stop(status.Start) }()
-		for IsLetter(r) || unicode.IsDigit(r) {
-			result += string(r)
-			p.Forward(1)
-			r = p.Curr().rune
+	if opt.StrictId {
+		if status.OK = IsLetter(r); status.OK {
+			status.Start = p.Start()
+			defer func() { p.Stop(status.Start) }()
+			for IsLetter(r) || unicode.IsDigit(r) {
+				result += string(r)
+				p.Forward(1)
+				r = p.Curr().rune
+			}
+		}
+	} else {
+		if status.OK = !p.Curr().isEOF && !unicode.IsDigit(r) && !unicode.IsSpace(r) &&
+			!(r == '{' || r == '<' || r == '[' || r == '(' || r == ','); status.OK {
+			status.Start = p.Start()
+			defer func() { p.Stop(status.Start) }()
+			for !unicode.IsSpace(r) && !(r == '}' || r == ']' || r == ',') {
+				result += string(r)
+				p.Forward(1)
+				if p.Curr().isEOF {
+					break
+				}
+				r = p.Curr().rune
+			}
 		}
 	}
 	return
@@ -833,6 +851,10 @@ func PathContent(p I, optOpt ...PathOpt) (bw.ValPath, error) {
 		st            Status
 	)
 	result := bw.ValPath{}
+	strictId := func(opt Opt) Opt {
+		opt.StrictId = true
+		return opt
+	}
 	for st.Err == nil {
 		isEmptyResult = len(result) == 0
 		if isEmptyResult && p.Curr().rune == '.' {
@@ -851,7 +873,7 @@ func PathContent(p I, optOpt ...PathOpt) (bw.ValPath, error) {
 				vpi = bw.ValPathItem{Type: bw.ValPathItemKey, Key: s}
 				return
 			}},
-			onId{opt: opt.Opt, f: func(s string, start *Start) (err error) {
+			onId{opt: strictId(opt.Opt), f: func(s string, start *Start) (err error) {
 				vpi = bw.ValPathItem{Type: bw.ValPathItemKey, Key: s}
 				return
 			}},
@@ -1149,7 +1171,7 @@ func Val(p I, optOpt ...Opt) (result interface{}, status Status) {
 	if hasKind(bwtype.ValBool) {
 		onArgs = append(onArgs, onBool{opt: opt, f: func(b bool, start *Start) (err error) { result = b; return }})
 	}
-	if (len(opt.IdVals) > 0 || opt.OnId != nil) && hasKind(bwtype.ValId) {
+	if (len(opt.IdVals) > 0 || opt.OnId != nil) && hasKind(bwtype.ValId) || hasKind(bwtype.ValString) {
 		onArgs = append(onArgs,
 			onId{opt: opt, f: func(s string, start *Start) (err error) {
 				var b bool
@@ -1159,9 +1181,13 @@ func Val(p I, optOpt ...Opt) (result interface{}, status Status) {
 					}
 				}
 				if !b && err == nil {
-					err = p.Error(E{start, bw.Fmt(ansiUnexpectedWord, s)})
-					if expects := getIdExpects(opt, ""); len(expects) > 0 {
-						err = Expects(p, err, expects)
+					if !opt.StrictId {
+						result = s
+					} else {
+						err = p.Error(E{start, bw.Fmt(ansiUnexpectedWord, s)})
+						if expects := getIdExpects(opt, ""); len(expects) > 0 {
+							err = Expects(p, err, expects)
+						}
 					}
 				}
 				return
