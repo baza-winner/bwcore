@@ -28,7 +28,7 @@ func init() {
 				verbosity {
 					type String
 					enum <all err ok none>
-					default "none"
+					default none
 				}
 				captureStdout {
 					type Bool
@@ -45,7 +45,7 @@ func init() {
 				silent {
 					type String
 					enum <none stderr stdout all>
-					default "all"
+					default all
 				}
 				exitOnError {
 					type Bool
