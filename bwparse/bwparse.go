@@ -470,11 +470,11 @@ func Id(p I, optOpt ...Opt) (result string, status Status) {
 			}
 		}
 	} else {
-		if status.OK = !p.Curr().isEOF && !unicode.IsDigit(r) && !unicode.IsSpace(r) &&
-			!(r == '{' || r == '<' || r == '[' || r == '(' || r == ','); status.OK {
+		// if status.OK = !p.Curr().isEOF && !unicode.IsDigit(r) && !(r == '-' || r == '+') && !unicode.IsSpace(r) && !isReservedRune(r); status.OK {
+		if status.OK = IsLetter(r); status.OK {
 			status.Start = p.Start()
 			defer func() { p.Stop(status.Start) }()
-			for !unicode.IsSpace(r) && !(r == '}' || r == ']' || r == ',') {
+			for !unicode.IsSpace(r) && !isReservedRune(r) {
 				result += string(r)
 				p.Forward(1)
 				if p.Curr().isEOF {
@@ -485,6 +485,14 @@ func Id(p I, optOpt ...Opt) (result string, status Status) {
 		}
 	}
 	return
+}
+
+func isReservedRune(r rune) bool {
+	return r == ',' || // r == '.' ||
+		r == '{' || r == '<' || r == '[' || r == '(' ||
+		r == '}' || r == '>' || r == ']' || r == ')' ||
+		r == ':' || r == '=' ||
+		r == '"' || r == '\''
 }
 
 // ============================================================================
@@ -898,7 +906,7 @@ func PathContent(p I, optOpt ...PathOpt) (bw.ValPath, error) {
 						}
 						return
 					}},
-					onId{opt: opt.Opt, f: func(s string, start *Start) (err error) {
+					onId{opt: strictId(opt.Opt), f: func(s string, start *Start) (err error) {
 						result = append(result, bw.ValPathItem{Type: bw.ValPathItemVar, Key: s})
 						return
 					}},
@@ -1036,6 +1044,7 @@ func Range(p I, optOpt ...Opt) (result bwtype.Range, status Status) {
 func Val(p I, optOpt ...Opt) (result interface{}, status Status) {
 	opt := getOpt(optOpt)
 	var onArgs []on
+	kindSet := bwtype.ValKindSet{}
 	kinds := []bwtype.ValKind{}
 	kindSetIsEmpty := len(opt.KindSet) == 0
 	hasKind := func(kind bwtype.ValKind) (result bool) {
@@ -1047,7 +1056,10 @@ func Val(p I, optOpt ...Opt) (result interface{}, status Status) {
 			result = !opt.KindSet.Has(kind)
 		}
 		if result {
-			kinds = append(kinds, kind)
+			if !kindSet.Has(kind) {
+				kinds = append(kinds, kind)
+				kindSet.Add(kind)
+			}
 		}
 		return
 	}
@@ -1171,7 +1183,7 @@ func Val(p I, optOpt ...Opt) (result interface{}, status Status) {
 	if hasKind(bwtype.ValBool) {
 		onArgs = append(onArgs, onBool{opt: opt, f: func(b bool, start *Start) (err error) { result = b; return }})
 	}
-	if (len(opt.IdVals) > 0 || opt.OnId != nil) && hasKind(bwtype.ValId) || hasKind(bwtype.ValString) {
+	if (len(opt.IdVals) > 0 || opt.OnId != nil) && hasKind(bwtype.ValId) || !opt.StrictId && hasKind(bwtype.ValString) {
 		onArgs = append(onArgs,
 			onId{opt: opt, f: func(s string, start *Start) (err error) {
 				var b bool
@@ -1181,12 +1193,17 @@ func Val(p I, optOpt ...Opt) (result interface{}, status Status) {
 					}
 				}
 				if !b && err == nil {
-					if !opt.StrictId {
-						result = s
-					} else {
+					if opt.StrictId {
 						err = p.Error(E{start, bw.Fmt(ansiUnexpectedWord, s)})
 						if expects := getIdExpects(opt, ""); len(expects) > 0 {
 							err = Expects(p, err, expects)
+						}
+					} else {
+						if opt.OnValidateString != nil {
+							err = opt.OnValidateString(On{p, start, &opt}, s)
+						}
+						if err == nil {
+							result = s
 						}
 					}
 				}

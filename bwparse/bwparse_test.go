@@ -853,17 +853,18 @@ func TestVal(t *testing.T) {
 					out: "unexpected end of string at pos \x1b[38;5;252;1m5\x1b[0m: \x1b[32m{key:\n",
 				},
 				{in: `qw `,
-					opt: bwparse.Opt{IdVals: map[string]interface{}{"Int": "Int", "Number": "Number"}},
+					opt: bwparse.Opt{IdVals: map[string]interface{}{"Int": "Int", "Number": "Number"}, StrictId: true},
 					out: "expects \x1b[96;1mInt\x1b[0m or \x1b[96;1mNumber\x1b[0m instead of unexpected `\x1b[91;1mqw\x1b[0m`\x1b[0m at pos \x1b[38;5;252;1m0\x1b[0m: \x1b[32m\x1b[91mqw\x1b[0m \n",
 				},
 				{in: `!`,
-					opt: bwparse.Opt{IdVals: map[string]interface{}{"Int": "Int", "Number": "Number"}},
+					opt: bwparse.Opt{IdVals: map[string]interface{}{"Int": "Int", "Number": "Number"}, StrictId: true},
 					out: "expects one of [\n  \x1b[97;1mArray\x1b[0m\n  \x1b[97;1mString\x1b[0m\n  \x1b[97;1mRange\x1b[0m\n  \x1b[97;1mPath\x1b[0m\n  \x1b[97;1mOrderedMap\x1b[0m\n  \x1b[97;1mNumber\x1b[0m\n  \x1b[97;1mNil\x1b[0m\n  \x1b[97;1mBool\x1b[0m\n  \x1b[97;1mId\x1b[0m(\x1b[96;1mInt\x1b[0m or \x1b[96;1mNumber\x1b[0m)\n] instead of unexpected char \x1b[96;1m'!'\x1b[0m (\x1b[38;5;201;1mcharCode\x1b[0m: \x1b[96;1m33\x1b[0m)\x1b[0m at pos \x1b[38;5;252;1m0\x1b[0m: \x1b[32m\x1b[91m!\x1b[0m\n",
 				},
 				{in: `! `,
 					opt: bwparse.Opt{
-						IdVals: map[string]interface{}{"Int": "Int", "Number": "Number", "String": "String"},
-						OnId:   func(on bwparse.On, s string) (val interface{}, ok bool, err error) { return },
+						IdVals:   map[string]interface{}{"Int": "Int", "Number": "Number", "String": "String"},
+						StrictId: true,
+						OnId:     func(on bwparse.On, s string) (val interface{}, ok bool, err error) { return },
 					},
 					out: "expects one of [\n  \x1b[97;1mArray\x1b[0m\n  \x1b[97;1mString\x1b[0m\n  \x1b[97;1mRange\x1b[0m\n  \x1b[97;1mPath\x1b[0m\n  \x1b[97;1mOrderedMap\x1b[0m\n  \x1b[97;1mNumber\x1b[0m\n  \x1b[97;1mNil\x1b[0m\n  \x1b[97;1mBool\x1b[0m\n  \x1b[97;1mId\x1b[0m(one of [\x1b[96;1mInt\x1b[0m, \x1b[96;1mNumber\x1b[0m, \x1b[96;1mString\x1b[0m] or \x1b[38;5;201;1mcustom\x1b[0m)\n] instead of unexpected char \x1b[96;1m'!'\x1b[0m (\x1b[38;5;201;1mcharCode\x1b[0m: \x1b[96;1m33\x1b[0m)\x1b[0m at pos \x1b[38;5;252;1m0\x1b[0m: \x1b[32m\x1b[91m!\x1b[0m \n",
 				},
@@ -877,10 +878,10 @@ func TestVal(t *testing.T) {
 					out: "strconv.ParseUint: parsing \"1000000000000000000000000\": value out of range at pos \x1b[38;5;252;1m0\x1b[0m: \x1b[32m\x1b[91m1_000_000_000_000_000_000_000_000\x1b[0m\n",
 				},
 				{in: `{ type Number keyA valA keyB valB }`,
-					opt: bwparse.Opt{IdVals: map[string]interface{}{"Number": "Number"}},
+					opt: bwparse.Opt{IdVals: map[string]interface{}{"Number": "Number"}, StrictId: true},
 					out: "expects \x1b[96;1mNumber\x1b[0m instead of unexpected `\x1b[91;1mvalA\x1b[0m`\x1b[0m at pos \x1b[38;5;252;1m19\x1b[0m: \x1b[32m{ type Number keyA \x1b[91mvalA\x1b[0m keyB valB }\n"},
 				{in: "{ val: nil def: Array",
-					opt: bwparse.Opt{IdVals: map[string]interface{}{"Array": "Array"}},
+					opt: bwparse.Opt{IdVals: map[string]interface{}{"Array": "Array"}, StrictId: true},
 					out: "unexpected end of string at pos \x1b[38;5;252;1m21\x1b[0m: \x1b[32m{ val: nil def: Array\n"},
 				{in: `{ some { { $a }} }`,
 					out: "unexpected char \x1b[96;1m'{'\x1b[0m (\x1b[38;5;201;1mcharCode\x1b[0m: \x1b[96;1m123\x1b[0m)\x1b[0m at pos \x1b[38;5;252;1m9\x1b[0m: \x1b[32m{ some { \x1b[91m{\x1b[0m $a }} }\n",
@@ -990,6 +991,7 @@ func TestVal(t *testing.T) {
 						OnId: func(on bwparse.On, s string) (val interface{}, ok bool, err error) {
 							return
 						},
+						StrictId: true,
 					},
 					out: "expects \x1b[96;1mInt\x1b[0m or \x1b[38;5;201;1mcustom\x1b[0m instead of unexpected `\x1b[91;1mBool\x1b[0m`\x1b[0m at pos \x1b[38;5;252;1m0\x1b[0m: \x1b[32m\x1b[91mBool\x1b[0m\n",
 				},
@@ -1184,7 +1186,10 @@ func TestLineCount(t *testing.T) {
 			}`
 			p := bwparse.MustFrom(bwrune.S{s}, opt...)
 			var st bwparse.Status
-			if result, st = bwparse.Val(p, bwparse.Opt{IdVals: map[string]interface{}{"Int": "Int"}}); st.Err != nil {
+			if result, st = bwparse.Val(p, bwparse.Opt{
+				IdVals:   map[string]interface{}{"Int": "Int"},
+				StrictId: true,
+			}); st.Err != nil {
 				bwerr.PanicErr(st.Err)
 			}
 			return
