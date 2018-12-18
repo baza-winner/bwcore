@@ -5,6 +5,7 @@ import (
 
 	"github.com/baza-winner/bwcore/ansi"
 	"github.com/baza-winner/bwcore/bw"
+	"github.com/baza-winner/bwcore/bwdebug"
 	"github.com/baza-winner/bwcore/bwerr"
 	"github.com/baza-winner/bwcore/bwmap"
 	"github.com/baza-winner/bwcore/bwparse"
@@ -176,6 +177,15 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 	if val, status = bwparse.Val(p, setForType(bwparse.Opt{
 		ValFalse: true,
 		KindSet:  bwtype.ValKindSetFrom(bwtype.ValMap),
+		OnValidateMap: func(on bwparse.On, m bwmap.I) (err error) {
+			if len(result.Types) == 0 {
+				err = p.Error(bwparse.E{
+					Start: on.Start,
+					Fmt:   bw.A{Fmt: "key <ansiVar>type<ansi> must be specified"},
+				})
+			}
+			return
+		},
 		OnValidateMapKey: func(on bwparse.On, m bwmap.I, key string) (err error) {
 			if !validKeys.Has(key) {
 				err = p.Error(bwparse.E{
@@ -430,6 +440,7 @@ func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (res
 	if result, status = bwparse.Val(p, opt); status.IsOK() {
 		h := Holder{Val: result, Pth: base}
 		if result, status.Err = h.validVal(def, skipArrayOf); status.Err != nil {
+			bwdebug.Print("def:json", def)
 			status.Err = p.Error(bwparse.E{
 				Start: status.Start,
 				Fmt:   bwerr.Err(status.Err),

@@ -232,6 +232,10 @@ func (v ValPath) AppendHash(name string) ValPath {
 	return append(v.Clone(), ValPathItem{Type: ValPathItemHash})
 }
 
+func (v ValPath) Append(a ValPath) ValPath {
+	return append(v.Clone(), a...)
+}
+
 // ============================================================================
 
 type ValPathProvider interface {

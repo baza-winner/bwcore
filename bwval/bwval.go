@@ -2,6 +2,8 @@
 package bwval
 
 import (
+	"strings"
+
 	"github.com/baza-winner/bwcore/bw"
 	"github.com/baza-winner/bwcore/bwerr"
 	"github.com/baza-winner/bwcore/bwjson"
@@ -40,7 +42,11 @@ type PathSS struct {
 
 func (v PathSS) Path() (result bw.ValPath, err error) {
 	for _, s := range v.SS {
-		result = append(result, bw.ValPathItem{Type: bw.ValPathItemKey, Key: s})
+		var isOptional bool
+		if isOptional = strings.HasSuffix(s, "?"); isOptional {
+			s = s[:len(s)-1]
+		}
+		result = append(result, bw.ValPathItem{Type: bw.ValPathItemKey, Key: s, IsOptional: isOptional})
 	}
 	return
 }
