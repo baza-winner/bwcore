@@ -459,29 +459,19 @@ func Bool(p I, optOpt ...Opt) (result bool, status Status) {
 func Id(p I, optOpt ...Opt) (result string, status Status) {
 	opt := getOpt(optOpt)
 	r := p.Curr().rune
-	if opt.StrictId {
-		if status.OK = IsLetter(r); status.OK {
-			status.Start = p.Start()
-			defer func() { p.Stop(status.Start) }()
-			for IsLetter(r) || unicode.IsDigit(r) {
-				result += string(r)
-				p.Forward(1)
-				r = p.Curr().rune
-			}
+	if status.OK = IsLetter(r); status.OK {
+		status.Start = p.Start()
+		defer func() { p.Stop(status.Start) }()
+		var while func(r rune) bool
+		if opt.StrictId {
+			while = func(r rune) bool { return IsLetter(r) || unicode.IsDigit(r) }
+		} else {
+			while = func(r rune) bool { return !unicode.IsSpace(r) && !isReservedRune(r) }
 		}
-	} else {
-		// if status.OK = !p.Curr().isEOF && !unicode.IsDigit(r) && !(r == '-' || r == '+') && !unicode.IsSpace(r) && !isReservedRune(r); status.OK {
-		if status.OK = IsLetter(r); status.OK {
-			status.Start = p.Start()
-			defer func() { p.Stop(status.Start) }()
-			for !unicode.IsSpace(r) && !isReservedRune(r) {
-				result += string(r)
-				p.Forward(1)
-				if p.Curr().isEOF {
-					break
-				}
-				r = p.Curr().rune
-			}
+		for !p.Curr().isEOF && while(r) {
+			result += string(r)
+			p.Forward(1)
+			r = p.Curr().rune
 		}
 	}
 	return
