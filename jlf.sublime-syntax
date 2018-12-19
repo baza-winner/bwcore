@@ -1,0 +1,277 @@
+%YAML 1.2
+---
+name: JLF
+# See http://www.sublimetext.com/docs/3/syntax.html
+file_extensions:
+  - jlf
+scope: source.jlf
+
+variables:
+  key: '[a-zA-Z_]([^\s:=]*)'
+  number: '[+-]?\d+(?:\.\d+)?'
+  idString: "[a-zA-Z_]([^\\s{}<>[\\\\]():=\"']*)"
+  strictId: '[a-zA-Z_]([a-zA-Z_\d]*)'
+  languageConsts: true|false|nil
+  range: ({{number}})\.\.({{number}})
+  beginOfPath: '{{'
+  endOfPath: '}}'
+  beginOfMap: '{'
+  endOfMap: '}'
+  beginOfArray: '\['
+  endOfArray: ']'
+  arrayOfString: '<([^>]*)>'
+  any: '(?=.)'
+
+contexts:
+
+  space:
+    - meta_include_prototype: false
+    - match: '[\s]+'
+    - match: //
+      scope: punctuation.definition.comment.jlf
+      push:
+        - meta_scope: comment.line.jlf
+        - match: $
+          pop: true
+    - match: /\*
+      scope: punctuation.definition.comment.begin.jlf
+      push:
+        - meta_scope: comment
+        - match: \*/
+          scope: punctuation.definition.comment.end.jlf
+          pop: true
+
+  illegal:
+    - meta_include_prototype: false
+    - match: .
+      scope: invalid.illegal.jlf
+
+  main:
+    - match: '(?=.)'
+      set: [end, expectsValue]
+
+  end:
+    - include: illegal
+
+  prototype:
+    - include: space
+
+  expectsValue:
+    - match: '{{beginOfPath}}'
+      scope: punctuation.section.block.begin.jlf
+      set: path
+    - match: '{{beginOfMap}}'
+      scope: punctuation.section.block.begin.jlf
+      set: mapExpectsKey
+    - match: '{{beginOfArray}}'
+      scope: punctuation.section.block.begin.jlf
+      set: arrayExpectsValue
+    - match: '{{arrayOfString}}'
+      scope: string.quoted.double.jlf
+      pop: true
+    - include: quotedString
+    - match: \b{{range}}\b
+      captures:
+        1: constant.numeric.jlf
+        2: constant.numeric.jlf
+      pop: true
+    - match: \b{{number}}\b
+      scope: constant.numeric.jlf
+      pop: true
+    - match: \b{{languageConsts}}\b
+      scope: constant.language.jlf
+      pop: true
+    - match: \b{{idString}}\b
+      scope: string.quoted.double.jlf
+      pop: true
+    - include: illegal
+
+  quotedString:
+    - meta_include_prototype: false
+    - match: \'
+      scope: punctuation.definition.string.begin.jlf
+      set:
+        - meta_scope: string.quoted.single.jlf
+        - match: '\\.'
+          scope: constant.character.escape.jlf
+        - match: \'
+          scope: punctuation.definition.string.end.jlf
+          pop: true
+    - match: \"
+      scope: punctuation.definition.string.begin.jlf
+      set:
+        - meta_scope: string.quoted.double.jlf
+        - match: '\\.'
+          scope: constant.character.escape.jlf
+        - match: \"
+          scope: punctuation.definition.string.end.jlf
+          pop: true
+
+  arrayExpectsValue:
+    - match: \]
+      scope: punctuation.section.block.end.jlf
+      pop: true
+    - match: '(?=.)'
+      set: [arrayExpectsValueOrSeparator, expectsValue]
+
+  arrayExpectsValueOrSeparator:
+    - match: ','
+      scope: punctuation.separator.jlf
+      set: arrayExpectsValue
+    - include: arrayExpectsValue
+
+  mapExpectsKey:
+    - match: \}
+      scope: punctuation.section.block.end.jlf
+      pop: true
+    - match: \'
+      scope: punctuation.definition.string.begin.jlf
+      set:
+        - meta_scope: support.function.jlf
+        - match: '\\.'
+          scope: constant.character.escape.jlf
+        - match: \'
+          scope: punctuation.definition.string.end.jlf
+          set: mapExpectsValueOrSeparator
+    - match: \"
+      scope: punctuation.definition.string.begin.jlf
+      set:
+        - meta_scope: support.function.jlf
+        - match: '\\.'
+          scope: constant.character.escape.jlf
+        - match: \"
+          scope: punctuation.definition.string.end.jlf
+          set: mapExpectsValueOrSeparator
+    - match: \b{{key}}\b
+      scope: support.function.jlf
+      set: mapExpectsValueOrSeparator
+    - include: illegal
+
+  mapExpectsKeyOrSeparator:
+    - match: ','
+      scope: punctuation.separator.jlf
+      set: mapExpectsKey
+    - include: mapExpectsKey
+
+  mapExpectsValueOrSeparator:
+    - match: '(:|=>)'
+      scope: punctuation.separator.jlf
+      set: mapExpectsValue
+    - include: mapExpectsValue
+
+  mapExpectsValue:
+    - match: '(?=.)'
+      set: [mapExpectsKeyOrSeparator, expectsValue]
+
+# =============================================================================
+
+  pathVar:
+    - meta_include_prototype: false
+    - meta_scope: entity.name.jlf
+    - match: '{{strictId}}'
+      pop: true
+    - match: \'
+      scope: punctuation.definition.string.begin.jlf
+      set:
+        - meta_scope: entity.name.jlf
+        - match: '\\.'
+          scope: constant.character.escape.jlf
+        - match: \'
+          scope: punctuation.definition.string.end.jlf
+          pop: true
+    - match: \"
+      scope: punctuation.definition.string.begin.jlf
+      set:
+        - meta_scope: entity.name.jlf
+        - match: '\\.'
+          scope: constant.character.escape.jlf
+        - match: \"
+          scope: punctuation.definition.string.end.jlf
+          pop: true
+
+  pathSegment:
+    - meta_include_prototype: false
+    - match: '[-+]?\d+'
+      scope: constant.numeric.jlf
+      pop: true
+    - match: \(
+      scope: punctuation.section.parens.begin
+      set: subPath
+    - match: '{{strictId}}'
+      scope: string.quoted.double.jlf
+      pop: true
+    - include: quotedString
+    - include: illegal
+
+# =====================================
+
+  path:
+    - meta_include_prototype: false
+    - match: '\$'
+      set: [nextPathSegment, pathVar]
+    - match: \.
+      scope: punctuation.separator.jlf
+      set: pathEnd
+    - match: '(?=.)'
+      set: [ nextPathSegment, pathSegment ]
+
+  pathEnd:
+    - meta_include_prototype: false
+    - include: endOfPath
+    - include: illegal
+
+  endOfPath:
+    - meta_include_prototype: false
+    - match: '}}'
+      pop: true
+
+  nextPathSegment:
+    - meta_include_prototype: false
+    - include: endOfPath
+    - match: '(\?)?\.(#)'
+      captures:
+        1: keyword.jlf
+        2: keyword.jlf
+      scope: punctuation.separator.jlf
+      set: endOfPath
+    - match: '(\?)?\.'
+      captures:
+        1: keyword.jlf
+      scope: punctuation.separator.jlf
+      set: [ nextPathSegment,pathSegment]
+    - include: illegal
+
+# =====================================
+
+  subPath:
+    - meta_include_prototype: false
+    - match: '\$'
+      set: [nextSubPathSegment, pathVar]
+    - match: \.
+      scope: punctuation.separator.jlf
+      set: subPathEnd
+    - match: '(?=.)'
+      set: [ nextSubPathSegment, pathSegment ]
+
+  subPathEnd:
+    - meta_include_prototype: false
+    - include: endOfSubPath
+    - include: illegal
+
+  endOfSubPath:
+    - meta_include_prototype: false
+    - match: '\)'
+      pop: true
+
+  nextSubPathSegment:
+    - meta_include_prototype: false
+    - include: endOfSubPath
+    - match: '\.#'
+      scope: punctuation.separator.jlf
+      set: endOfSubPath
+    - match: \.
+      scope: punctuation.separator.jlf
+      set: [ nextSubPathSegment,pathSegment]
+    - include: illegal
+
+# =============================================================================

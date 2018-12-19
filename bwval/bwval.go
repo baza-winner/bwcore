@@ -267,7 +267,6 @@ func TemplateFrom(pp bwrune.ProviderProvider, optDef ...*Def) (result Template, 
 		err = bwerr.Refine(err, "failed to TemplateFrom: {Error}")
 		return
 	}
-	// bwdebug.Print("def", def)
 	var st bwparse.Status
 	if def != nil {
 		val, st = ParseValByDef(p, *def)

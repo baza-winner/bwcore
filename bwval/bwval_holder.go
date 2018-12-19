@@ -120,14 +120,14 @@ func (v Holder) MustPathStr(pathStr string, optVars ...map[string]interface{}) (
 
 // MarshalJSON - реализация интерфейса bw.Val
 func (v Holder) MarshalJSON() ([]byte, error) {
-	if len(v.Pth) == 0 {
-		return json.Marshal(v.Val)
-	} else {
-		result := map[string]interface{}{}
-		result["val"] = v.Val
-		result["path"] = v.Pth.String()
-		return json.Marshal(result)
-	}
+	// if len(v.Pth) == 0 {
+	// 	return json.Marshal(v.Val)
+	// } else {
+	result := map[string]interface{}{}
+	result["val"] = v.Val
+	result["path"] = v.Pth.String()
+	return json.Marshal(result)
+	// }
 }
 
 // SetPathVal - реализация интерфейса bw.Val
@@ -174,18 +174,24 @@ func (v *Holder) SetPathVal(val interface{}, path bw.ValPath, optVars ...map[str
 					func() (result interface{}, ok bool) {
 						if ok = simplePath[i+1].Type == bw.ValPathItemKey; ok {
 							_, _ = hVal.KindSwitch(map[bwtype.ValKind]KindCase{
-								bwtype.ValMap: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
-									m, _ := val.(map[string]interface{})
-									result = map[string]interface{}{}
-									m[vpi.Key] = result
-									return nil, nil
-								},
-								bwtype.ValOrderedMap: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
-									o, _ := val.(*bwmap.Ordered)
+								bwtype.ValMapIntf: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+									o, _ := val.(bwmap.I)
 									result = bwmap.OrderedNew()
 									o.Set(vpi.Key, result)
 									return nil, nil
 								},
+								// bwtype.ValMap: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+								// 	m, _ := val.(map[string]interface{})
+								// 	result = map[string]interface{}{}
+								// 	m[vpi.Key] = result
+								// 	return nil, nil
+								// },
+								// bwtype.ValOrderedMap: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
+								// 	o, _ := val.(*bwmap.Ordered)
+								// 	result = bwmap.OrderedNew()
+								// 	o.Set(vpi.Key, result)
+								// 	return nil, nil
+								// },
 							})
 						}
 						return
@@ -511,28 +517,6 @@ func (v Holder) ForEach(body ForEachBody) (err error) {
 			}
 			return
 		},
-		// bwtype.ValOrderedMap: func(val interface{}, kind bwtype.ValKind) (result interface{}, err error) {
-		// 	o, _ := val.(*bwmap.Ordered)
-		// 	for idx, key := range o.Keys() {
-		// 		hVal := v.MustKey(key)
-		// 		if needBreak, err = body(idx, key, hVal); needBreak || err != nil {
-		// 			break
-		// 		}
-		// 	}
-		// 	return
-		// },
-		// bwtype.ValMap: func(val interface{}, kind bwtype.ValKind) (result interface{}, err error) {
-		// 	idx := 0
-		// 	m, _ := val.(map[string]interface{})
-		// 	for key, _ := range m {
-		// 		hVal := v.MustKey(key)
-		// 		if needBreak, err = body(idx, key, hVal); needBreak || err != nil {
-		// 			break
-		// 		}
-		// 		idx++
-		// 	}
-		// 	return
-		// },
 		bwtype.ValArray: func(val interface{}, kind bwtype.ValKind) (result interface{}, err error) {
 			vals, _ := val.([]interface{})
 			for idx, _ := range vals {
@@ -556,11 +540,6 @@ func (v Holder) Keys(optFilter ...bwmap.KeysFilter) (result []string, err error)
 			result = m.Keys(optFilter...)
 			return nil, nil
 		},
-		// bwtype.ValOrderedMap: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
-		// 	o, _ := val.(*bwmap.Ordered)
-		// 	result = o.Keys(optFilter...)
-		// 	return nil, nil
-		// },
 	})
 	return
 }
@@ -947,12 +926,13 @@ func (v Holder) validVal(def Def, skipArrayOf bool) (result interface{}, err err
 		if defKind == bwtype.ValMap {
 			m, _ = val.(map[string]interface{})
 		} else {
-			o, _ := val.(bwmap.Ordered)
+			o, _ := val.(*bwmap.Ordered)
 			m = o.Map()
 		}
 		if def.Keys != nil {
 			unexpectedKeys := bwmap.MustUnexpectedKeys(val, def.Keys)
 			for key, keyDef := range def.Keys {
+				// bwdebug.Print("v:json", v, "key", key, "m:json", m, "keyDef:json", keyDef)
 				if err = mapHelper(v.Pth, m, key, keyDef); err != nil {
 					return
 				}
@@ -969,8 +949,28 @@ func (v Holder) validVal(def Def, skipArrayOf bool) (result interface{}, err err
 					}
 				}
 			}
-		} else if def.Elem != nil {
+			var requiredKeys []string
+			for key, keyDef := range def.Keys {
+				if !keyDef.IsOptional {
+					requiredKeys = append(requiredKeys, key)
+				}
+			}
+			if len(requiredKeys) > 0 {
+				for _, key := range requiredKeys {
+					if _, ok := m[key]; !ok {
+						err = v.hasNoKeyError(key)
+						return
+					}
+				}
+			}
+		}
+		if def.Elem != nil {
 			for k := range m {
+				if def.Keys != nil {
+					if _, ok := def.Keys[k]; ok {
+						continue
+					}
+				}
 				if err = mapHelper(v.Pth, m, k, *(def.Elem)); err != nil {
 					return
 				}
@@ -1006,6 +1006,7 @@ func (v Holder) validVal(def Def, skipArrayOf bool) (result interface{}, err err
 
 func mapHelper(path bw.ValPath, m map[string]interface{}, key string, elemDef Def) (err error) {
 	vp, _ := Holder{Val: m, Pth: path}.Key(key)
+	// bwdebug.Print("vp:json", vp, "path", path, "key", key)
 	var val interface{}
 	if val, err = vp.validVal(elemDef, false); err != nil {
 		return

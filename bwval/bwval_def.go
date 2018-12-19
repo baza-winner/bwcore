@@ -5,7 +5,6 @@ import (
 
 	"github.com/baza-winner/bwcore/ansi"
 	"github.com/baza-winner/bwcore/bw"
-	"github.com/baza-winner/bwcore/bwdebug"
 	"github.com/baza-winner/bwcore/bwerr"
 	"github.com/baza-winner/bwcore/bwmap"
 	"github.com/baza-winner/bwcore/bwparse"
@@ -392,6 +391,28 @@ func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (res
 			}
 			return
 		}
+		opt.OnValidateMap = func(on bwparse.On, m bwmap.I) (err error) {
+			if def.Keys != nil {
+				var requiredKeys []string
+				for key, keyDef := range def.Keys {
+					if !keyDef.IsOptional {
+						requiredKeys = append(requiredKeys, key)
+					}
+				}
+				if len(requiredKeys) > 0 {
+					for _, key := range requiredKeys {
+						if !m.HasKey(key) {
+							err = p.Error(bwparse.E{
+								Start: on.Start,
+								Fmt:   bw.Fmt(ansi.String("no <ansiErr>required<ansi> key `<ansiErr>%s<ansi>`"), key),
+							})
+							return
+						}
+					}
+				}
+			}
+			return
+		}
 	}
 
 	if hasArray := opt.KindSet.Has(bwtype.ValArray); hasArray || !skipArrayOf && def.IsArrayOf {
@@ -440,7 +461,6 @@ func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (res
 	if result, status = bwparse.Val(p, opt); status.IsOK() {
 		h := Holder{Val: result, Pth: base}
 		if result, status.Err = h.validVal(def, skipArrayOf); status.Err != nil {
-			bwdebug.Print("def:json", def)
 			status.Err = p.Error(bwparse.E{
 				Start: status.Start,
 				Fmt:   bwerr.Err(status.Err),

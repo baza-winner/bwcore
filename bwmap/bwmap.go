@@ -36,6 +36,9 @@ func UnexpectedKeys(m interface{}, expected ...interface{}) (result bwset.String
 	if expected == nil {
 		return
 	}
+	if o, ok := m.(*Ordered); ok {
+		m = o.Map()
+	}
 	v := reflect.ValueOf(m)
 	if v.Kind() != reflect.Map {
 		err = bwerr.From(ansiMustBeMap, m)
