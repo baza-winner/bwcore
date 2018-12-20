@@ -459,14 +459,20 @@ func Bool(p I, optOpt ...Opt) (result bool, status Status) {
 func Id(p I, optOpt ...Opt) (result string, status Status) {
 	opt := getOpt(optOpt)
 	r := p.Curr().rune
-	if status.OK = IsLetter(r); status.OK {
+	var isId func(r rune) bool
+	if opt.StrictId {
+		isId = func(r rune) bool { return IsLetter(r) }
+	} else {
+		isId = func(r rune) bool { return IsLetter(r) || unicode.IsDigit(r) || r == '-' || r == '/' || r == '.' }
+	}
+	if status.OK = isId(r); status.OK {
 		status.Start = p.Start()
 		defer func() { p.Stop(status.Start) }()
 		var while func(r rune) bool
 		if opt.StrictId {
 			while = func(r rune) bool { return IsLetter(r) || unicode.IsDigit(r) }
 		} else {
-			while = func(r rune) bool { return !unicode.IsSpace(r) && !isReservedRune(r) }
+			while = func(r rune) bool { return IsLetter(r) || unicode.IsDigit(r) || r == '-' || r == '/' || r == '.' }
 		}
 		for !p.Curr().isEOF && while(r) {
 			result += string(r)
@@ -477,13 +483,13 @@ func Id(p I, optOpt ...Opt) (result string, status Status) {
 	return
 }
 
-func isReservedRune(r rune) bool {
-	return r == ',' || // r == '.' ||
-		r == '{' || r == '<' || r == '[' || r == '(' ||
-		r == '}' || r == '>' || r == ']' || r == ')' ||
-		r == ':' || r == '=' ||
-		r == '"' || r == '\''
-}
+// func isReservedRune(r rune) bool {
+// 	return r == ',' ||
+// 		r == '{' || r == '<' || r == '[' || r == '(' ||
+// 		r == '}' || r == '>' || r == ']' || r == ')' ||
+// 		r == ':' || r == '=' ||
+// 		r == '"' || r == '\''
+// }
 
 // ============================================================================
 
