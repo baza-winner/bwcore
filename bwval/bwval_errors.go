@@ -113,7 +113,7 @@ func (v Holder) notEnoughRangeError(l int, idx int) error {
 
 // ============================================================================
 
-func (v Holder) outOfRangeError(rng bwtype.Range) (err error) {
+func (v Holder) outOfRangeError(rng *bwtype.Range) (err error) {
 	err = bwerr.From(v.ansiString()+ansi.String(" is <ansiErr>out of range<ansi> <ansiVal>%s"), rng.String())
 	return
 }

@@ -1,58 +1,15 @@
 package bwval
 
 import (
-	"encoding/json"
-
 	"github.com/baza-winner/bwcore/ansi"
 	"github.com/baza-winner/bwcore/bw"
 	"github.com/baza-winner/bwcore/bwerr"
 	"github.com/baza-winner/bwcore/bwmap"
+
 	"github.com/baza-winner/bwcore/bwparse"
 	"github.com/baza-winner/bwcore/bwset"
 	"github.com/baza-winner/bwcore/bwtype"
 )
-
-// ============================================================================
-
-type Def struct {
-	Types      bwtype.ValKindSet
-	IsOptional bool
-	Enum       bwset.String
-	Range      bwtype.Range
-	Keys       map[string]Def
-	Elem       *Def
-	ArrayElem  *Def
-	Default    interface{}
-	IsArrayOf  bool
-}
-
-func (v Def) MarshalJSON() ([]byte, error) {
-	result := map[string]interface{}{}
-	result["Types"] = v.Types
-	result["IsOptional"] = v.IsOptional
-	if v.IsArrayOf {
-		result["IsArrayOf"] = v.IsArrayOf
-	}
-	if v.Enum != nil {
-		result["Enum"] = v.Enum
-	}
-	if v.Range.Kind() != bwtype.RangeNo {
-		result["Range"] = v.Range
-	}
-	if v.Keys != nil {
-		result["Keys"] = v.Keys
-	}
-	if v.Elem != nil {
-		result["Elem"] = *(v.Elem)
-	}
-	if v.ArrayElem != nil {
-		result["ArrayElem"] = *(v.ArrayElem)
-	}
-	if v.Default != nil {
-		result["Default"] = v.Default
-	}
-	return json.Marshal(result)
-}
 
 // ============================================================================
 
@@ -76,8 +33,8 @@ func init() {
 	)
 }
 
-func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, status bwparse.Status) {
-	result = &Def{}
+func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *bwtype.Def, status Status) {
+	result = &bwtype.Def{}
 	defer func() {
 		if !status.IsOK() {
 			result = nil
@@ -88,7 +45,7 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 	if len(optBaseProvider) > 0 {
 		base = MustPath(optBaseProvider[0])
 	} else {
-		base = bw.ValPath{bw.ValPathItem{Type: bw.ValPathItemVar, Key: "Def"}}
+		base = bw.ValPath{bw.ValPathItem{Type: bw.ValPathItemVar, Name: "Def"}}
 	}
 	string2type := map[string]bwtype.ValKind{}
 	for _, t := range defSupportedTypes.ToSlice() {
@@ -102,7 +59,7 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 		isOptionalSpecified bool
 	)
 	result.Types = bwtype.ValKindSet{}
-	addType := func(on bwparse.On, tp bwtype.ValKind) (err error) {
+	addType := func(on On, tp bwtype.ValKind) (err error) {
 		switch tp {
 		case bwtype.ValNumber, bwtype.ValInt:
 			dontMix := bwtype.ValKindSetFrom(bwtype.ValInt, bwtype.ValNumber)
@@ -121,7 +78,7 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 		result.Types.Add(tp)
 		return
 	}
-	processType := func(on bwparse.On, s string) (ok bool, err error) {
+	processType := func(on On, s string) (ok bool, err error) {
 		if tp, ok = string2type[s]; ok {
 			err = addType(on, tp)
 		} else if ok = s == "ArrayOf"; ok {
@@ -134,29 +91,29 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 		return
 	}
 	validKeys := bwset.StringFrom("type", "range", "enum", "keys", "elem", "arrayElem", "default", "isOptional")
-	setForType := func(opt bwparse.Opt) bwparse.Opt {
+	setForType := func(opt Opt) Opt {
 		opt.KindSet.Add(bwtype.ValId, bwtype.ValString, bwtype.ValArray)
-		opt.OnId = func(on bwparse.On, s string) (val interface{}, ok bool, err error) {
+		opt.OnId = func(on On, s string) (val interface{}, ok bool, err error) {
 			ok, err = processType(on, s)
 			return
 		}
-		opt.OnValidateString = func(on bwparse.On, s string) (err error) {
+		opt.OnValidateString = func(on On, s string) (err error) {
 			if ok, err = processType(on, s); !ok && err == nil {
 				err = bwparse.Unexpected(p, on.Start)
 			}
 			return
 		}
-		opt.OnParseArrayElem = func(on bwparse.On, vals []interface{}) (outVals []interface{}, status bwparse.Status) {
+		opt.OnParseArrayElem = func(on On, vals []interface{}) (outVals []interface{}, status Status) {
 			var val interface{}
 			kindSet := on.Opt.KindSet
 			defer func() { on.Opt.KindSet = kindSet }()
 			on.Opt.KindSet = bwtype.ValKindSetFrom(bwtype.ValId, bwtype.ValString)
-			if val, status = bwparse.Val(p, *on.Opt); status.IsOK() {
+			if val, status = ParseVal(p, *on.Opt); status.IsOK() {
 				outVals = append(vals, val)
 			}
 			return
 		}
-		opt.OnValidateArray = func(on bwparse.On, vals []interface{}) (err error) {
+		opt.OnValidateArray = func(on On, vals []interface{}) (err error) {
 			if len(vals) == 0 {
 				err = bwparse.Expects(p, bwparse.Unexpected(p, on.Start), "non empty <ansiType>Array<ansi>")
 			}
@@ -173,10 +130,10 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 		}
 		return err
 	}
-	if val, status = bwparse.Val(p, setForType(bwparse.Opt{
+	if val, status = ParseVal(p, setForType(Opt{
 		ValFalse: true,
 		KindSet:  bwtype.ValKindSetFrom(bwtype.ValMap),
-		OnValidateMap: func(on bwparse.On, m bwmap.I) (err error) {
+		OnValidateMap: func(on On, m bwmap.I) (err error) {
 			if len(result.Types) == 0 {
 				err = p.Error(bwparse.E{
 					Start: on.Start,
@@ -185,7 +142,7 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 			}
 			return
 		},
-		OnValidateMapKey: func(on bwparse.On, m bwmap.I, key string) (err error) {
+		OnValidateMapKey: func(on On, m bwmap.I, key string) (err error) {
 			if !validKeys.Has(key) {
 				err = p.Error(bwparse.E{
 					Start: on.Start,
@@ -216,10 +173,10 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 			}
 			return
 		},
-		OnParseMapElem: func(on bwparse.On, m bwmap.I, key string) (status bwparse.Status) {
+		OnParseMapElem: func(on On, m bwmap.I, key string) (status Status) {
 			switch key {
 			case "type":
-				if _, status = bwparse.Val(p, setForType(bwparse.Opt{KindSet: bwtype.ValKindSet{}})); status.IsOK() {
+				if _, status = ParseVal(p, setForType(Opt{KindSet: bwtype.ValKindSet{}})); status.IsOK() {
 					validKeys = bwset.StringFrom("isOptional", "default")
 					for _, vk := range result.Types.ToSlice() {
 						switch vk {
@@ -241,7 +198,7 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 								Start: status.Start,
 								Fmt:   bw.A{Fmt: "key <ansiVar>enum<ansi> is specified, so value of key <ansiVar>type<ansi> expects to have <ansiVal>String<ansi>"},
 							})
-						} else if result.Range.Kind() != bwtype.RangeNo && !(result.Types.Has(bwtype.ValInt) || result.Types.Has(bwtype.ValNumber)) {
+						} else if result.Range != nil && !(result.Types.Has(bwtype.ValInt) || result.Types.Has(bwtype.ValNumber)) {
 							status.Err = p.Error(bwparse.E{
 								Start: status.Start,
 								Fmt:   bw.A{Fmt: "key <ansiVar>range<ansi> is specified, so value of key <ansiVar>type<ansi> expects to have <ansiVal>Int<ansi> or <ansiVal>Number<ansi>"},
@@ -269,18 +226,18 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 					}
 				}
 			case "enum":
-				_, status = bwparse.Val(p, bwparse.Opt{
+				_, status = ParseVal(p, Opt{
 					KindSet: bwtype.ValKindSetFrom(bwtype.ValString, bwtype.ValArray),
-					OnValidateString: func(on bwparse.On, s string) (err error) {
+					OnValidateString: func(on On, s string) (err error) {
 						if result.Enum == nil {
 							result.Enum = bwset.String{}
 						}
 						result.Enum.Add(s)
 						return
 					},
-					OnParseArrayElem: func(on bwparse.On, vals []interface{}) (outVals []interface{}, status bwparse.Status) {
+					OnParseArrayElem: func(on On, vals []interface{}) (outVals []interface{}, status Status) {
 						var s string
-						if s, status = bwparse.String(p, *on.Opt); status.IsOK() {
+						if s, status = ParseString(p, *on.Opt); status.IsOK() {
 							if result.Enum == nil {
 								result.Enum = bwset.String{}
 							}
@@ -293,21 +250,21 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 					},
 				})
 			case "range":
-				if result.Range, status = bwparse.Range(p, bwparse.Opt{KindSet: bwtype.ValKindSetFrom(bwtype.ValNumber)}); !status.OK && status.Err == nil {
+				if result.Range, status = ParseRange(p, Opt{KindSet: bwtype.ValKindSetFrom(bwtype.ValNumber)}); !status.OK && status.Err == nil {
 					status.Err = bwparse.Expects(p, nil, "<ansiType>Range<ansi>")
 				}
 			case "keys":
-				if _, status = bwparse.Map(p, bwparse.Opt{
-					OnParseMapElem: func(on bwparse.On, m bwmap.I, key string) (status bwparse.Status) {
+				if _, status = ParseMap(p, Opt{
+					OnParseMapElem: func(on On, m bwmap.I, key string) (status Status) {
 						if result.Keys == nil {
-							result.Keys = map[string]Def{}
+							result.Keys = map[string]bwtype.Def{}
 						}
-						var def *Def
+						var def *bwtype.Def
 						if def, status = ParseDef(p, base.AppendKey(key)); status.IsOK() {
 							result.Keys[key] = *def
 							m.Set(key, nil)
 						} else if status.Err == nil {
-							status.Err = bwparse.Expects(p, nil, "<ansiType>Def<ansi>")
+							status.Err = bwparse.Expects(p, nil, "<ansiType>bwtype.Def<ansi>")
 						}
 						return
 					},
@@ -315,7 +272,7 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 					status.Err = bwparse.Expects(p, nil, "<ansiType>Map<ansi>")
 				}
 			case "elem", "arrayElem":
-				var def *Def
+				var def *bwtype.Def
 				if def, status = ParseDef(p, base.AppendKey(key)); status.IsOK() {
 					if key == "elem" {
 						result.Elem = def
@@ -323,10 +280,10 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 						result.ArrayElem = def
 					}
 				} else if status.Err == nil {
-					status.Err = bwparse.Expects(p, nil, "<ansiType>Def<ansi>")
+					status.Err = bwparse.Expects(p, nil, "<ansiType>bwtype.Def<ansi>")
 				}
 			case "isOptional":
-				result.IsOptional, status = bwparse.Bool(p)
+				result.IsOptional, status = ParseBool(p)
 				isOptionalSpecified = true
 			case "default":
 				result.Default, status = ParseValByDef(p, *result, base.AppendKey(key))
@@ -347,7 +304,7 @@ func ParseDef(p bwparse.I, optBaseProvider ...bw.ValPathProvider) (result *Def, 
 
 // ============================================================================
 
-func ParseValByDef(p bwparse.I, def Def, optBase ...bw.ValPath) (result interface{}, status bwparse.Status) {
+func ParseValByDef(p bwparse.I, def bwtype.Def, optBase ...bw.ValPath) (result interface{}, status Status) {
 	var base bw.ValPath
 	if len(optBase) > 0 {
 		base = optBase[0]
@@ -355,13 +312,13 @@ func ParseValByDef(p bwparse.I, def Def, optBase ...bw.ValPath) (result interfac
 	return parseValByDef(p, def, base, false)
 }
 
-func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (result interface{}, status bwparse.Status) {
+func parseValByDef(p bwparse.I, def bwtype.Def, base bw.ValPath, skipArrayOf bool) (result interface{}, status Status) {
 
-	opt := bwparse.Opt{KindSet: bwtype.ValKindSet{}}
+	opt := Opt{KindSet: bwtype.ValKindSet{}}
 	opt.KindSet.AddSet(def.Types)
 
 	if opt.KindSet.Has(bwtype.ValMap) || opt.KindSet.Has(bwtype.ValOrderedMap) {
-		opt.OnValidateMapKey = func(on bwparse.On, m bwmap.I, key string) (err error) {
+		opt.OnValidateMapKey = func(on On, m bwmap.I, key string) (err error) {
 			if def.Elem == nil && def.Keys != nil {
 				if _, ok := def.Keys[key]; !ok {
 					err = p.Error(bwparse.E{
@@ -372,8 +329,8 @@ func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (res
 			}
 			return
 		}
-		opt.OnParseMapElem = func(on bwparse.On, m bwmap.I, key string) (status bwparse.Status) {
-			var keyDef *Def
+		opt.OnParseMapElem = func(on On, m bwmap.I, key string) (status Status) {
+			var keyDef *bwtype.Def
 			if def.Keys != nil {
 				if v, ok := def.Keys[key]; ok {
 					keyDef = &v
@@ -383,7 +340,7 @@ func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (res
 				keyDef = def.Elem
 			}
 			if keyDef == nil {
-				keyDef = &Def{Types: defSupportedTypes}
+				keyDef = &bwtype.Def{Types: defSupportedTypes}
 			}
 			var val interface{}
 			if val, status = parseValByDef(p, *keyDef, base.AppendKey(key), skipArrayOf); status.IsOK() {
@@ -391,7 +348,7 @@ func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (res
 			}
 			return
 		}
-		opt.OnValidateMap = func(on bwparse.On, m bwmap.I) (err error) {
+		opt.OnValidateMap = func(on On, m bwmap.I) (err error) {
 			if def.Keys != nil {
 				var requiredKeys []string
 				for key, keyDef := range def.Keys {
@@ -416,11 +373,11 @@ func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (res
 	}
 
 	if hasArray := opt.KindSet.Has(bwtype.ValArray); hasArray || !skipArrayOf && def.IsArrayOf {
-		elemDef := func() Def {
+		elemDef := func() bwtype.Def {
 			if !hasArray {
 				return def
 			} else {
-				var elemDef *Def
+				var elemDef *bwtype.Def
 				if def.ArrayElem != nil {
 					elemDef = def.ArrayElem
 				}
@@ -428,7 +385,7 @@ func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (res
 					elemDef = def.Elem
 				}
 				if elemDef == nil {
-					elemDef = &Def{Types: defSupportedTypes}
+					elemDef = &bwtype.Def{Types: defSupportedTypes}
 				}
 				return *elemDef
 			}
@@ -438,14 +395,14 @@ func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (res
 			opt.KindSet.Add(bwtype.ValArray)
 			subSkipArrayOf = true
 		}
-		opt.OnParseArrayElem = func(on bwparse.On, vals []interface{}) (outVals []interface{}, status bwparse.Status) {
+		opt.OnParseArrayElem = func(on On, vals []interface{}) (outVals []interface{}, status Status) {
 			var val interface{}
 			if val, status = parseValByDef(p, elemDef(), base.AppendIdx(len(vals)), subSkipArrayOf); status.IsOK() {
 				outVals = append(vals, val)
 			}
 			return
 		}
-		opt.OnValidateArrayOfStringElem = func(on bwparse.On, ss []string, s string) (err error) {
+		opt.OnValidateArrayOfStringElem = func(on On, ss []string, s string) (err error) {
 			h := Holder{Val: s, Pth: base.AppendIdx(len(ss))}
 			if _, err = h.validVal(elemDef(), subSkipArrayOf); err != nil {
 				// bwdebug.Print("err", err)
@@ -458,7 +415,7 @@ func parseValByDef(p bwparse.I, def Def, base bw.ValPath, skipArrayOf bool) (res
 		}
 	}
 
-	if result, status = bwparse.Val(p, opt); status.IsOK() {
+	if result, status = ParseVal(p, opt); status.IsOK() {
 		h := Holder{Val: result, Pth: base}
 		if result, status.Err = h.validVal(def, skipArrayOf); status.Err != nil {
 			status.Err = p.Error(bwparse.E{

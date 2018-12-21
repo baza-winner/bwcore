@@ -48,7 +48,7 @@ variables:
 
   pathSegmentSeparator: ':'
   rangeSeparator: '\.\.'
-  assign: '='
+  assignSeparator: '(=>|:?=|:)'
 
   defTypeSingle: 'Array|Map|String|Int|Number|Bool'
   defTypeMulti: 'ArrayOf'
@@ -56,7 +56,6 @@ variables:
   pathUpperLevel: '\.\.'
   pathCurrLevel: '\.'
   pathOptionalSign: '\?'
-  # pathHashSign: '#'
   newline: '\n'
 
 # =============================================================================
@@ -98,10 +97,10 @@ contexts:
       captures:
         1: keyword.jlf
         2: keyword.jlf
-      set: [main, defOrPath, assign]
+      set: [main, defOrPath, assignSeparator]
     - match: '{{varStarter}}'
       scope: keyword.jlf
-      set: [main, value, assign, var]
+      set: [main, value, assignSeparator, var]
     - match: '{{any}}'
       set: [end, value]
 
@@ -110,15 +109,17 @@ contexts:
       captures:
         1: keyword.jlf
         2: keyword.jlf
-      set: [end, defOrPath, assign]
+      set: [end, defOrPath, assignSeparator]
     - match: '{{varStarter}}'
       scope: keyword.jlf
-      set: [end, value, assign, var]
+      set: [end, value, assignSeparator, var]
     - include: illegal
 
-  assign:
-    - match: '{{assign}}'
-      scope: punctuation.separator.jlf
+  assignSeparator:
+    - match: '{{assignSeparator}}'
+      scope: comment.jlf
+      pop: true
+    - match: '{{any}}'
       pop: true
 
 # =============================================================================
@@ -252,14 +253,14 @@ contexts:
 
   keySeparator:
     - match: '{{keySeparator}}'
-      scope: punctuation.separator.jlf
+      scope: comment.jlf
       pop: true
     - match: '{{any}}'
       pop: true
 
   valueSeparator:
     - match: '{{valueSeparator}}'
-      scope: punctuation.separator.jlf
+      scope: comment.jlf
       pop: true
     - match: '{{any}}'
       pop: true
@@ -377,9 +378,6 @@ contexts:
 
   pathBeginOnlySegment:
     - meta_include_prototype: false
-    - match: '{{varStarter}}'
-      scope: keyword.jlf
-      set: var
     - match: '{{fileSpecStarter}}'
       scope: keyword.jlf
       set: pathFileSpec
@@ -389,6 +387,9 @@ contexts:
 
   pathCommonSegment:
     - meta_include_prototype: false
+    - match: '{{varStarter}}'
+      scope: keyword.jlf
+      set: var
     - match: '{{funcStarter}}'
       scope: keyword.jlf
       set: [ pathFuncArg, pathFuncName ]
@@ -637,28 +638,28 @@ contexts:
       pop: true
     - match: \btype\b
       scope: keyword.jlf
-      set: [keyOfDef, defType, keySeparator]
+      set: [keyOfDef, valueSeparator, defType, keySeparator]
     - match: \benum\b
       scope: keyword.jlf
-      set: [keyOfDef, strings, keySeparator]
+      set: [keyOfDef, valueSeparator, strings, keySeparator]
     - match: \bkeysDef\b
       scope: keyword.jlf
-      set: [keyOfDef, defKeysDef, keySeparator]
+      set: [keyOfDef, valueSeparator, defKeysDef, keySeparator]
     - match: \bkeys\b
       scope: keyword.jlf
-      set: [keyOfDef, strings, keySeparator]
+      set: [keyOfDef, valueSeparator, strings, keySeparator]
     - match: \b(elemDef|arrayElemDef)\b
       scope: keyword.jlf
-      set: [keyOfDef, defBegin, keySeparator]
+      set: [keyOfDef, valueSeparator, defOrPath, keySeparator]
     - match: \brange\b
       scope: keyword.jlf
-      set: [keyOfDef, rangeValue, keySeparator]
+      set: [keyOfDef, valueSeparator, rangeValue, keySeparator]
     - match: \bisOptional\b
       scope: keyword.jlf
-      set: [keyOfDef, boolValue, keySeparator]
+      set: [keyOfDef, valueSeparator, boolValue, keySeparator]
     - match: \bdefault\b
       scope: keyword.jlf
-      set: [keyOfDef, value, keySeparator]
+      set: [keyOfDef, valueSeparator, value, keySeparator]
     - include: illegal
 
   defType:
@@ -701,7 +702,7 @@ contexts:
       scope: punctuation.section.block.end.jlf
       pop: true
     - match: '{{any}}'
-      set: [ defKeysTail, defBegin, keySeparator, optionalSign, keyOfDefKeys]
+      set: [ defKeysTail, defOrPath, keySeparator, optionalSign, keyOfDefKeys]
 
   keyOfDefKeys:
     - include: key

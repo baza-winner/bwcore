@@ -130,11 +130,13 @@ const (
 type ValPathItemType uint8
 
 const (
-	ValPathItemHash ValPathItemType = iota
+	ValPathItemDef ValPathItemType = iota
+	ValPathItemFileSpec
 	ValPathItemIdx
 	ValPathItemKey
-	ValPathItemPath
 	ValPathItemVar
+	ValPathItemFunc
+	ValPathItemPath
 )
 
 func (v ValPathItemType) MarshalJSON() ([]byte, error) {
@@ -144,13 +146,16 @@ func (v ValPathItemType) MarshalJSON() ([]byte, error) {
 type ValPathItem struct {
 	Type       ValPathItemType
 	Idx        int
-	Key        string
+	Name       string
 	Path       ValPath
 	IsOptional bool
+	DefaultVal interface{}
+	FuncArg    interface{}
+	Def        interface{}
 }
 
 func (vpi ValPathItem) keyForPathS() (result string) {
-	result = vpi.Key
+	result = vpi.Name
 	runes := []rune(result)
 	var needQuote bool
 	if needQuote = len(runes) == 0; !needQuote {
@@ -194,12 +199,12 @@ func (v ValPath) String() (result string) {
 				s = "$" + vpi.keyForPathS()
 			case ValPathItemIdx:
 				s = strconv.FormatInt(int64(vpi.Idx), 10)
-			case ValPathItemHash:
-				s = "#"
+			// case ValPathItemHash:
+			// 	s = "#"
 			default:
 				panic(Spew.Sprintf("%#v", vpi.Type))
 			}
-			if vpi.Type != ValPathItemHash && vpi.IsOptional {
+			if vpi.IsOptional {
 				s += "?"
 			}
 			ss = append(ss, s)
@@ -221,16 +226,16 @@ func (v ValPath) AppendIdx(idx int) ValPath {
 
 func (v ValPath) AppendKey(key string) ValPath {
 	// path := append(v[:0:0], v...)
-	return append(v.Clone(), ValPathItem{Type: ValPathItemKey, Key: key})
+	return append(v.Clone(), ValPathItem{Type: ValPathItemKey, Name: key})
 }
 
 func (v ValPath) AppendVar(name string) ValPath {
-	return append(v.Clone(), ValPathItem{Type: ValPathItemVar, Key: name})
+	return append(v.Clone(), ValPathItem{Type: ValPathItemVar, Name: name})
 }
 
-func (v ValPath) AppendHash(name string) ValPath {
-	return append(v.Clone(), ValPathItem{Type: ValPathItemHash})
-}
+// func (v ValPath) AppendHash(name string) ValPath {
+// 	return append(v.Clone(), ValPathItem{Type: ValPathItemHash})
+// }
 
 func (v ValPath) Append(a ValPath) ValPath {
 	return append(v.Clone(), a...)
@@ -263,6 +268,20 @@ var braces = map[rune]rune{
 
 func Braces() map[rune]rune {
 	return braces
+}
+
+// ============================================================================
+
+func IsDigit(r rune) bool {
+	return '0' <= r && r <= '9'
+}
+
+func IsLetter(r rune) bool {
+	return r == '_' || unicode.IsLetter(r)
+}
+
+func IsPunctOrSymbol(r rune) bool {
+	return unicode.IsPunct(r) || unicode.IsSymbol(r)
 }
 
 // ============================================================================

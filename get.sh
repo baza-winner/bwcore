@@ -16,7 +16,8 @@ go get github.com/baza-winner/bwcore/bwtesting
 go get github.com/baza-winner/bwcore/bwtype
 go get github.com/baza-winner/bwcore/bwval
 go get github.com/mohae/deepcopy
-go get github.com/urfave/cli 
+go get github.com/urfave/cli
 go get github.com/maruel/panicparse/cmd/pp
 go get golang.org/x/tools/cmd/stringer
 go get github.com/iancoleman/strcase
+go get honnef.co/go/tools/cmd/megacheck

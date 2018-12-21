@@ -16,6 +16,7 @@ import (
 type Holder struct {
 	Val interface{}
 	Pth bw.ValPath
+	Var map[string]interface{}
 }
 
 // ============================================================================
@@ -39,7 +40,7 @@ func (v Holder) PathVal(path bw.ValPath, optVars ...map[string]interface{}) (res
 	}
 
 	if path[0].Type == bw.ValPathItemVar {
-		varName := path[0].Key
+		varName := path[0].Name
 		var target interface{}
 		var ok bool
 		if ok = len(optVars) > 0; ok {
@@ -57,33 +58,33 @@ func (v Holder) PathVal(path bw.ValPath, optVars ...map[string]interface{}) (res
 	for i, vpi := range simplePath {
 		switch vpi.Type {
 		case bw.ValPathItemKey:
-			result, err = Holder{result, v.Pth.Append(path[:i])}.KeyVal(vpi.Key,
+			result, err = Holder{Val: result, Pth: v.Pth.Append(path[:i])}.KeyVal(vpi.Name,
 				func() (result interface{}, ok bool) {
 					ok = hasOptional(path[i:])
 					return
 				},
 			)
 		case bw.ValPathItemIdx:
-			result, err = Holder{result, v.Pth.Append(path[:i])}.IdxVal(vpi.Idx,
+			result, err = Holder{Val: result, Pth: v.Pth.Append(path[:i])}.IdxVal(vpi.Idx,
 				func() (result interface{}, ok bool) {
 					ok = hasOptional(path[i:])
 					return
 				},
 			)
-		case bw.ValPathItemHash:
-			if result == nil {
-				result = 0
-			} else {
-				switch t := result.(type) {
-				case map[string]interface{}:
-					result = len(t)
-				case []interface{}:
-					result = len(t)
-				default:
-					// err = Holder{result, path[:i]}.notOfValKindError("Map", "Array")
-					err = Holder{result, v.Pth.Append(path[:i])}.notOfValKindError(bwtype.ValKindSetFrom(bwtype.ValMap, bwtype.ValArray))
-				}
-			}
+			// case bw.ValPathItemHash:
+			// 	if result == nil {
+			// 		result = 0
+			// 	} else {
+			// 		switch t := result.(type) {
+			// 		case map[string]interface{}:
+			// 			result = len(t)
+			// 		case []interface{}:
+			// 			result = len(t)
+			// 		default:
+			// 			// err = Holder{result, path[:i]}.notOfValKindError("Map", "Array")
+			// 			err = Holder{result, v.Pth.Append(path[:i])}.notOfValKindError(bwtype.ValKindSetFrom(bwtype.ValMap, bwtype.ValArray))
+			// 		}
+			// 	}
 		}
 		if err != nil {
 			return
@@ -102,7 +103,7 @@ func (v Holder) Path(pathProvider bw.ValPathProvider, optVars ...map[string]inte
 	if val, err = (&v).PathVal(path, optVars...); err != nil {
 		return
 	}
-	result = Holder{val, path}
+	result = Holder{Val: val, Pth: path}
 	return
 }
 
@@ -136,9 +137,9 @@ func (v *Holder) SetPathVal(val interface{}, path bw.ValPath, optVars ...map[str
 		v.Val = val
 		return
 	}
-	if path[len(path)-1].Type == bw.ValPathItemHash {
-		return readonlyPathError(path)
-	}
+	// if path[len(path)-1].Type == bw.ValPathItemHash {
+	// 	return readonlyPathError(path)
+	// }
 
 	var simplePath bw.ValPath
 	simplePath, err = v.simplifyPath(path, optVars)
@@ -168,16 +169,16 @@ func (v *Holder) SetPathVal(val interface{}, path bw.ValPath, optVars ...map[str
 		for i, vpi := range simplePath[:len(simplePath)-1] {
 			switch vpi.Type {
 			case bw.ValPathItemKey:
-				hVal := Holder{result, path[:i+1]}
+				hVal := Holder{Val: result, Pth: path[:i+1]}
 				result, err = hVal.KeyVal(
-					vpi.Key,
+					vpi.Name,
 					func() (result interface{}, ok bool) {
 						if ok = simplePath[i+1].Type == bw.ValPathItemKey; ok {
 							_, _ = hVal.KindSwitch(map[bwtype.ValKind]KindCase{
 								bwtype.ValMapIntf: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
 									o, _ := val.(bwmap.I)
 									result = bwmap.OrderedNew()
-									o.Set(vpi.Key, result)
+									o.Set(vpi.Name, result)
 									return nil, nil
 								},
 								// bwtype.ValMap: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
@@ -198,21 +199,21 @@ func (v *Holder) SetPathVal(val interface{}, path bw.ValPath, optVars ...map[str
 					},
 				)
 			case bw.ValPathItemIdx:
-				result, err = Holder{result, v.Pth.Append(path[:i+1])}.IdxVal(vpi.Idx)
+				result, err = Holder{Val: result, Pth: v.Pth.Append(path[:i+1])}.IdxVal(vpi.Idx)
 			}
 			if err != nil {
 				return
 			} else if result == nil {
-				return Holder{nil, v.Pth.Append(path[:i+1])}.wrongValError()
+				return Holder{Pth: v.Pth.Append(path[:i+1])}.wrongValError()
 			}
 		}
 	}
-	rh := Holder{result, path[:len(path)-1]}
+	rh := Holder{Val: result, Pth: path[:len(path)-1]}
 	vpi := simplePath[len(simplePath)-1]
 	switch vpi.Type {
 	case bw.ValPathItemKey:
 		// bwdebug.Print("!LOOK AT ME", "vpi.Key", vpi.Key, "val", val)
-		err = rh.SetKeyVal(vpi.Key, val)
+		err = rh.SetKeyVal(vpi.Name, val)
 	case bw.ValPathItemIdx:
 		err = rh.SetIdxVal(vpi.Idx, val)
 	}
@@ -632,7 +633,7 @@ func (v Holder) MustKeyVal(key string, optDefaultValProvider ...defaultValProvid
 func (v Holder) Key(key string, optDefaultValProvider ...defaultValProvider) (result Holder, err error) {
 	var val interface{}
 	if val, err = v.KeyVal(key, optDefaultValProvider...); err == nil {
-		result = Holder{val, v.Pth.AppendKey(key)}
+		result = Holder{Val: val, Pth: v.Pth.AppendKey(key)}
 	}
 	return
 }
@@ -726,7 +727,7 @@ func (v Holder) MustIdxVal(idx int, optDefaultValProvider ...defaultValProvider)
 func (v Holder) Idx(idx int, optDefaultValProvider ...defaultValProvider) (result Holder, err error) {
 	var val interface{}
 	if val, err = v.IdxVal(idx, optDefaultValProvider...); err == nil {
-		result = Holder{val, v.Pth.AppendIdx(idx)}
+		result = Holder{Val: val, Pth: v.Pth.AppendIdx(idx)}
 	}
 	return
 }
@@ -755,7 +756,7 @@ func (v Holder) SetIdxVal(idx int, val interface{}) (err error) {
 
 // ============================================================================
 
-func (v Holder) ValidVal(def Def) (result interface{}, err error) {
+func (v Holder) ValidVal(def bwtype.Def) (result interface{}, err error) {
 	result, err = v.validVal(def, false)
 	if err != nil {
 		err = bwerr.Refine(err, ansi.String("<ansiVal>%s<ansi>::{Error}"), bwjson.Pretty(v.Val))
@@ -763,7 +764,7 @@ func (v Holder) ValidVal(def Def) (result interface{}, err error) {
 	return
 }
 
-func (v Holder) MustValidVal(def Def) (result interface{}) {
+func (v Holder) MustValidVal(def bwtype.Def) (result interface{}) {
 	var err error
 	if result, err = v.ValidVal(def); err != nil {
 		bwerr.PanicErr(err)
@@ -771,7 +772,7 @@ func (v Holder) MustValidVal(def Def) (result interface{}) {
 	return
 }
 
-func (v *Holder) Valid(def Def) (result Holder, err error) {
+func (v *Holder) Valid(def bwtype.Def) (result Holder, err error) {
 	var val interface{}
 	val, err = v.validVal(def, false)
 	if err != nil {
@@ -782,7 +783,7 @@ func (v *Holder) Valid(def Def) (result Holder, err error) {
 	return
 }
 
-func (v Holder) MustValid(def Def) (result Holder) {
+func (v Holder) MustValid(def bwtype.Def) (result Holder) {
 	var err error
 	if result, err = v.Valid(def); err != nil {
 		bwerr.PanicErr(err)
@@ -824,7 +825,7 @@ func (v Holder) MustKindSwitch(kindCases map[bwtype.ValKind]KindCase, optDefault
 
 // ============================================================================
 
-func (v Holder) validVal(def Def, skipArrayOf bool) (result interface{}, err error) {
+func (v Holder) validVal(def bwtype.Def, skipArrayOf bool) (result interface{}, err error) {
 	var (
 		defKind    bwtype.ValKind
 		val        interface{}
@@ -1004,7 +1005,7 @@ func (v Holder) validVal(def Def, skipArrayOf bool) (result interface{}, err err
 	return
 }
 
-func mapHelper(path bw.ValPath, m map[string]interface{}, key string, elemDef Def) (err error) {
+func mapHelper(path bw.ValPath, m map[string]interface{}, key string, elemDef bwtype.Def) (err error) {
 	vp, _ := Holder{Val: m, Pth: path}.Key(key)
 	// bwdebug.Print("vp:json", vp, "path", path, "key", key)
 	var val interface{}
@@ -1017,7 +1018,7 @@ func mapHelper(path bw.ValPath, m map[string]interface{}, key string, elemDef De
 	return
 }
 
-func (v Holder) arrayHelper(elemDef Def, skipArrayOf bool) (result interface{}, err error) {
+func (v Holder) arrayHelper(elemDef bwtype.Def, skipArrayOf bool) (result interface{}, err error) {
 	arr := v.MustArray()
 	newArr := make([]interface{}, 0, len(arr))
 	for i := range arr {
@@ -1051,7 +1052,7 @@ func (v Holder) simplifyPath(path bw.ValPath, optVars []map[string]interface{}) 
 			if _, err = h.KindSwitch(map[bwtype.ValKind]KindCase{
 				bwtype.ValString: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {
 					s, _ := val.(string)
-					result = append(result, bw.ValPathItem{Type: bw.ValPathItemKey, Key: s})
+					result = append(result, bw.ValPathItem{Type: bw.ValPathItemKey, Name: s})
 					return val, nil
 				},
 				bwtype.ValInt: func(val interface{}, kind bwtype.ValKind) (interface{}, error) {

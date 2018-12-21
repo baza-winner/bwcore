@@ -13,12 +13,13 @@ import (
 	"github.com/baza-winner/bwcore/bwerr"
 	"github.com/baza-winner/bwcore/bwrune"
 	"github.com/baza-winner/bwcore/bwstr"
+	"github.com/baza-winner/bwcore/bwtype"
 	"github.com/baza-winner/bwcore/bwval"
 )
 
 const defaultFailedCode = 1
 
-var cmdOptDef *bwval.Def
+var cmdOptDef *bwtype.Def
 
 func init() {
 	cmdOptDef = bwval.MustDefFrom(bwrune.S{S: `
@@ -60,7 +61,7 @@ func init() {
 	`})
 }
 
-func CmdOptDef() *bwval.Def {
+func CmdOptDef() *bwtype.Def {
 	return cmdOptDef
 }
 

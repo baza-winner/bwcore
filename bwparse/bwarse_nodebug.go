@@ -11,6 +11,6 @@ func (p *P) Stop(start *Start) {
 	delete(p.starts, start.ps.pos)
 }
 
-func (p *proxy) Stop(start *Start) {
+func (p *Proxy) Stop(start *Start) {
 	delete(p.starts, start.ps.pos)
 }

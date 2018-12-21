@@ -22,7 +22,7 @@ func CreateFileFromTemplate(targetFileSpec, templateFileSpec string, vars map[st
 	}()
 	w := bufio.NewWriter(file)
 	var p *bwparse.P
-	if p, err = bwparse.From(bwrune.F{templateFileSpec}); err != nil {
+	if p, err = bwparse.From(bwrune.F{S: templateFileSpec}); err != nil {
 		return
 	}
 	p.Forward(bwparse.Initial)

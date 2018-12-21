@@ -9,6 +9,7 @@ import (
 	"github.com/baza-winner/bwcore/bw"
 	"github.com/baza-winner/bwcore/bwerr"
 	"github.com/baza-winner/bwcore/bwmap"
+	"github.com/baza-winner/bwcore/bwset"
 )
 
 // ============================================================================
@@ -229,23 +230,23 @@ type Number struct {
 	val interface{}
 }
 
-func NumberFrom(val interface{}) (result Number, ok bool) {
+func NumberFrom(val interface{}) (result *Number, ok bool) {
 	var (
 		i int
 		u uint
 		f float64
 	)
 	if i, ok = Int(val); ok {
-		result = Number{i}
+		result = &Number{i}
 	} else if u, ok = Uint(val); ok {
-		result = Number{u}
+		result = &Number{u}
 	} else if f, ok = Float64(val); ok {
-		result = Number{f}
+		result = &Number{f}
 	}
 	return
 }
 
-func MustNumberFrom(val interface{}) (result Number) {
+func MustNumberFrom(val interface{}) (result *Number) {
 	var ok bool
 	if result, ok = NumberFrom(val); !ok {
 		bwerr.Panic(ansi.String("<ansiVal>%#v<ansi> can not be a <ansiType>Number"), val)
@@ -253,11 +254,11 @@ func MustNumberFrom(val interface{}) (result Number) {
 	return
 }
 
-func (n Number) Val() interface{} {
+func (n *Number) Val() interface{} {
 	return n.val
 }
 
-func (n Number) IsEqualTo(a Number) (result bool) {
+func (n *Number) IsEqualTo(a *Number) (result bool) {
 	return n.compareTo(a, func(kind compareKind, u, v uint, i, j int, f, g float64) (result bool) {
 		switch kind {
 		case compareUintUint:
@@ -271,7 +272,7 @@ func (n Number) IsEqualTo(a Number) (result bool) {
 	})
 }
 
-func (n Number) IsLessThan(a Number) (result bool) {
+func (n *Number) IsLessThan(a *Number) (result bool) {
 	result = n.compareTo(a, func(kind compareKind, u, v uint, i, j int, f, g float64) (result bool) {
 		switch kind {
 		case compareUintUint:
@@ -300,7 +301,7 @@ const (
 
 type compareFunc func(kind compareKind, u, v uint, i, j int, f, g float64) (result bool)
 
-func (n Number) compareTo(a Number, fn compareFunc) (result bool) {
+func (n *Number) compareTo(a *Number, fn compareFunc) (result bool) {
 	if u, ok := Uint(n.val); ok {
 		if v, ok := Uint(a.val); ok {
 			result = fn(compareUintUint, u, v, 0, 0, 0, 0)
@@ -343,7 +344,7 @@ type RangeLimit struct {
 func RangeLimitFrom(val interface{}) (result RangeLimit, ok bool) {
 	var (
 		path bw.ValPath
-		n    Number
+		n    *Number
 	)
 	if val == nil {
 		result = RangeLimit{}
@@ -441,7 +442,7 @@ type A struct {
 	Min, Max interface{}
 }
 
-func RangeFrom(a A) (result Range, err error) {
+func RangeFrom(a A) (result *Range, err error) {
 	var min, max RangeLimit
 	var ok bool
 	if min, ok = RangeLimitFrom(a.Min); !ok {
@@ -452,7 +453,7 @@ func RangeFrom(a A) (result Range, err error) {
 		err = bwerr.From(ansiVarValCanNotBeRangeLimit, "a.Max", a.Max)
 		return
 	}
-	result = Range{min: min, max: max}
+	result = &Range{min: min, max: max}
 	if result.Kind() == RangeMinMax {
 		if min, ok := NumberFrom(a.Min); ok {
 			if max, ok := NumberFrom(a.Max); ok {
@@ -465,7 +466,7 @@ func RangeFrom(a A) (result Range, err error) {
 	return
 }
 
-func MustRangeFrom(a A) (result Range) {
+func MustRangeFrom(a A) (result *Range) {
 	var err error
 	if result, err = RangeFrom(a); err != nil {
 		bwerr.PanicErr(err)
@@ -492,7 +493,7 @@ func (v Range) String() (result string) {
 }
 
 func (r Range) Contains(val interface{}) (result bool) {
-	var n Number
+	var n *Number
 	var ok bool
 	if n, ok = NumberFrom(val); !ok {
 		return false
@@ -538,6 +539,48 @@ func (r Range) MarshalJSON() ([]byte, error) {
 
 // ============================================================================
 
+type Def struct {
+	Types      ValKindSet
+	IsOptional bool
+	Enum       bwset.String
+	Range      *Range
+	Keys       map[string]Def
+	Elem       *Def
+	ArrayElem  *Def
+	Default    interface{}
+	IsArrayOf  bool
+}
+
+func (v Def) MarshalJSON() ([]byte, error) {
+	result := map[string]interface{}{}
+	result["Types"] = v.Types
+	result["IsOptional"] = v.IsOptional
+	if v.IsArrayOf {
+		result["IsArrayOf"] = v.IsArrayOf
+	}
+	if v.Enum != nil {
+		result["Enum"] = v.Enum
+	}
+	if v.Range.Kind() != RangeNo {
+		result["Range"] = v.Range
+	}
+	if v.Keys != nil {
+		result["Keys"] = v.Keys
+	}
+	if v.Elem != nil {
+		result["Elem"] = *(v.Elem)
+	}
+	if v.ArrayElem != nil {
+		result["ArrayElem"] = *(v.ArrayElem)
+	}
+	if v.Default != nil {
+		result["Default"] = v.Default
+	}
+	return json.Marshal(result)
+}
+
+// ============================================================================
+
 // ValKind - разновидность interface{}-значения
 type ValKind uint8
 
@@ -557,6 +600,7 @@ const (
 	ValOrderedMap
 	ValMapIntf
 	ValArray
+	ValDef
 	ValNil
 )
 
@@ -680,6 +724,17 @@ func Kind(val interface{}, optExpects ...ValKindSet) (result interface{}, kind V
 				result = t
 				kind = ValMapIntf
 			}
+		case bwmap.Ordered:
+			if expectsAny || expects.Has(ValOrderedMap) {
+				result = &t
+				kind = ValOrderedMap
+			} else if expects.Has(ValMap) {
+				result = t.Map()
+				kind = ValMap
+			} else if expects.Has(ValMapIntf) {
+				result = &t
+				kind = ValMapIntf
+			}
 		case bwmap.I:
 			if expectsAny || expects.Has(ValMapIntf) {
 				result = t
@@ -690,10 +745,25 @@ func Kind(val interface{}, optExpects ...ValKindSet) (result interface{}, kind V
 				result = t
 				kind = ValPath
 			}
-		case Range:
+		case *Range:
 			if expectsAny || expects.Has(ValRange) {
 				result = t
 				kind = ValRange
+			}
+		case Range:
+			if expectsAny || expects.Has(ValRange) {
+				result = &t
+				kind = ValRange
+			}
+		case *Def:
+			if expectsAny || expects.Has(ValDef) {
+				result = t
+				kind = ValDef
+			}
+		case Def:
+			if expectsAny || expects.Has(ValDef) {
+				result = &t
+				kind = ValDef
 			}
 		case int:
 			result, kind = kindOfInt(int64(t))
@@ -741,7 +811,7 @@ func Kind(val interface{}, optExpects ...ValKindSet) (result interface{}, kind V
 				result = MustNumberFrom(t)
 				kind = ValNumber
 			}
-		case Number:
+		case *Number:
 			if expects.Has(ValNumber) {
 				result = t
 				kind = ValNumber
@@ -749,6 +819,17 @@ func Kind(val interface{}, optExpects ...ValKindSet) (result interface{}, kind V
 				val = t.val
 				needRecall = true
 			}
+		case Number:
+			if expects.Has(ValNumber) {
+				result = &t
+				kind = ValNumber
+			} else {
+				val = t.val
+				needRecall = true
+			}
+		case *RangeLimit:
+			val = t.val
+			needRecall = true
 		case RangeLimit:
 			val = t.val
 			needRecall = true
