@@ -38,7 +38,7 @@ variables:
 
   escapeStarter: '\\'
   varStarter: '\$'
-  exprStarter: '\$'
+  funcStarter: '\&'
   fileSpecStarter: '@'
   defStarter: '\^'
 
@@ -50,14 +50,14 @@ variables:
   rangeSeparator: '\.\.'
   assign: '='
 
-  defTypeSingle: 'Array|Map|OrderedMap|String|Int|Number|Bool'
+  defTypeSingle: 'Array|Map|String|Int|Number|Bool'
   defTypeMulti: 'ArrayOf'
 
   pathUpperLevel: '\.\.'
   pathCurrLevel: '\.'
   pathOptionalSign: '\?'
-  pathHashSign: '#'
-  pathFuncSign: '\$'
+  # pathHashSign: '#'
+  newline: '\n'
 
 # =============================================================================
 # =============================================================================
@@ -73,12 +73,14 @@ contexts:
     - match: '{{beginOfSingleLineComment}}'
       scope: punctuation.definition.comment.jlf
       push:
+        - meta_include_prototype: false
         - meta_scope: comment.line.jlf
         - match: $
           pop: true
     - match: '{{beginOfMultiLineComment}}'
       scope: punctuation.definition.comment.begin.jlf
       push:
+        - meta_include_prototype: false
         - meta_scope: comment
         - match: '{{endOfMultiLineComment}}'
           scope: punctuation.definition.comment.end.jlf
@@ -92,21 +94,25 @@ contexts:
 # =============================================================================
 
   main:
-    - match: '{{varStarter}}\^'
-      scope: entity.name.jlf
-      set: [main, defBegin, assign]
+    - match: '({{varStarter}})({{defStarter}})'
+      captures:
+        1: keyword.jlf
+        2: keyword.jlf
+      set: [main, defOrPath, assign]
     - match: '{{varStarter}}'
-      scope: entity.name.jlf
+      scope: keyword.jlf
       set: [main, value, assign, var]
     - match: '{{any}}'
       set: [end, value]
 
   end:
-    - match: '{{varStarter}}\^'
-      scope: entity.name.jlf
-      set: [end, defBegin, assign]
+    - match: '({{varStarter}})({{defStarter}})'
+      captures:
+        1: keyword.jlf
+        2: keyword.jlf
+      set: [end, defOrPath, assign]
     - match: '{{varStarter}}'
-      scope: entity.name.jlf
+      scope: keyword.jlf
       set: [end, value, assign, var]
     - include: illegal
 
@@ -124,9 +130,6 @@ contexts:
     - match: '{{beginOfPath}}'
       scope: punctuation.section.block.begin.jlf
       set: [ mayBeRange, endOfPathSegment, pathBeginSegment ]
-    - match: '{{exprStarter}}'
-      scope: keyword.jlf
-      set: [ mayBeRange, expr ]
     - include: map
     - include: def
     - include: array
@@ -145,9 +148,16 @@ contexts:
 
 # =====================================
 
+  nonBoolNil:
+    - meta_include_prototype: false
+    - match: \b{{bool}}|{{nil}}\b
+      scope: invalid.illegal.jlf
+      pop: true
+
   string:
     - meta_include_prototype: false
     - include: quotedString
+    - include: nonBoolNil
     - match: \b{{id}}\b
       scope: string.quoted.double.jlf
       pop: true
@@ -157,10 +167,12 @@ contexts:
     - match: '{{singleQuotedStringDelimiter}}'
       scope: punctuation.definition.string.begin.jlf
       set:
+        - meta_include_prototype: false
         - meta_scope: string.quoted.double.jlf
         - match: '{{escapeStarter}}'
           scope: constant.character.escape.jlf
           push:
+            - meta_include_prototype: false
             - match: "[{{singleEscapeRunes}}]"
               scope: constant.character.escape.jlf
               pop: true
@@ -171,10 +183,12 @@ contexts:
     - match: '{{doubleQuotedStringDelimiter}}'
       scope: punctuation.definition.string.begin.jlf
       set:
+        - meta_include_prototype: false
         - meta_scope: string.quoted.double.jlf
         - match: '{{escapeStarter}}'
           scope: constant.character.escape.jlf
           push:
+            - meta_include_prototype: false
             - match: "[{{singleEscapeRunes}}{{doubleEscapeRunes}}]"
               scope: constant.character.escape.jlf
               pop: true
@@ -202,10 +216,12 @@ contexts:
     - match: '{{singleQuotedStringDelimiter}}'
       scope: punctuation.definition.string.begin.jlf
       set:
+        - meta_include_prototype: false
         - meta_scope: support.function.jlf
         - match: '{{escapeStarter}}'
           scope: constant.character.escape.jlf
           push:
+            - meta_include_prototype: false
             - match: "[{{singleEscapeRunes}}]"
               scope: constant.character.escape.jlf
               pop: true
@@ -216,10 +232,12 @@ contexts:
     - match: '{{doubleQuotedStringDelimiter}}'
       scope: punctuation.definition.string.begin.jlf
       set:
+        - meta_include_prototype: false
         - meta_scope: support.function.jlf
         - match: '{{escapeStarter}}'
           scope: constant.character.escape.jlf
           push:
+            - meta_include_prototype: false
             - match: "[{{singleEscapeRunes}}{{doubleEscapeRunes}}]"
               scope: constant.character.escape.jlf
               pop: true
@@ -250,8 +268,8 @@ contexts:
 
   def:
     - meta_include_prototype: false
-    - match: '\^'
-      scope: variable.parameter.jlf
+    - match: '{{defStarter}}'
+      scope: keyword.jlf
       set: defBegin
 
 # =====================================
@@ -273,9 +291,15 @@ contexts:
 
   arrayOfString:
     - meta_include_prototype: false
-    - match: '{{arrayOfString}}'
-      scope: string.quoted.double.jlf
-      pop: true
+    - match: '{{beginOfArrayString}}'
+      scope: punctuation.section.block.begin.jlf
+      set:
+        - meta_include_prototype: false
+        - match: '{{endOfArrayString}}'
+          scope: punctuation.section.block.end.jlf
+          pop: true
+        - match: .
+          scope: string.quoted.double.jlf
 
 # =====================================
 
@@ -301,9 +325,6 @@ contexts:
       set: [ rangeMaxValue, rangeSeparator ]
     - match: '{{beginOfPath}}'
       set: [ rangeMaxValue, rangeSeparator, endOfPathSegment, pathBeginSegment ]
-    - match: '{{exprStarter}}'
-      scope: keyword.jlf
-      set: [ rangeMaxValue, rangeSeparator, expr ]
     - include: illegal
 
   rangeSeparator:
@@ -336,7 +357,6 @@ contexts:
       set: [ stringsTail, valueSeparator, stringsItem]
 
   stringsItem:
-    - include: nonBoolNil
     - include: string
     - include: arrayOfString
     - include: path
@@ -349,26 +369,16 @@ contexts:
     - match: '{{beginOfPath}}'
       scope: punctuation.section.parens.begin.jlf
       set: [endOfPathSegment, pathBeginSegment]
-    - match: '{{exprStarter}}'
-      scope: keyword.jlf
-      set: expr
-
-  expr:
-    - meta_include_prototype: false
-    - match: 'concat|join'
-      scope: keyword.jlf
-      set: strings
-    - include: illegal
 
   pathBeginSegment:
-    - meta_include_prototype: false
     - include: pathBeginOnlySegment
     - include: pathCommonSegment
     - include: illegal
 
   pathBeginOnlySegment:
+    - meta_include_prototype: false
     - match: '{{varStarter}}'
-      scope: entity.name.jlf
+      scope: keyword.jlf
       set: var
     - match: '{{fileSpecStarter}}'
       scope: keyword.jlf
@@ -378,6 +388,10 @@ contexts:
       pop: true
 
   pathCommonSegment:
+    - meta_include_prototype: false
+    - match: '{{funcStarter}}'
+      scope: keyword.jlf
+      set: [ pathFuncArg, pathFuncName ]
     - match: '{{int}}'
       scope: meta.path
       pop: true
@@ -387,9 +401,40 @@ contexts:
     - match: '{{id}}'
       scope: support.function.jlf
       pop: true
+    - match: '{{singleQuotedStringDelimiter}}'
+      scope: punctuation.definition.string.begin.jlf
+      set:
+        - meta_include_prototype: false
+        - meta_scope: support.function.jlf
+        - match: '{{escapeStarter}}'
+          scope: constant.character.escape.jlf
+          push:
+            - meta_include_prototype: false
+            - match: "[{{singleEscapeRunes}}]"
+              scope: constant.character.escape.jlf
+              pop: true
+            - include: illegal
+        - match: '{{singleQuotedStringDelimiter}}'
+          scope: punctuation.definition.string.end.jlf
+          pop: true
+    - match: '{{doubleQuotedStringDelimiter}}'
+      scope: punctuation.definition.string.begin.jlf
+      set:
+        - meta_include_prototype: false
+        - meta_scope: support.function.jlf
+        - match: '{{escapeStarter}}'
+          scope: constant.character.escape.jlf
+          push:
+            - meta_include_prototype: false
+            - match: "[{{singleEscapeRunes}}{{doubleEscapeRunes}}]"
+              scope: constant.character.escape.jlf
+              pop: true
+            - include: illegal
+        - match: '{{doubleQuotedStringDelimiter}}'
+          scope: punctuation.definition.string.end.jlf
+          pop: true
 
   pathSegment:
-    - meta_include_prototype: false
     - include: path
     - include: pathCommonSegment
     - include: illegal
@@ -401,40 +446,81 @@ contexts:
       pop: true
 
   endOfPathSegment:
-    - meta_include_prototype: false
-    - include: '{{pathOptionalSign}}'
+    - match: '{{pathOptionalSign}}'
       scope: keyword.jlf
-      set: nextPathSegment
+      set: pathOptionalSign
     - match: '{{any}}'
       set: nextPathSegment
 
+  pathOptionalSign:
+    - match: '(?=({{pathSegmentSeparator}}|{{endOfPath}}))'
+      set: nextPathSegment
+    - match: '{{any}}'
+      set: [nextPathSegment, value]
+
   nextPathSegment:
-    - meta_include_prototype: false
     - include: endOfPath
-    - match: '({{pathSegmentSeparator}})({{pathFuncSign}})'
-      captures:
-        1: keyword.jlf
-        2: keyword.jlf
-      set: [ pathEnd, pathFunc ]
-    - match: '({{pathSegmentSeparator}})({{defStarter}})'
-      captures:
-        1: keyword.jlf
-        2: parameter.variable.jlf
-      set: [ pathEnd, defBegin]
     - match: '{{pathSegmentSeparator}}'
       scope: keyword.jlf
-      set: [ endOfPathSegment, pathSegment]
+      set: nextPathSegmentHelper
     - include: illegal
 
-  pathFunc:
-    - meta_include_prototype: false
-    - match: \bkey|len\b
+  nextPathSegmentHelper:
+    - match: '({{defStarter}})'
       scope: keyword.jlf
+      set: [ pathEnd, defBegin]
+    - match: '{{beginOfPath}}'
+      scope: punctuation.section.block.begin.jlf
+      set: [ pathEnd, endOfPathSegment, pathBeginSegment, ]
+    - match: '{{any}}'
+      set: [ endOfPathSegment, pathSegment]
+
+  pathFuncName:
+    - meta_include_prototype: false
+    - match: \b{{id}}\b
+      scope: entity.function.jlf
       pop: true
+    - match: '{{singleQuotedStringDelimiter}}'
+      scope: punctuation.definition.string.begin.jlf
+      set:
+        - meta_include_prototype: false
+        - meta_scope: entity.function.jlf
+        - match: '{{escapeStarter}}'
+          scope: constant.character.escape.jlf
+          push:
+            - meta_include_prototype: false
+            - match: "[{{singleEscapeRunes}}]"
+              scope: constant.character.escape.jlf
+              pop: true
+            - include: illegal
+        - match: '{{singleQuotedStringDelimiter}}'
+          scope: punctuation.definition.string.end.jlf
+          pop: true
+    - match: '{{doubleQuotedStringDelimiter}}'
+      scope: punctuation.definition.string.begin.jlf
+      set:
+        - meta_include_prototype: false
+        - meta_scope: entity.function.jlf
+        - match: '{{escapeStarter}}'
+          scope: constant.character.escape.jlf
+          push:
+            - meta_include_prototype: false
+            - match: "[{{singleEscapeRunes}}{{doubleEscapeRunes}}]"
+              scope: constant.character.escape.jlf
+              pop: true
+            - include: illegal
+        - match: '{{doubleQuotedStringDelimiter}}'
+          scope: punctuation.definition.string.end.jlf
+          pop: true
     - include: illegal
+
+  pathFuncArg:
+    - match: '(?=({{pathSegmentSeparator}}|{{endOfPath}}))'
+      pop: true
+    - match: '{{any}}'
+      set: value
 
   pathEnd:
-    - meta_include_prototype: false
     - include: endOfPath
     - include: illegal
 
@@ -446,10 +532,12 @@ contexts:
     - match: '{{singleQuotedStringDelimiter}}'
       scope: punctuation.definition.string.begin.jlf
       set:
+        - meta_include_prototype: false
         - meta_scope: entity.name.jlf
         - match: '{{escapeStarter}}'
           scope: constant.character.escape.jlf
           push:
+            - meta_include_prototype: false
             - match: "[{{singleEscapeRunes}}]"
               scope: constant.character.escape.jlf
               pop: true
@@ -460,10 +548,12 @@ contexts:
     - match: '{{doubleQuotedStringDelimiter}}'
       scope: punctuation.definition.string.begin.jlf
       set:
+        - meta_include_prototype: false
         - meta_scope: entity.name.jlf
         - match: '{{escapeStarter}}'
           scope: constant.character.escape.jlf
           push:
+            - meta_include_prototype: false
             - match: "[{{singleEscapeRunes}}{{doubleEscapeRunes}}]"
               scope: constant.character.escape.jlf
               pop: true
@@ -475,48 +565,71 @@ contexts:
 
   pathFileSpec:
     - meta_include_prototype: false
-    - match: '{{id}}'
-      scope: meta.path
+    - match: '(?={{pathSegmentSeparator}}|{{endOfPath}}|{{pathOptionalSign}}|{{newline}})'
       pop: true
+    - match: '{{beginOfPath}}'
+      scope: punctuation.section.parens.begin.jlf
+      set: [ pathFileSpec, endOfPathSegment, pathBeginSegment]
     - match: '{{singleQuotedStringDelimiter}}'
-      scope: punctuation.definition.string.begin.jlf
-      set:
-        - meta_scope: meta.path
+      scope: keyword.jlf
+      push:
+        - meta_include_prototype: false
         - match: '{{escapeStarter}}'
           scope: constant.character.escape.jlf
           push:
+            - meta_include_prototype: false
             - match: "[{{singleEscapeRunes}}]"
               scope: constant.character.escape.jlf
               pop: true
             - include: illegal
         - match: '{{singleQuotedStringDelimiter}}'
-          scope: punctuation.definition.string.end.jlf
+          scope: keyword.jlf
           pop: true
+        - match: .
+          scope: meta.path
     - match: '{{doubleQuotedStringDelimiter}}'
-      scope: punctuation.definition.string.begin.jlf
-      set:
-        - meta_scope: meta.path
+      scope: keyword.jlf
+      push:
+        - meta_include_prototype: false
         - match: '{{escapeStarter}}'
           scope: constant.character.escape.jlf
           push:
+            - meta_include_prototype: false
             - match: "[{{singleEscapeRunes}}{{doubleEscapeRunes}}]"
               scope: constant.character.escape.jlf
               pop: true
             - include: illegal
         - match: '{{doubleQuotedStringDelimiter}}'
-          scope: punctuation.definition.string.end.jlf
+          scope: keyword.jlf
           pop: true
+        - match: .
+          scope: meta.path
+    - match: '{{escapeStarter}}'
+      scope: constant.character.escape.jlf
+      push:
+        - meta_include_prototype: false
+        - meta_include_prototype: false
+        - match: '[\s]'
+          scope: constant.character.escape.jlf
+          pop: true
+        - include: illegal
+    - match: .
+      scope: meta.path
     - include: illegal
 
 # =============================================================================
 
   defBegin:
+    - meta_include_prototype: false
     - match: '{{beginOfMap}}'
       scope: punctuation.section.block.begin.jlf
       set: keyOfDef
-    - include: path
     - include: defType
     - include: illegal
+
+  defOrPath:
+    - include: path
+    - include: defBegin
 
   keyOfDef:
     - match: '{{endOfMap}}'
@@ -582,12 +695,6 @@ contexts:
       scope: punctuation.section.block.begin.jlf
       set: defKeysTail
     - include: illegal
-
-  nonBoolNil:
-    - meta_include_prototype: false
-    - match: \b{{bool}}|{{nil}}\b
-      scope: invalid.illegal.jlf
-      pop: true
 
   defKeysTail:
     - match: '{{endOfMap}}'
