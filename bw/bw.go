@@ -10,7 +10,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
-//go:generate stringer -type=ValPathItemType
+//go:generate stringer -type=ValPathItem
 
 // ============================================================================
 
@@ -127,27 +127,52 @@ const (
 
 // ============================================================================
 
-type ValPathItemType uint8
+type ValPathItem uint8
 
 const (
-	ValPathItemDef ValPathItemType = iota
+	ValPathItemUnknown ValPathItem = iota
+	ValPathItemVar
 	ValPathItemFileSpec
 	ValPathItemIdx
 	ValPathItemKey
-	ValPathItemVar
-	ValPathItemFunc
+
+	ValPathItemFileSpecTemplate
 	ValPathItemPath
+	ValPathItemFunc
+	ValPathItemDef
 )
 
-func (v ValPathItemType) MarshalJSON() ([]byte, error) {
+func (v ValPathItem) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.String())
 }
 
+type CompositeFileSpecItem struct {
+	IsPath bool
+	S      string
+	Path   ValPath
+}
+
+type CompositeFileSpec []CompositeFileSpecItem
+
 type ValPathItem struct {
-	Type       ValPathItemType
-	Idx        int
-	Name       string
+	Type ValPathItem
+	Idx  int
+	Name string
+	// Path ValPath
+	// FileSpec   CompositeFileSpec
+	// IsOptional bool
+	// DefaultVal interface{}
+	// FuncArg    interface{}
+	// Def        interface{}
+}
+
+type ValPathTemplateItem struct {
+	ValPathItem
+	// Type       ValPathItem
+	// Idx        int
+	// Name       string
 	Path       ValPath
+	FileSpec   CompositeFileSpec
 	IsOptional bool
 	DefaultVal interface{}
 	FuncArg    interface{}
@@ -160,7 +185,7 @@ func (vpi ValPathItem) keyForPathS() (result string) {
 	var needQuote bool
 	if needQuote = len(runes) == 0; !needQuote {
 		for i, r := range runes {
-			if r == '_' || unicode.IsLetter(r) || i > 0 && ('0' <= r && r <= '9') {
+			if IsLetter(r) || i > 0 && IsDigit(r) {
 				continue
 			}
 			needQuote = true
@@ -174,6 +199,7 @@ func (vpi ValPathItem) keyForPathS() (result string) {
 }
 
 type ValPath []ValPathItem
+type ValPathTemplate []ValPathTemplateItem
 
 func (v ValPath) MarshalJSON() ([]byte, error) {
 	result := []interface{}{}
@@ -183,49 +209,48 @@ func (v ValPath) MarshalJSON() ([]byte, error) {
 	return json.Marshal(result)
 }
 
+const (
+	ValPathSeparator      = ':'
+	ValPathBeginDelimiter = '('
+	ValPathEndDelimiter   = ')'
+)
+
 func (v ValPath) String() (result string) {
 	ss := []string{}
-	if len(v) == 0 {
-		result = "."
-	} else {
-		for _, vpi := range v {
-			var s string
-			switch vpi.Type {
-			case ValPathItemPath:
-				s = "(" + vpi.Path.String() + ")"
-			case ValPathItemKey:
-				s = vpi.keyForPathS()
-			case ValPathItemVar:
-				s = "$" + vpi.keyForPathS()
-			case ValPathItemIdx:
-				s = strconv.FormatInt(int64(vpi.Idx), 10)
-			// case ValPathItemHash:
-			// 	s = "#"
-			default:
-				panic(Spew.Sprintf("%#v", vpi.Type))
-			}
-			if vpi.IsOptional {
-				s += "?"
-			}
-			ss = append(ss, s)
+	for _, vpi := range v {
+		var s string
+		switch vpi.Type {
+		// case ValPathItemPath:
+		// 	s = vpi.Path.String()
+		case ValPathItemFileSpec:
+			s = vpi.Name
+		case ValPathItemKey:
+			s = vpi.keyForPathS()
+		case ValPathItemVar:
+			s = "$" + vpi.keyForPathS()
+		case ValPathItemIdx:
+			s = strconv.FormatInt(int64(vpi.Idx), 10)
+		default:
+			panic(Spew.Sprintf("%#v", vpi.Type))
 		}
-		result = strings.Join(ss, ".")
+		if vpi.IsOptional {
+			s += "?"
+		}
+		ss = append(ss, s)
 	}
+	result = string(ValPathEndDelimiter) + strings.Join(ss, string(ValPathSeparator)) + string(ValPathEndDelimiter)
 	return
 }
 
 func (v ValPath) Clone() ValPath {
-	// https://github.com/go101/go101/wiki/How-to-efficiently-clone-a-slice%3F
 	return append(v[:0:0], v...)
 }
 
 func (v ValPath) AppendIdx(idx int) ValPath {
-	// path := append(v[:0:0], v...) // https://github.com/go101/go101/wiki/How-to-efficiently-clone-a-slice%3F
 	return append(v.Clone(), ValPathItem{Type: ValPathItemIdx, Idx: idx})
 }
 
 func (v ValPath) AppendKey(key string) ValPath {
-	// path := append(v[:0:0], v...)
 	return append(v.Clone(), ValPathItem{Type: ValPathItemKey, Name: key})
 }
 
@@ -233,13 +258,13 @@ func (v ValPath) AppendVar(name string) ValPath {
 	return append(v.Clone(), ValPathItem{Type: ValPathItemVar, Name: name})
 }
 
-// func (v ValPath) AppendHash(name string) ValPath {
-// 	return append(v.Clone(), ValPathItem{Type: ValPathItemHash})
-// }
-
 func (v ValPath) Append(a ValPath) ValPath {
 	return append(v.Clone(), a...)
 }
+
+// ============================================================================
+
+// type ValPathItem uint8
 
 // ============================================================================
 

@@ -15,48 +15,7 @@ import (
 	"github.com/baza-winner/bwcore/bwrune"
 	"github.com/baza-winner/bwcore/bwset"
 	"github.com/baza-winner/bwcore/bwstr"
-	"github.com/baza-winner/bwcore/bwtype"
 )
-
-// ============================================================================
-
-// type PosInfo struct {
-//   isEOF       bool
-//   rune        rune
-//   pos         int
-//   line        uint
-//   col         uint
-//   prefix      string
-//   prefixStart int
-//   justParsed  interface{}
-// }
-
-// func (p PosInfo) IsEOF() bool {
-//   return p.isEOF
-// }
-
-// func (p PosInfo) Rune() rune {
-//   return p.rune
-// }
-
-// // ============================================================================
-
-// func (start Start) Suffix() string {
-//   return start.suffix
-// }
-
-// // ============================================================================
-
-// type bwparse.I interface {
-//   FileSpec() string
-//   Close() error
-//   Curr() *PosInfo
-//   Forward(count uint)
-//   Error(a E) error
-//   LookAhead(ofs uint) *PosInfo
-//   Start() *bwparse.Start
-//   Stop(start *bwparse.Start)
-// }
 
 // ============================================================================
 
@@ -76,9 +35,9 @@ type ValidateMapFunc func(on On, m bwmap.I) (err error)
 type ParseArrayElemFunc func(on On, vals []interface{}) (outVals []interface{}, status Status)
 type ValidateArrayFunc func(on On, vals []interface{}) (err error)
 
-type ValidateNumberFunc func(on On, n *bwtype.Number) (err error)
-type ValidateRangeFunc func(on On, rng *bwtype.Range) (err error)
-type ValidatePathFunc func(on On, path bw.ValPath) (err error)
+type ValidateNumberFunc func(on On, n Number) (err error)
+type ValidateRangeFunc func(on On, rng *RangeTemplate) (err error)
+type ValidatePathFunc func(on On, path bw.ValPathTemplate) (err error)
 
 type ValidateStringFunc func(on On, s string) (err error)
 
@@ -96,10 +55,10 @@ const (
 
 type Opt struct {
 	ExcludeKinds bool
-	KindSet      bwtype.ValKindSet
+	KindSet      ValKindSet
 
-	RangeLimitMinOwnKindSet bwtype.ValKindSet // empty means 'inherits'
-	RangeLimitMaxOwnKindSet bwtype.ValKindSet // empty means 'inherits'
+	RangeLimitMinOwnKindSet ValKindSet // empty means 'inherits'
+	RangeLimitMaxOwnKindSet ValKindSet // empty means 'inherits'
 
 	Path bw.ValPath
 
@@ -559,7 +518,7 @@ func ParseUint(p bwparse.I, optOpt ...Opt) (result uint, status Status) {
 	var justParsed numberResult
 	curr := p.Curr()
 	if justParsed, status.OK = curr.JustParsed.(numberResult); status.OK {
-		if result, status.OK = bwtype.Uint(justParsed.n.Val()); status.OK {
+		if result, status.OK = Uint(justParsed.n.Val()); status.OK {
 			status.Start = justParsed.start
 			p.Forward(uint(len(justParsed.start.Suffix())))
 			return
@@ -580,7 +539,7 @@ func ParseUint(p bwparse.I, optOpt ...Opt) (result uint, status Status) {
 
 // ============================================================================
 
-func ParseNumber(p bwparse.I, optOpt ...Opt) (result *bwtype.Number, status Status) {
+func ParseNumber(p bwparse.I, optOpt ...Opt) (result Number, status Status) {
 	opt := getOpt(optOpt)
 	result, status = parseNumber(p, opt, RangeLimitNone)
 	if status.OK {
@@ -934,7 +893,7 @@ func ParsePathContent(p bwparse.I, optOpt ...PathOpt) (bw.ValPath, error) {
 
 // ============================================================================
 
-func ParseRange(p bwparse.I, optOpt ...Opt) (result *bwtype.Range, status Status) {
+func ParseRange(p bwparse.I, optOpt ...Opt) (result *Range, status Status) {
 	opt := getOpt(optOpt)
 
 	var (
@@ -944,8 +903,8 @@ func ParseRange(p bwparse.I, optOpt ...Opt) (result *bwtype.Range, status Status
 		justParsedPath     bw.ValPath
 	)
 
-	hasKind := func(kind bwtype.ValKind, rlk RangeLimitKind) (result bool) {
-		var ks bwtype.ValKindSet
+	hasKind := func(kind ValKind, rlk RangeLimitKind) (result bool) {
+		var ks ValKindSet
 		if rlk == RangeLimitMin {
 			ks = opt.RangeLimitMinOwnKindSet
 		} else {
@@ -964,7 +923,7 @@ func ParseRange(p bwparse.I, optOpt ...Opt) (result *bwtype.Range, status Status
 	}
 
 	onArgs := func(rlk RangeLimitKind) (onArgs []on) {
-		if hasKind(bwtype.ValPath, rlk) {
+		if hasKind(ValPath, rlk) {
 			onArgs = append(onArgs, onPath{opt: PathOpt{Opt: opt}, f: func(path bw.ValPath, start *bwparse.Start) (err error) {
 				justParsedPath = path
 				rangeLimitVal = path
@@ -973,19 +932,19 @@ func ParseRange(p bwparse.I, optOpt ...Opt) (result *bwtype.Range, status Status
 			}})
 		}
 
-		if hasKind(bwtype.ValNumber, rlk) {
-			onArgs = append(onArgs, onNumber{opt: opt, rlk: rlk, f: func(n *bwtype.Number, start *bwparse.Start) (err error) {
+		if hasKind(ValNumber, rlk) {
+			onArgs = append(onArgs, onNumber{opt: opt, rlk: rlk, f: func(n Number, start *bwparse.Start) (err error) {
 				rangeLimitVal = n
 				isNumber = true
 				return
 			}})
-		} else if hasKind(bwtype.ValInt, rlk) {
+		} else if hasKind(ValInt, rlk) {
 			onArgs = append(onArgs, onInt{opt: opt, rlk: rlk, f: func(i int, start *bwparse.Start) (err error) {
 				rangeLimitVal = i
 				isNumber = true
 				return
 			}})
-		} else if hasKind(bwtype.ValUint, rlk) {
+		} else if hasKind(ValUint, rlk) {
 			onArgs = append(onArgs, onUint{opt: opt, f: func(u uint, start *bwparse.Start) (err error) {
 				rangeLimitVal = u
 				isNumber = true
@@ -1010,7 +969,7 @@ func ParseRange(p bwparse.I, optOpt ...Opt) (result *bwtype.Range, status Status
 				pp.Stop(status.Start)
 				ps := status.Start.PosInfo()
 				if isNumber {
-					ps.JustParsed = numberResult{bwtype.MustNumberFrom(min), status.Start}
+					ps.JustParsed = numberResult{MustNumberFrom(min), status.Start}
 				} else if isPath {
 					ps.JustParsed = pathResult{justParsedPath, status.Start}
 				}
@@ -1032,7 +991,7 @@ func ParseRange(p bwparse.I, optOpt ...Opt) (result *bwtype.Range, status Status
 	if st.Err != nil {
 		status.Err = st.Err
 	} else {
-		result, status.Err = bwtype.RangeFrom(bwtype.A{Min: min, Max: rangeLimitVal})
+		result, status.Err = RangeFrom(RangeA{Min: min, Max: rangeLimitVal})
 	}
 
 	return
@@ -1043,10 +1002,10 @@ func ParseRange(p bwparse.I, optOpt ...Opt) (result *bwtype.Range, status Status
 func ParseVal(p bwparse.I, optOpt ...Opt) (result interface{}, status Status) {
 	opt := getOpt(optOpt)
 	var onArgs []on
-	kindSet := bwtype.ValKindSet{}
-	kinds := []bwtype.ValKind{}
+	kindSet := ValKindSet{}
+	kinds := []ValKind{}
 	kindSetIsEmpty := len(opt.KindSet) == 0
-	hasKind := func(kind bwtype.ValKind) (result bool) {
+	hasKind := func(kind ValKind) (result bool) {
 		if kindSetIsEmpty {
 			result = true
 		} else if !opt.ExcludeKinds {
@@ -1062,7 +1021,7 @@ func ParseVal(p bwparse.I, optOpt ...Opt) (result interface{}, status Status) {
 		}
 		return
 	}
-	if hasKind(bwtype.ValArray) {
+	if hasKind(ValArray) {
 		onArgs = append(onArgs, onArray{opt: opt, f: func(vals []interface{}, start *bwparse.Start) (err error) {
 			if opt.OnValidateArray != nil {
 				err = opt.OnValidateArray(On{p, start, &opt}, vals)
@@ -1082,7 +1041,7 @@ func ParseVal(p bwparse.I, optOpt ...Opt) (result interface{}, status Status) {
 			return
 		}})
 	}
-	if hasKind(bwtype.ValString) {
+	if hasKind(ValString) {
 		onArgs = append(onArgs, onString{opt: opt, f: func(s string, start *bwparse.Start) (err error) {
 			if opt.OnValidateString != nil {
 				err = opt.OnValidateString(On{p, start, &opt}, s)
@@ -1093,8 +1052,8 @@ func ParseVal(p bwparse.I, optOpt ...Opt) (result interface{}, status Status) {
 			return
 		}})
 	}
-	if hasKind(bwtype.ValRange) {
-		onArgs = append(onArgs, onRange{opt: opt, f: func(rng *bwtype.Range, start *bwparse.Start) (err error) {
+	if hasKind(ValRange) {
+		onArgs = append(onArgs, onRange{opt: opt, f: func(rng *Range, start *bwparse.Start) (err error) {
 			if opt.OnValidateRange != nil {
 				err = opt.OnValidateRange(On{p, start, &opt}, rng)
 			}
@@ -1104,7 +1063,7 @@ func ParseVal(p bwparse.I, optOpt ...Opt) (result interface{}, status Status) {
 			return
 		}})
 	}
-	if hasKind(bwtype.ValPath) {
+	if hasKind(ValPath) {
 		onArgs = append(onArgs, onPath{opt: PathOpt{Opt: opt}, f: func(path bw.ValPath, start *bwparse.Start) (err error) {
 			if opt.OnValidatePath != nil {
 				err = opt.OnValidatePath(On{p, start, &opt}, path)
@@ -1116,7 +1075,7 @@ func ParseVal(p bwparse.I, optOpt ...Opt) (result interface{}, status Status) {
 		}})
 	}
 
-	if hasKind(bwtype.ValOrderedMap) {
+	if hasKind(ValOrderedMap) {
 		onArgs = append(onArgs, onOrderedMap{opt: opt, f: func(m *bwmap.Ordered, start *bwparse.Start) (err error) {
 			if opt.OnValidateMap != nil {
 				err = opt.OnValidateMap(On{p, start, &opt}, m)
@@ -1126,7 +1085,7 @@ func ParseVal(p bwparse.I, optOpt ...Opt) (result interface{}, status Status) {
 			}
 			return
 		}})
-	} else if hasKind(bwtype.ValMap) {
+	} else if hasKind(ValMap) {
 		onArgs = append(onArgs, onMap{opt: opt, f: func(m map[string]interface{}, start *bwparse.Start) (err error) {
 			if opt.OnValidateMap != nil {
 				err = opt.OnValidateMap(On{p, start, &opt}, bwmap.M(m))
@@ -1138,16 +1097,16 @@ func ParseVal(p bwparse.I, optOpt ...Opt) (result interface{}, status Status) {
 		}})
 	}
 
-	if hasKind(bwtype.ValNumber) {
-		onArgs = append(onArgs, onNumber{opt: opt, f: func(n *bwtype.Number, start *bwparse.Start) (err error) {
+	if hasKind(ValNumber) {
+		onArgs = append(onArgs, onNumber{opt: opt, f: func(n Number, start *bwparse.Start) (err error) {
 			if opt.OnValidateNumber != nil {
 				err = opt.OnValidateNumber(On{p, start, &opt}, n)
 			}
 			if err == nil {
 				val := n.Val()
-				if i, b := bwtype.Int(val); b {
+				if i, b := Int(val); b {
 					result = i
-				} else if u, b := bwtype.Uint(val); b {
+				} else if u, b := Uint(val); b {
 					result = u
 				} else {
 					result = val
@@ -1155,20 +1114,20 @@ func ParseVal(p bwparse.I, optOpt ...Opt) (result interface{}, status Status) {
 			}
 			return
 		}})
-	} else if hasKind(bwtype.ValInt) {
+	} else if hasKind(ValInt) {
 		onArgs = append(onArgs, onInt{opt: opt, f: func(i int, start *bwparse.Start) (err error) {
 			if opt.OnValidateNumber != nil {
-				err = opt.OnValidateNumber(On{p, start, &opt}, bwtype.MustNumberFrom(i))
+				err = opt.OnValidateNumber(On{p, start, &opt}, MustNumberFrom(i))
 			}
 			if err == nil {
 				result = i
 			}
 			return
 		}})
-	} else if hasKind(bwtype.ValUint) {
+	} else if hasKind(ValUint) {
 		onArgs = append(onArgs, onUint{opt: opt, f: func(u uint, start *bwparse.Start) (err error) {
 			if opt.OnValidateNumber != nil {
-				err = opt.OnValidateNumber(On{p, start, &opt}, bwtype.MustNumberFrom(u))
+				err = opt.OnValidateNumber(On{p, start, &opt}, MustNumberFrom(u))
 			}
 			if err == nil {
 				result = u
@@ -1176,16 +1135,20 @@ func ParseVal(p bwparse.I, optOpt ...Opt) (result interface{}, status Status) {
 			return
 		}})
 	}
-	if hasKind(bwtype.ValNil) {
+	if hasKind(ValNil) {
 		onArgs = append(onArgs, onNil{opt: opt, f: func(start *bwparse.Start) (err error) { return }})
 	}
-	if hasKind(bwtype.ValBool) {
+	if hasKind(ValBool) {
 		onArgs = append(onArgs, onBool{opt: opt, f: func(b bool, start *bwparse.Start) (err error) { result = b; return }})
 	}
-	if hasKind(bwtype.ValDef) {
-		onArgs = append(onArgs, onDef{opt: opt, f: func(b bool, start *bwparse.Start) (err error) { result = b; return }})
+	if hasKind(ValDef) {
+		onArgs = append(onArgs, onDef{opt: opt, f: func(def *Def, start *bwparse.Start) (err error) {
+			result = def
+			return
+		}})
+		// onArgs = append(onArgs, onDef{opt: opt.Path, f: func(def *Def, start *bwparse.Start) (err error) { result = b; return }})
 	}
-	if (len(opt.IdVals) > 0 || opt.OnId != nil) && hasKind(bwtype.ValId) || !opt.StrictId && hasKind(bwtype.ValString) {
+	if (len(opt.IdVals) > 0 || opt.OnId != nil) && hasKind(ValId) || !opt.StrictId && hasKind(ValString) {
 		onArgs = append(onArgs,
 			onId{opt: opt, f: func(s string, start *bwparse.Start) (err error) {
 				var b bool
@@ -1215,27 +1178,27 @@ func ParseVal(p bwparse.I, optOpt ...Opt) (result interface{}, status Status) {
 	}
 	if status = processOn(p, onArgs...); !status.OK && !opt.ValFalse {
 		var expects []string
-		asType := func(kind bwtype.ValKind) (result string) {
+		asType := func(kind ValKind) (result string) {
 			s := kind.String()
 			switch kind {
-			case bwtype.ValNumber, bwtype.ValInt:
+			case ValNumber, ValInt:
 				if opt.NonNegativeNumber != nil && opt.NonNegativeNumber(RangeLimitNone) {
 					s = "NonNegative" + s
 				}
-			case bwtype.ValRange:
+			case ValRange:
 				if opt.NonNegativeNumber != nil && opt.NonNegativeNumber(RangeLimitMin) {
 					s = s + "(Min: NonNegative)"
 				}
 			}
 			result = fmt.Sprintf(ansiType, s)
-			if kind == bwtype.ValId {
+			if kind == ValId {
 				if expects := getIdExpects(opt, "  "); len(expects) > 0 {
 					result += "(" + expects + ")"
 				}
 			}
 			return
 		}
-		addExpects := func(kind bwtype.ValKind) {
+		addExpects := func(kind ValKind) {
 			expects = append(expects, asType(kind))
 		}
 		for _, kind := range kinds {
@@ -1300,7 +1263,7 @@ func init() {
 //   var val interface{}
 //   keys.Add(key)
 //   if val, ok = opt[key]; ok && val != nil {
-//     if result, ok = bwtype.Uint(val); !ok {
+//     if result, ok = Uint(val); !ok {
 //       bwerr.Panic(ansiOptKeyIsNotOfType, key, val, "Uint")
 //     }
 //   }
@@ -1510,7 +1473,7 @@ type onUint struct {
 func (onUint) IsOn() {}
 
 type onNumber struct {
-	f   func(n *bwtype.Number, start *bwparse.Start) (err error)
+	f   func(n Number, start *bwparse.Start) (err error)
 	opt Opt
 	rlk RangeLimitKind
 }
@@ -1518,7 +1481,7 @@ type onNumber struct {
 func (onNumber) IsOn() {}
 
 type onRange struct {
-	f   func(rng *bwtype.Range, start *bwparse.Start) (err error)
+	f   func(rng *Range, start *bwparse.Start) (err error)
 	opt Opt
 }
 
@@ -1595,8 +1558,8 @@ type onBool struct {
 func (onBool) IsOn() {}
 
 type onDef struct {
-	f   func(def *bwtype.Def, start *bwparse.Start) (err error)
-	opt bw.ValPathProvider
+	f   func(def *Def, start *bwparse.Start) (err error)
+	opt Opt
 }
 
 func (onDef) IsOn() {}
@@ -1607,15 +1570,15 @@ func processOn(p bwparse.I, processors ...on) (status Status) {
 	var (
 		i    int
 		u    uint
-		n    *bwtype.Number
+		n    Number
 		s    string
 		path bw.ValPath
 		vals []interface{}
 		m    map[string]interface{}
 		o    *bwmap.Ordered
 		b    bool
-		rng  *bwtype.Range
-		def  *bwtype.Def
+		rng  *Range
+		def  *Def
 	)
 	p.Forward(bwparse.Initial)
 	for _, processor := range processors {
@@ -1649,7 +1612,7 @@ func processOn(p bwparse.I, processors ...on) (status Status) {
 		case onBool:
 			b, status = ParseBool(p, t.opt)
 		case onDef:
-			def, status = ParseDef(p, t.opt)
+			def, status = parseDef(p, t.opt, false)
 		}
 		if status.Err != nil {
 			return
@@ -1689,6 +1652,19 @@ func processOn(p bwparse.I, processors ...on) (status Status) {
 			}
 			return
 		}
+	}
+	return
+}
+
+// ============================================================================
+
+func parseDef(p bwparse.I, opt Opt, isEmbeded bool) (result *Def, status Status) {
+	p.Forward(bwparse.Initial)
+	if isEmbeded {
+		result, status = ParseDef(p, opt.Path)
+	} else if status.OK = p.Curr().Rune() == '^'; status.OK {
+		p.Forward(1)
+		result, status = ParseDef(p, opt.Path)
 	}
 	return
 }
@@ -1826,7 +1802,7 @@ func looksLikeNumber(p bwparse.I, nonNegative bool) (s string, isNegative bool, 
 // ============================================================================
 
 type numberResult struct {
-	n     *bwtype.Number
+	n     Number
 	start *bwparse.Start
 }
 
@@ -1845,7 +1821,7 @@ func parseInt(p bwparse.I, opt Opt, rangeLimitKind RangeLimitKind) (result int, 
 	var justParsed numberResult
 	curr := p.Curr()
 	if justParsed, status.OK = curr.JustParsed.(numberResult); status.OK {
-		if result, status.OK = bwtype.Int(justParsed.n.Val()); status.OK {
+		if result, status.OK = Int(justParsed.n.Val()); status.OK {
 			if status.OK = !nonNegativeNumber || result >= 0; status.OK {
 				status.Start = justParsed.start
 				p.Forward(uint(len(justParsed.start.Suffix())))
@@ -1867,7 +1843,7 @@ func parseInt(p bwparse.I, opt Opt, rangeLimitKind RangeLimitKind) (result int, 
 
 // ============================================================================
 
-func parseNumber(p bwparse.I, opt Opt, rangeLimitKind RangeLimitKind) (result *bwtype.Number, status Status) {
+func parseNumber(p bwparse.I, opt Opt, rangeLimitKind RangeLimitKind) (result Number, status Status) {
 	var (
 		s          string
 		hasDot     bool
@@ -1882,7 +1858,7 @@ func parseNumber(p bwparse.I, opt Opt, rangeLimitKind RangeLimitKind) (result *b
 	curr := p.Curr()
 	if justParsed, status.OK = curr.JustParsed.(numberResult); status.OK {
 		if nonNegativeNumber {
-			if _, status.OK = bwtype.Uint(justParsed.n.Val()); !status.OK {
+			if _, status.OK = Uint(justParsed.n.Val()); !status.OK {
 				status.Err = bwparse.Unexpected(p)
 				return
 			}
@@ -1911,7 +1887,7 @@ func parseNumber(p bwparse.I, opt Opt, rangeLimitKind RangeLimitKind) (result *b
 		if hasDot && !zeroAfterDotRegexp.MatchString(s) {
 			var f float64
 			if f, status.Err = strconv.ParseFloat(s, 64); status.Err == nil {
-				result = bwtype.MustNumberFrom(f)
+				result = MustNumberFrom(f)
 			}
 		} else {
 			if pos := strings.LastIndex(s, string(dotRune)); pos >= 0 {
@@ -1920,12 +1896,12 @@ func parseNumber(p bwparse.I, opt Opt, rangeLimitKind RangeLimitKind) (result *b
 			if isNegative {
 				var i int
 				if i, status.Err = bwstr.ParseInt(s); status.Err == nil {
-					result = bwtype.MustNumberFrom(i)
+					result = MustNumberFrom(i)
 				}
 			} else {
 				var u uint
 				if u, status.Err = bwstr.ParseUint(s); status.Err == nil {
-					result = bwtype.MustNumberFrom(u)
+					result = MustNumberFrom(u)
 				}
 			}
 		}

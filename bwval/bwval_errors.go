@@ -9,7 +9,6 @@ import (
 	"github.com/baza-winner/bwcore/bwjson"
 	"github.com/baza-winner/bwcore/bwset"
 	"github.com/baza-winner/bwcore/bwstr"
-	"github.com/baza-winner/bwcore/bwtype"
 )
 
 // ============================================================================
@@ -68,10 +67,10 @@ func (v Holder) hasNoKeyError(key string) error {
 
 // ============================================================================
 
-func (v Holder) notOfValKindError(vk bwtype.ValKindSet) (result error) {
-	if vk.Has(bwtype.ValMapIntf) {
-		vk.Del(bwtype.ValMapIntf)
-		vk.Add(bwtype.ValMap, bwtype.ValOrderedMap)
+func (v Holder) notOfValKindError(vk ValKindSet) (result error) {
+	if vk.Has(ValMapIntf) {
+		vk.Del(ValMapIntf)
+		vk.Add(ValMap, ValOrderedMap)
 	}
 	vks := vk.ToSlice()
 	expectedTypes := ""
@@ -113,7 +112,7 @@ func (v Holder) notEnoughRangeError(l int, idx int) error {
 
 // ============================================================================
 
-func (v Holder) outOfRangeError(rng *bwtype.Range) (err error) {
+func (v Holder) outOfRangeError(rng *Range) (err error) {
 	err = bwerr.From(v.ansiString()+ansi.String(" is <ansiErr>out of range<ansi> <ansiVal>%s"), rng.String())
 	return
 }

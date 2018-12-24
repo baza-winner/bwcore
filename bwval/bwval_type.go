@@ -1,4 +1,4 @@
-package bwtype
+package bwval
 
 import (
 	"encoding/json"
@@ -8,6 +8,7 @@ import (
 	"github.com/baza-winner/bwcore/ansi"
 	"github.com/baza-winner/bwcore/bw"
 	"github.com/baza-winner/bwcore/bwerr"
+	"github.com/baza-winner/bwcore/bwjson"
 	"github.com/baza-winner/bwcore/bwmap"
 	"github.com/baza-winner/bwcore/bwset"
 )
@@ -51,9 +52,15 @@ func Int(val interface{}) (result int, ok bool) {
 	case Number:
 		val = t.val
 		needRecall = true
+	// case Number:
+	//  val = t.val
+	//  needRecall = true
 	case RangeLimit:
 		val = t.val
 		needRecall = true
+	// case *RangeLimit:
+	//  val = t.val
+	//  needRecall = true
 	default:
 		result, ok = platformSpecificInt(val)
 	}
@@ -118,9 +125,15 @@ func Uint(val interface{}) (result uint, ok bool) {
 	case Number:
 		val = t.val
 		needRecall = true
+	// case Number:
+	//  val = t.val
+	//  needRecall = true
 	case RangeLimit:
 		val = t.val
 		needRecall = true
+	// case *RangeLimit:
+	//  val = t.val
+	//  needRecall = true
 	default:
 		result, ok = platformSpecificUint(val)
 	}
@@ -175,9 +188,15 @@ func Float64(val interface{}) (result float64, ok bool) {
 	case Number:
 		val = t.val
 		needRecall = true
+	// case Number:
+	//  val = t.val
+	//  needRecall = true
 	case RangeLimit:
 		val = t.val
 		needRecall = true
+	// case *RangeLimit:
+	//  val = t.val
+	//  needRecall = true
 	default:
 		ok = false
 		needRecall = true
@@ -230,23 +249,23 @@ type Number struct {
 	val interface{}
 }
 
-func NumberFrom(val interface{}) (result *Number, ok bool) {
+func NumberFrom(val interface{}) (result Number, ok bool) {
 	var (
 		i int
 		u uint
 		f float64
 	)
 	if i, ok = Int(val); ok {
-		result = &Number{i}
+		result = Number{i}
 	} else if u, ok = Uint(val); ok {
-		result = &Number{u}
+		result = Number{u}
 	} else if f, ok = Float64(val); ok {
-		result = &Number{f}
+		result = Number{f}
 	}
 	return
 }
 
-func MustNumberFrom(val interface{}) (result *Number) {
+func MustNumberFrom(val interface{}) (result Number) {
 	var ok bool
 	if result, ok = NumberFrom(val); !ok {
 		bwerr.Panic(ansi.String("<ansiVal>%#v<ansi> can not be a <ansiType>Number"), val)
@@ -254,11 +273,11 @@ func MustNumberFrom(val interface{}) (result *Number) {
 	return
 }
 
-func (n *Number) Val() interface{} {
+func (n Number) Val() interface{} {
 	return n.val
 }
 
-func (n *Number) IsEqualTo(a *Number) (result bool) {
+func (n Number) IsEqualTo(a Number) (result bool) {
 	return n.compareTo(a, func(kind compareKind, u, v uint, i, j int, f, g float64) (result bool) {
 		switch kind {
 		case compareUintUint:
@@ -272,7 +291,7 @@ func (n *Number) IsEqualTo(a *Number) (result bool) {
 	})
 }
 
-func (n *Number) IsLessThan(a *Number) (result bool) {
+func (n Number) IsLessThan(a Number) (result bool) {
 	result = n.compareTo(a, func(kind compareKind, u, v uint, i, j int, f, g float64) (result bool) {
 		switch kind {
 		case compareUintUint:
@@ -301,7 +320,7 @@ const (
 
 type compareFunc func(kind compareKind, u, v uint, i, j int, f, g float64) (result bool)
 
-func (n *Number) compareTo(a *Number, fn compareFunc) (result bool) {
+func (n Number) compareTo(a Number, fn compareFunc) (result bool) {
 	if u, ok := Uint(n.val); ok {
 		if v, ok := Uint(a.val); ok {
 			result = fn(compareUintUint, u, v, 0, 0, 0, 0)
@@ -343,16 +362,13 @@ type RangeLimit struct {
 
 func RangeLimitFrom(val interface{}) (result RangeLimit, ok bool) {
 	var (
-		path bw.ValPath
-		n    *Number
+		n Number
 	)
 	if val == nil {
 		result = RangeLimit{}
 		ok = true
 	} else if n, ok = NumberFrom(val); ok {
-		result = RangeLimit{val: n}
-	} else if path, ok = val.(bw.ValPath); ok {
-		result = RangeLimit{val: path}
+		result = RangeLimit{val: n.val}
 	} else {
 		result, ok = val.(RangeLimit)
 	}
@@ -367,64 +383,68 @@ func MustRangeLimitFrom(val interface{}) (result RangeLimit) {
 	return
 }
 
-func (n RangeLimit) Nil() (ok bool) {
-	ok = n.val == nil
-	return
-}
-
-func (n RangeLimit) Number() (result Number, ok bool) {
-	result, ok = n.val.(Number)
-	return
-}
-
-func (n RangeLimit) Path() (result bw.ValPath, ok bool) {
-	result, ok = n.val.(bw.ValPath)
-	return
-}
-
-func (n RangeLimit) MustNumber() (result Number) {
-	var ok bool
-	if result, ok = n.Number(); !ok {
-		bwerr.Panic(ansiIsNotOfType, n.val, "Number")
-	}
-	return
-}
-
-func (n RangeLimit) MustPath() (result bw.ValPath) {
-	var ok bool
-	if result, ok = n.Path(); !ok {
-		bwerr.Panic(ansiIsNotOfType, n.val, "bw.ValPath")
-	}
-	return
+func (n RangeLimit) Val() interface{} {
+	return n.val
 }
 
 func (rl RangeLimit) String() (result string) {
-	var (
-		n    Number
-		path bw.ValPath
-		ok   bool
-	)
-	if n, ok = rl.Number(); ok {
+	if n, ok := NumberFrom(rl.val); ok {
 		result = n.String()
-	} else if path, ok = rl.Path(); ok {
-		result = path.String()
-		if !(len(path) > 0 && path[0].Type == bw.ValPathItemVar) {
-			result = "{{" + result + "}}"
-		}
 	}
 	return
 }
 
 // ============================================================================
 
-type RangeKindValue uint8
+type RangeTemplateLimit struct {
+	val interface{}
+}
 
-const (
-	RangeNo RangeKindValue = iota
-	RangeMin
-	RangeMax
-	RangeMinMax
-)
+func RangeTemplateLimitFrom(val interface{}) (result RangeTemplateLimit, ok bool) {
+	var (
+		path bw.ValPath
+		n    Number
+		rl   RangeLimit
+	)
+	if val == nil {
+		result = RangeTemplateLimit{}
+		ok = true
+	} else if n, ok = NumberFrom(val); ok {
+		result = RangeTemplateLimit{val: n.val}
+	} else if path, ok = val.(bw.ValPath); ok {
+		result = RangeTemplateLimit{val: path}
+	} else if rl, ok = val.(RangeLimit); ok {
+		result = RangeTemplateLimit{val: rl.val}
+	} else {
+		result, ok = val.(RangeTemplateLimit)
+	}
+	return
+}
+
+func MustRangeTemplateLimitFrom(val interface{}) (result RangeTemplateLimit) {
+	var ok bool
+	if result, ok = RangeTemplateLimitFrom(val); !ok {
+		bwerr.Panic(ansiValCanNotBeRangeLimit, val)
+	}
+	return
+}
+
+func (rl RangeTemplateLimit) String() (result string) {
+	if n, ok := NumberFrom(rl.val); ok {
+		result = n.String()
+	} else if path, ok := n.val.(bw.ValPath); !ok {
+		result = path.String()
+	}
+	return
+}
+
+// ============================================================================
+
+type RangeA struct {
+	Min, Max interface{}
+}
+
+// ============================================================================
 
 type Range struct {
 	min, max RangeLimit
@@ -438,11 +458,7 @@ func (r Range) Max() RangeLimit {
 	return r.max
 }
 
-type A struct {
-	Min, Max interface{}
-}
-
-func RangeFrom(a A) (result *Range, err error) {
+func RangeFrom(a RangeA) (result *Range, err error) {
 	var min, max RangeLimit
 	var ok bool
 	if min, ok = RangeLimitFrom(a.Min); !ok {
@@ -454,35 +470,20 @@ func RangeFrom(a A) (result *Range, err error) {
 		return
 	}
 	result = &Range{min: min, max: max}
-	if result.Kind() == RangeMinMax {
-		if min, ok := NumberFrom(a.Min); ok {
-			if max, ok := NumberFrom(a.Max); ok {
-				if max.IsLessThan(min) {
-					err = bwerr.From(ansiMaxMustNotBeLessThanMin, max, min)
-				}
+	if min, ok := NumberFrom(min.val); ok {
+		if max, ok := NumberFrom(max.val); ok {
+			if max.IsLessThan(min) {
+				err = bwerr.From(ansiMaxMustNotBeLessThanMin, max, min)
 			}
 		}
 	}
 	return
 }
 
-func MustRangeFrom(a A) (result *Range) {
+func MustRangeFrom(a RangeA) (result *Range) {
 	var err error
 	if result, err = RangeFrom(a); err != nil {
 		bwerr.PanicErr(err)
-	}
-	return
-}
-
-func (r Range) Kind() (result RangeKindValue) {
-	if r.min.val != nil {
-		if r.max.val != nil {
-			result = RangeMinMax
-		} else {
-			result = RangeMin
-		}
-	} else if r.max.val != nil {
-		result = RangeMax
 	}
 	return
 }
@@ -493,44 +494,26 @@ func (v Range) String() (result string) {
 }
 
 func (r Range) Contains(val interface{}) (result bool) {
-	var n *Number
+	var n Number
 	var ok bool
 	if n, ok = NumberFrom(val); !ok {
 		return false
 	}
-	var minResult, maxResult bool
-	rangeKind := r.Kind()
-	switch rangeKind {
-	case RangeMin, RangeMinMax:
-		if min, ok := NumberFrom(r.min.val); ok {
-			if n.IsEqualTo(min) {
-				return true
-			} else {
-				minResult = !n.IsLessThan(min)
-			}
+	if min, ok := NumberFrom(r.min.val); !ok {
+		if n.IsEqualTo(min) {
+			return true
+		} else if n.IsLessThan(min) {
+			return false
 		}
 	}
-	switch rangeKind {
-	case RangeMax, RangeMinMax:
-		if max, ok := NumberFrom(r.max.val); ok {
-			if n.IsEqualTo(max) {
-				return true
-			} else {
-				maxResult = !max.IsLessThan(n)
-			}
+	if max, ok := NumberFrom(r.max.val); ok {
+		if n.IsEqualTo(max) {
+			return true
+		} else if max.IsLessThan(n) {
+			return false
 		}
 	}
-	switch rangeKind {
-	case RangeMinMax:
-		result = minResult && maxResult
-	case RangeMax:
-		result = maxResult
-	case RangeMin:
-		result = minResult
-	default:
-		result = true
-	}
-	return
+	return true
 }
 
 func (r Range) MarshalJSON() ([]byte, error) {
@@ -539,44 +522,159 @@ func (r Range) MarshalJSON() ([]byte, error) {
 
 // ============================================================================
 
+type RangeTemplate struct {
+	min, max RangeTemplateLimit
+}
+
+func (r RangeTemplate) Min() RangeTemplateLimit {
+	return r.min
+}
+
+func (r RangeTemplate) Max() RangeTemplateLimit {
+	return r.max
+}
+
+func RangeTemplateFrom(a RangeA) (result *RangeTemplate, err error) {
+	var min, max RangeTemplateLimit
+	var ok bool
+	if min, ok = RangeTemplateLimitFrom(a.Min); !ok {
+		err = bwerr.From(ansiVarValCanNotBeRangeLimit, "a.Min", a.Min)
+		return
+	}
+	if max, ok = RangeTemplateLimitFrom(a.Max); !ok {
+		err = bwerr.From(ansiVarValCanNotBeRangeLimit, "a.Max", a.Max)
+		return
+	}
+	result = &RangeTemplate{min: min, max: max}
+	if min, ok := NumberFrom(min.val); ok {
+		if max, ok := NumberFrom(max.val); ok {
+			if max.IsLessThan(min) {
+				err = bwerr.From(ansiMaxMustNotBeLessThanMin, max, min)
+			}
+		}
+	}
+	return
+}
+
+func MustRangeTemplateFrom(a RangeA) (result *RangeTemplate) {
+	var err error
+	if result, err = RangeTemplateFrom(a); err != nil {
+		bwerr.PanicErr(err)
+	}
+	return
+}
+
+func (v RangeTemplate) String() (result string) {
+	result = fmt.Sprintf("%s..%s", v.min, v.max)
+	return
+}
+
+func (r RangeTemplate) MarshalJSON() ([]byte, error) {
+	return json.Marshal(r.String())
+}
+
+// ============================================================================
+
+type EnumTemplateItem struct {
+	IsPath bool
+	S      string
+	Path   bw.ValPathTemplate
+}
+
+// type DefTemplateEnum struct {
+// 	IsPath bool
+// 	Path   bw.ValPathTemplate
+// 	Items  []EnumTemplateItem
+// }
+
+type DefTemplateRange struct {
+	IsPath        bool
+	RangeTemplate *RangeTemplate
+	Path          bw.ValPathTemplate
+}
+
+type DefTemplate struct {
+	Types        ValKindSet
+	IsOptional   bool
+	Enum         []EnumTemplateItem
+	Range        *DefTemplateRange
+	KeysDef      map[string]DefTemplate
+	ElemDef      *DefTemplate
+	ArrayElemDef *DefTemplate
+	Default      *Template
+	IsArrayOf    bool
+}
+
+func (v *DefTemplate) MarshalJSON() ([]byte, error) {
+	return bwjson.MarshalJSON(v)
+	// result := map[string]interface{}{}
+	// result["Types"] = v.Types
+	// result["IsOptional"] = v.IsOptional
+	// if v.IsArrayOf {
+	// 	result["IsArrayOf"] = v.IsArrayOf
+	// }
+	// if v.Enum != nil {
+	// 	result["Enum"] = v.Enum
+	// }
+	// if v.Range != nil {
+	// 	result["Range"] = v.Range
+	// }
+	// if v.KeysDef != nil {
+	// 	result["KeysDef"] = v.KeysDef
+	// }
+	// if v.ElemDef != nil {
+	// 	result["ElemDef"] = v.ElemDef
+	// }
+	// if v.ArrayElemDef != nil {
+	// 	result["ArrayElemDef"] = v.ArrayElemDef
+	// }
+	// if v.Default != nil {
+	// 	result["Default"] = v.Default
+	// }
+	// return json.Marshal(result)
+}
+
+// ============================================================================
+
 type Def struct {
-	Types      ValKindSet
-	IsOptional bool
-	Enum       bwset.String
-	Range      *Range
-	Keys       map[string]Def
-	Elem       *Def
-	ArrayElem  *Def
-	Default    interface{}
-	IsArrayOf  bool
+	Types        ValKindSet
+	IsOptional   bool
+	Enum         bwset.String
+	Range        *Range
+	KeysDef      map[string]Def
+	ElemDef      *Def
+	ArrayElemDef *Def
+	Default      interface{}
+	IsArrayOf    bool
 }
 
 func (v Def) MarshalJSON() ([]byte, error) {
-	result := map[string]interface{}{}
-	result["Types"] = v.Types
-	result["IsOptional"] = v.IsOptional
-	if v.IsArrayOf {
-		result["IsArrayOf"] = v.IsArrayOf
-	}
-	if v.Enum != nil {
-		result["Enum"] = v.Enum
-	}
-	if v.Range.Kind() != RangeNo {
-		result["Range"] = v.Range
-	}
-	if v.Keys != nil {
-		result["Keys"] = v.Keys
-	}
-	if v.Elem != nil {
-		result["Elem"] = *(v.Elem)
-	}
-	if v.ArrayElem != nil {
-		result["ArrayElem"] = *(v.ArrayElem)
-	}
-	if v.Default != nil {
-		result["Default"] = v.Default
-	}
-	return json.Marshal(result)
+	return bwjson.MarshalJSON(v)
+	// result := map[string]interface{}{}
+	// result["Types"] = v.Types
+	// result["IsOptional"] = v.IsOptional
+	// if v.IsArrayOf {
+	// 	result["IsArrayOf"] = v.IsArrayOf
+	// }
+	// if len(v.Enum) > 0 {
+	// 	result["Enum"] = v.Enum
+	// }
+	// if v.Range != nil {
+	// 	result["Range"] = v.Range
+	// }
+	// if v.KeysDef != nil {
+	// 	result["KeysDef"] = v.KeysDef
+	// }
+	// if v.ElemDef != nil {
+	// 	result["ElemDef"] = v.ElemDef
+	// }
+	// if v.ArrayElemDef != nil {
+	// 	result["ArrayElemDef"] = v.ArrayElemDef
+	// }
+	// if v.Default != nil {
+	// 	result["Default"] = v.Default
+	// }
+	// return json.Marshal(result)
 }
 
 // ============================================================================
@@ -607,6 +705,21 @@ const (
 // MarshalJSON encoding/json support
 func (v ValKind) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.String())
+}
+
+func (v ValKind) AnsiString() string {
+	return ansi.String(fmt.Sprintf("<ansiType>%s<ansi>", v.String()))
+}
+
+// ============================================================================
+
+type ValKinds []ValKind
+
+func (vks ValKinds) Strings() (result []string) {
+	for _, vk := range vks {
+		result = append(result, vk.String())
+	}
+	return
 }
 
 // ============================================================================
@@ -811,27 +924,16 @@ func Kind(val interface{}, optExpects ...ValKindSet) (result interface{}, kind V
 				result = MustNumberFrom(t)
 				kind = ValNumber
 			}
-		case *Number:
+		case Number:
 			if expects.Has(ValNumber) {
 				result = t
 				kind = ValNumber
 			} else {
-				val = t.val
+				val = t.Val()
 				needRecall = true
 			}
-		case Number:
-			if expects.Has(ValNumber) {
-				result = &t
-				kind = ValNumber
-			} else {
-				val = t.val
-				needRecall = true
-			}
-		case *RangeLimit:
-			val = t.val
-			needRecall = true
 		case RangeLimit:
-			val = t.val
+			val = t.Val()
 			needRecall = true
 		default:
 			switch value := reflect.ValueOf(val); value.Kind() {
@@ -916,8 +1018,8 @@ var (
 	ansiUknownValKind            string
 	ansiVarValCanNotBeRangeLimit string
 	ansiValCanNotBeRangeLimit    string
-	ansiIsNotOfType              string
-	ansiMaxMustNotBeLessThanMin  string
+	// ansiIsNotOfType              string
+	ansiMaxMustNotBeLessThanMin string
 )
 
 func init() {
@@ -925,9 +1027,9 @@ func init() {
 		mapValKindFromString[i.String()] = i
 	}
 	ansiUknownValKind = ansi.String("<ansiPath>ValKindFromString<ansi>: uknown <ansiVal>%s")
-	ansiVarValCanNotBeRangeLimit = ansi.String("<ansiVar>%s<ansi> (<ansiVal>%#v<ansi>) can not be a <ansiType>RangeLimit")
-	ansiValCanNotBeRangeLimit = ansi.String("<ansiVal>%#v<ansi> can not be a <ansiType>RangeLimit")
-	ansiIsNotOfType = ansi.String("<ansiVal>%#v<ansi> is not <ansiType>%s")
+	// ansiVarValCanNotBeRangeLimit = ansi.String("<ansiVar>%s<ansi> (<ansiVal>%#v<ansi>) can not be a <ansiType>RangeLimit")
+	// ansiValCanNotBeRangeLimit = ansi.String("<ansiVal>%#v<ansi> can not be a <ansiType>RangeLimit")
+	// ansiIsNotOfType = ansi.String("<ansiVal>%#v<ansi> is not <ansiType>%s")
 	ansiMaxMustNotBeLessThanMin = ansi.String("<ansiVar>a.Max<ansi> (<ansiVal>%s<ansi>) must not be <ansiErr>less<ansi> then <ansiVar>a.Min<ansi> (<ansiVal>%s<ansi>)")
 }
 

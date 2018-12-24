@@ -7,10 +7,7 @@ import (
 	"github.com/baza-winner/bwcore/ansi"
 	"github.com/baza-winner/bwcore/bw"
 	"github.com/baza-winner/bwcore/bwerr"
-	"github.com/baza-winner/bwcore/bwjson"
-	"github.com/baza-winner/bwcore/bwmap"
 	"github.com/baza-winner/bwcore/bwrune"
-	"github.com/baza-winner/bwcore/bwset"
 )
 
 // ============================================================================
@@ -140,7 +137,12 @@ type P struct {
 	starts        map[int]*Start
 }
 
-func From(pp bwrune.ProviderProvider, opt ...map[string]interface{}) (result *P, err error) {
+type Opt struct {
+	PreLineCount  uint
+	PostLineCount uint
+}
+
+func From(pp bwrune.ProviderProvider, optOpt ...Opt) (result *P, err error) {
 	var p bwrune.Provider
 	if p, err = pp.Provider(); err != nil {
 		return
@@ -157,27 +159,35 @@ func From(pp bwrune.ProviderProvider, opt ...map[string]interface{}) (result *P,
 		preLineCount:  3,
 		postLineCount: 3,
 	}
-	if len(opt) > 0 {
-		m := opt[0]
-		if m != nil {
-			keys := bwset.String{}
-			if i, ok := optKeyUint(m, "preLineCount", &keys); ok {
-				result.preLineCount = i
-			}
-			if i, ok := optKeyUint(m, "postLineCount", &keys); ok {
-				result.postLineCount = i
-			}
-			if unexpectedKeys := bwmap.MustUnexpectedKeys(m, keys); len(unexpectedKeys) > 0 {
-				err = bwerr.From(ansiOptHasUnexpectedKeys, bwjson.Pretty(m), unexpectedKeys)
-			}
+	if len(optOpt) > 0 {
+		opt := optOpt[0]
+		if opt.PreLineCount > 0 {
+			result.preLineCount = opt.PreLineCount
 		}
+		if opt.PostLineCount > 0 {
+			result.postLineCount = opt.PostLineCount
+		}
+
+		// m := opt[0]
+		// if m != nil {
+		// 	keys := bwset.String{}
+		// 	if i, ok := optKeyUint(m, "preLineCount", &keys); ok {
+		// 		result.preLineCount = i
+		// 	}
+		// 	if i, ok := optKeyUint(m, "postLineCount", &keys); ok {
+		// 		result.postLineCount = i
+		// 	}
+		// 	if unexpectedKeys := bwmap.MustUnexpectedKeys(m, keys); len(unexpectedKeys) > 0 {
+		// 		err = bwerr.From(ansiOptHasUnexpectedKeys, bwjson.Pretty(m), unexpectedKeys)
+		// 	}
+		// }
 	}
 	return
 }
 
-func MustFrom(pp bwrune.ProviderProvider, opt ...map[string]interface{}) (result *P) {
+func MustFrom(pp bwrune.ProviderProvider, optOpt ...Opt) (result *P) {
 	var err error
-	if result, err = From(pp, opt...); err != nil {
+	if result, err = From(pp, optOpt...); err != nil {
 		bwerr.PanicErr(err)
 	}
 	return
@@ -330,48 +340,132 @@ func SkipRunes(p I, rr ...rune) (ok bool) {
 
 // ============================================================================
 
+// const (
+// 	TillNonEOF bool = false
+// 	TillEOF    bool = true
+// )
+
+type Till uint8
+
 const (
-	TillNonEOF bool = false
-	TillEOF    bool = true
+	TillAny Till = iota
+	TillNonEOF
+	TillEOF
 )
 
-func SkipSpace(p I, tillEOF bool) (ok bool, err error) {
+func SkipSpace(p I, till Till) (ok bool, err error) {
 	p.Forward(Initial)
 REDO:
-	for !p.Curr().isEOF && unicode.IsSpace(p.Curr().rune) {
+	for !p.Curr().IsEOF() && unicode.IsSpace(p.Curr().Rune()) {
 		ok = true
 		p.Forward(1)
 	}
-	if p.Curr().isEOF && !tillEOF {
-		err = Unexpected(p)
-		return
-	}
-	if CanSkipRunes(p, '/', '/') {
-		ok = true
-		p.Forward(2)
-		for !p.Curr().isEOF && p.Curr().rune != '\n' {
-			p.Forward(1)
+	if p.Curr().IsEOF() {
+		if till == TillNonEOF {
+			err = Unexpected(p)
+			return
 		}
-		if !p.Curr().isEOF {
-			p.Forward(1)
-		}
-		goto REDO
-	} else if CanSkipRunes(p, '/', '*') {
-		ok = true
-		p.Forward(2)
-		for !p.Curr().isEOF && !CanSkipRunes(p, '*', '/') {
-			p.Forward(1)
-		}
-		if !p.Curr().isEOF {
+	} else {
+		if CanSkipRunes(p, '/', '/') {
+			ok = true
 			p.Forward(2)
+			for !p.Curr().isEOF && p.Curr().rune != '\n' {
+				p.Forward(1)
+			}
+			if !p.Curr().isEOF {
+				p.Forward(1)
+			}
+			goto REDO
+		} else if CanSkipRunes(p, '/', '*') {
+			ok = true
+			p.Forward(2)
+			for !p.Curr().isEOF && !CanSkipRunes(p, '*', '/') {
+				p.Forward(1)
+			}
+			if !p.Curr().isEOF {
+				p.Forward(2)
+			}
+			goto REDO
 		}
-		goto REDO
+		if till == TillEOF {
+			err = Unexpected(p)
+		}
 	}
-	if tillEOF && !p.Curr().isEOF {
-		err = Unexpected(p)
-	}
+	// if p.Curr().IsEOF && !tillEOF {
+	// 	err = Unexpected(p)
+	// 	return
+	// }
+	// if CanSkipRunes(p, '/', '/') {
+	// 	ok = true
+	// 	p.Forward(2)
+	// 	for !p.Curr().isEOF && p.Curr().rune != '\n' {
+	// 		p.Forward(1)
+	// 	}
+	// 	if !p.Curr().isEOF {
+	// 		p.Forward(1)
+	// 	}
+	// 	goto REDO
+	// } else if CanSkipRunes(p, '/', '*') {
+	// 	ok = true
+	// 	p.Forward(2)
+	// 	for !p.Curr().isEOF && !CanSkipRunes(p, '*', '/') {
+	// 		p.Forward(1)
+	// 	}
+	// 	if !p.Curr().isEOF {
+	// 		p.Forward(2)
+	// 	}
+	// 	goto REDO
+	// }
+	// if tillEOF && !p.Curr().isEOF {
+	// 	err = Unexpected(p)
+	// }
 	return
 }
+
+// ============================================================================
+
+// const (
+// 	TillNonEOF bool = false
+// 	TillEOF    bool = true
+// )
+
+// func SkipSpace(p I, tillEOF bool) (ok bool, err error) {
+// 	p.Forward(Initial)
+// REDO:
+// 	for !p.Curr().isEOF && unicode.IsSpace(p.Curr().rune) {
+// 		ok = true
+// 		p.Forward(1)
+// 	}
+// 	if p.Curr().isEOF && !tillEOF {
+// 		err = Unexpected(p)
+// 		return
+// 	}
+// 	if CanSkipRunes(p, '/', '/') {
+// 		ok = true
+// 		p.Forward(2)
+// 		for !p.Curr().isEOF && p.Curr().rune != '\n' {
+// 			p.Forward(1)
+// 		}
+// 		if !p.Curr().isEOF {
+// 			p.Forward(1)
+// 		}
+// 		goto REDO
+// 	} else if CanSkipRunes(p, '/', '*') {
+// 		ok = true
+// 		p.Forward(2)
+// 		for !p.Curr().isEOF && !CanSkipRunes(p, '*', '/') {
+// 			p.Forward(1)
+// 		}
+// 		if !p.Curr().isEOF {
+// 			p.Forward(2)
+// 		}
+// 		goto REDO
+// 	}
+// 	if tillEOF && !p.Curr().isEOF {
+// 		err = Unexpected(p)
+// 	}
+// 	return
+// }
 
 // // ============================================================================
 

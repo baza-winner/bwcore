@@ -8,15 +8,13 @@ import (
 	"github.com/baza-winner/bwcore/bwerr"
 	"github.com/baza-winner/bwcore/bwos"
 	"github.com/baza-winner/bwcore/bwrune"
-	"github.com/baza-winner/bwcore/bwset"
-	"github.com/baza-winner/bwcore/bwtype"
 )
 
 // ============================================================================
 
 var (
-	ansiOptKeyIsNotOfType    string
-	ansiOptHasUnexpectedKeys string
+	// 	ansiOptKeyIsNotOfType    string
+	// 	ansiOptHasUnexpectedKeys string
 
 	ansiOK  string
 	ansiErr string
@@ -27,16 +25,17 @@ var (
 	ansiUnexpectedEOF   string
 	ansiUnexpectedChar  string
 	ansiUnexpectedWord  string
-	// ansiOutOfRange            string
-	ansiUnexpectedBasePathIdx string
-	ansiType                  string
-	ansiVal                   string
-	ansiVarSpace              string
+
+	// 	// ansiOutOfRange            string
+	// 	ansiUnexpectedBasePathIdx string
+	// 	ansiType                  string
+	// 	ansiVal                   string
+	ansiVarSpace string
 )
 
 func init() {
-	ansiOptKeyIsNotOfType = ansi.String("<ansiVar>opt.%s<ansi> (<ansiVal>%#v<ansi>) is not <ansiType>%s")
-	ansiOptHasUnexpectedKeys = ansi.String("<ansiVar>opt<ansi> (<ansiVal>%s<ansi>) has unexpected keys <ansiVal>%s")
+	// 	ansiOptKeyIsNotOfType = ansi.String("<ansiVar>opt.%s<ansi> (<ansiVal>%#v<ansi>) is not <ansiType>%s")
+	// 	ansiOptHasUnexpectedKeys = ansi.String("<ansiVar>opt<ansi> (<ansiVal>%s<ansi>) has unexpected keys <ansiVal>%s")
 
 	ansiOK = ansi.CSIFromSGRCodes(ansi.MustSGRCodeOfColor8(ansi.Color8{Color: ansi.SGRColorGreen, Bright: false})).String()
 	ansiErr = ansi.CSIFromSGRCodes(ansi.MustSGRCodeOfColor8(ansi.Color8{Color: ansi.SGRColorRed, Bright: true})).String()
@@ -47,22 +46,22 @@ func init() {
 	ansiUnexpectedEOF = ansi.String("unexpected end of string")
 	ansiUnexpectedChar = ansi.String("unexpected char <ansiVal>%q<ansiReset> (<ansiVar>charCode<ansi>: <ansiVal>%d<ansi>)")
 	ansiUnexpectedWord = ansi.String("unexpected `<ansiErr>%s<ansi>`")
-	ansiUnexpectedBasePathIdx = ansi.String("unexpected base path idx <ansiVal>%d<ansi> (len(bases): <ansiVal>%d)")
-	ansiType = ansi.String("<ansiType>%s")
-	ansiVal = ansi.String("<ansiVal>%s")
+	// 	ansiUnexpectedBasePathIdx = ansi.String("unexpected base path idx <ansiVal>%d<ansi> (len(bases): <ansiVal>%d)")
+	// 	ansiType = ansi.String("<ansiType>%s")
+	// 	ansiVal = ansi.String("<ansiVal>%s")
 	ansiVarSpace = ansi.String("<ansiVar>Space")
 }
 
-func optKeyUint(opt map[string]interface{}, key string, keys *bwset.String) (result uint, ok bool) {
-	var val interface{}
-	keys.Add(key)
-	if val, ok = opt[key]; ok && val != nil {
-		if result, ok = bwtype.Uint(val); !ok {
-			bwerr.Panic(ansiOptKeyIsNotOfType, key, val, "Uint")
-		}
-	}
-	return
-}
+// func optKeyUint(opt map[string]interface{}, key string, keys *bwset.String) (result uint, ok bool) {
+// 	var val interface{}
+// 	keys.Add(key)
+// 	if val, ok = opt[key]; ok && val != nil {
+// 		if result, ok = bwtype.Uint(val); !ok {
+// 			bwerr.Panic(ansiOptKeyIsNotOfType, key, val, "Uint")
+// 		}
+// 	}
+// 	return
+// }
 
 // ============================================================================
 

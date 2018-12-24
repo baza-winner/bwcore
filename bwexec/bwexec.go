@@ -13,19 +13,18 @@ import (
 	"github.com/baza-winner/bwcore/bwerr"
 	"github.com/baza-winner/bwcore/bwrune"
 	"github.com/baza-winner/bwcore/bwstr"
-	"github.com/baza-winner/bwcore/bwtype"
 	"github.com/baza-winner/bwcore/bwval"
 )
 
 const defaultFailedCode = 1
 
-var cmdOptDef *bwtype.Def
+var cmdOptDef *bwval.Def
 
 func init() {
 	cmdOptDef = bwval.MustDefFrom(bwrune.S{S: `
 		{
 			type Map
-			keys {
+			keysDef {
 				verbosity {
 					type String
 					enum <all err ok none>
@@ -58,10 +57,10 @@ func init() {
 				}
 			}
 		}
-	`})
+	`}, bwval.MustPath(bwval.PathS{S: "$bwexec.cmdOptDef"}))
 }
 
-func CmdOptDef() *bwtype.Def {
+func CmdOptDef() *bwval.Def {
 	return cmdOptDef
 }
 

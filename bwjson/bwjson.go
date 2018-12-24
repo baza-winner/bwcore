@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 
 	"github.com/baza-winner/bwcore/bwerr"
 	"github.com/baza-winner/bwcore/bwos"
@@ -55,4 +56,64 @@ func ToFile(fileSpec string, val interface{}) (err error) {
 	}
 	err = ioutil.WriteFile(fileSpec, bytes, 0644)
 	return
+}
+
+func MarshalJSON(val interface{}) ([]byte, error) {
+	var value = reflect.ValueOf(val)
+	for value.Kind() == reflect.Ptr {
+		value = value.Elem()
+	}
+	if value.Kind() != reflect.Struct {
+		return json.Marshal(val)
+	} else {
+		result := map[string]interface{}{}
+	FIELD:
+		for i := 0; i < value.NumField(); i++ {
+			fieldValue := value.Field(i)
+			for fieldValue.Kind() == reflect.Ptr {
+				if fieldValue.IsNil() {
+					continue FIELD
+				}
+				fieldValue = fieldValue.Elem()
+			}
+			// kind := fieldValue.Kind()
+			switch fieldValue.Kind() {
+			case reflect.Slice, reflect.Map, reflect.String:
+				if fieldValue.Len() == 0 {
+					continue FIELD
+				}
+			case reflect.Interface:
+				if fieldValue.IsNil() {
+					continue FIELD
+				}
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				if fieldValue.Int() == 0 {
+					continue FIELD
+				}
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				if fieldValue.Uint() == 0 {
+					continue FIELD
+				}
+			case reflect.Float32, reflect.Float64:
+				if fieldValue.Float() == 0 {
+					continue FIELD
+				}
+			}
+			// if (kind == reflect.Slice {
+			// 	if fieldValue.Len() == 0 {
+			// 		continue FIELD
+			// 	}
+			// } else if kind == reflect.Map {
+			// 	if fieldValue.Len() == 0 {
+			// 		continue FIELD
+			// 	}
+			// } else if kind == reflect.String {
+			// 	if fieldValue.Len() == 0 {
+			// 		continue FIELD
+			// 	}
+			// }
+			result[value.Type().Field(i).Name] = fieldValue
+		}
+		return json.Marshal(result)
+	}
 }
