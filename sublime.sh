@@ -1,10 +1,9 @@
 #!/bin/sh
-for i in jld jlf; do
-  for j in sublime-syntax tmPreferences; do
-    targetFileSpec="$HOME/Library/Application Support/Sublime Text 3/Packages/User/$i.$j"
-    rm -f "$targetFileSpec"
-    if [[ $i == jlf ]]; then
-      ln "./$i.$j" "$targetFileSpec"
-    fi
-  done
+for i in jlf.sublime-syntax jlf.tmPreferences syntax_test_jlf; do
+  targetFileSpec="$HOME/Library/Application Support/Sublime Text 3/Packages/User/$i"
+  rm -f "$targetFileSpec"
+  ln "./$i" "$targetFileSpec"
+  # rm -f "./symlink.to.$i"
+  # ln -s "$targetFileSpec" "./symlink.to.$i"
 done
+
