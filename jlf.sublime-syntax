@@ -280,9 +280,13 @@ contexts:
     - include: illegalInclude
 
   chainNextSegmentOptional:
+    - meta_include_prototype: false
     - match: '{{pathSegmentSeparator}}'
       scope: keyword.jlf
       push: chainSegmentSpec
+    - match: '{{optionalEnder}}'
+      scope: keyword.jlf
+      pop: true
     - match: '{{any}}'
       pop: true
 
@@ -291,8 +295,8 @@ contexts:
     - include: varSpecInclude
 
   chainSegmentSpec:
-    # - match: '(?={{defStarter}})'
-      # set: [chainNextSegmentOptional, defWithStarter]
+    - match: '(?={{defStarter}})'
+      set: [chainNextSegmentOptional, defWithStarter]
     - match: '{{beginOfIterator}}'
       scope: punctuation.section.bracket.begin.jlf
       set: [chainNextSegmentOptional, iteratorEnd, iteratorConditionOptional, iteratorNegationOptional]
