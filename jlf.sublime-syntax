@@ -32,8 +32,11 @@ variables:
   beginOfExpr: '\('
   endOfExpr: '\)'
 
-  beginOfArgs: '\{'
-  endOfArgs: '\}'
+  beginOfArgsMap: '\{'
+  endOfArgsMap: '\}'
+
+  beginOfArgsArray: '\{'
+  endOfArgsArray: '\}'
 
   beginOfIterator: '\['
   endOfIterator: '\]'
@@ -41,14 +44,14 @@ variables:
   doubleQuotedStringDelimiter: '"'
 
   escapeStarter: '\\'
-  varSpecStarter: '\$'
-  varDefStarter: '\$'
+  varStarter: '\$'
   fileSpecStarter: '%'
   defStarter: '\^'
   genStarter: '\&'
-  pathSpecStarter: '\*'
-  exprPathStarter: '[{{fileSpecStarter}}{{varSpecStarter}}{{pathSpecStarter}}]'
-  pathSegmentSpecStarter: '[^^\s\(\|\*%]'
+  # pathSpecStarter: '\*'
+  # varStarter: '[{{fileSpecStarter}}{{varStarter}}{{pathSpecStarter}}]'
+  # varStarter: '{{varStarter}}'
+  chainSegmentSpecStarter: '[^^\s\(\|\*%]'
 
   int: '[-+]?\d+'
 
@@ -65,18 +68,18 @@ variables:
   andOp: '(\&\&)'
   orOp: '(\|\|)'
   cmpOps: '(==|!=|<=|>=)'
+  defMatchOp: '(=\^)'
 
   defTypeSingle: 'Array|Map|String|Int|Number|Bool|Range|Def|Gen|Any|AnyBut'
   defTypeMulti: 'ArrayOf'
+  spreadOp: '(\.\.\.)'
 
-  pathUpperLevel: '\.\.(?={{endOfNonQuotedString}})'
-  pathCurrLevel: '(?!{{pathUpperLevel}})\.(?={{endOfNonQuotedString}})'
   optionalEnder: '\?'
   pathDefaultValueStarter: ':'
   beginOfNonQuotedKey: '(?=[^{{beginOfMap}}{{endOfMap}}{{beginOfArray}}{{endOfArray}}{{commaSeparatorOptional}}])(?!{{endOfNonQuotedKey}})'
   endOfNonQuotedKey: '{{space}}|{{optionalEnder}}|{{beginOfExpr}}|{{endOfExpr}}|{{beginOfMap}}|{{beginOfArray}}|{{keySeparator}}'
   beginOfNonQuotedString: '(?=[\\a-zA-Z_\.])'
-  endOfNonQuotedString: '{{space}}|{{optionalEnder}}|{{beginOfExpr}}|{{endOfExpr}}|{{pathSegmentSeparator}}|{{beginOfMap}}|{{beginOfArray}}|{{endOfMap}}|{{endOfArray}}|{{commaSeparatorOptional}}|{{defStarter}}'
+  endOfNonQuotedString: '{{space}}|{{optionalEnder}}|{{beginOfExpr}}|{{endOfExpr}}|{{pathSegmentSeparator}}|{{beginOfMap}}|{{beginOfArray}}|{{endOfMap}}|{{endOfArray}}|{{commaSeparatorOptional}}|{{defStarter}}|{{spreadOp}}'
   jsonQuotedEscapeRunes: '[bfnrt]'
   jsonQuotedEscapeRunesAsIs: '["\\/]'
   escapeRunes: '[abfnrtv]'
@@ -118,43 +121,27 @@ contexts:
 # =============================================================================
 
   varDefInclude:
-    - match: '({{varDefStarter}}){{beginOfVarDefBlock}}'
-      captures:
-        1: keyword.jlf
-      push:
-        - match: '{{endOfVarDefBlock}}'
-          pop: true
-        - match: '{{defStarter}}'
-          scope: variable.parameter.jlf
-          push: [defValue, keySeparatorOptional]
-        - match: '{{id}}'
-          scope: entity.name.jlf
-          push: [value, keySeparatorOptional, varDefArgsOptional]
-        - include: illegalInclude
-    - match: '({{varDefStarter}})({{defStarter}})'
+    - match: '({{varStarter}})({{defStarter}})'
       captures:
         1: keyword.jlf
         2: variable.parameter.jlf
       push: [defValue, keySeparatorOptional]
-    - match: '({{varDefStarter}})({{id}})'
-      captures:
-        1: keyword.jlf
-        2: entity.name.jlf
-      push: [value, keySeparatorOptional, varDefArgsOptional]
+    - match: '({{varStarter}})'
+      scope: keyword.jlf
+      push: [value, keySeparatorOptional, varDefArgsOptional, varName]
 
   main:
     - match: '{{any}}'
       set: [mainTail, mainArgsOptional]
 
   mainArgsOptional:
-    - match: '({{varDefStarter}})(?={{beginOfArgs}})'
+    - match: '({{varStarter}})(?={{beginOfArgsMap}})'
       scope: keyword.jlf
       set: varDefArgsOptional
     - match: '{{any}}'
       pop: true
 
   mainTail:
-    - match: '({{varDefStarter}}){{beginOfVarDefBlock}}'
     - include: varDefInclude
     - match: '{{any}}'
       set: [end, value]
@@ -167,10 +154,10 @@ contexts:
 
   varDefArgsOptional:
     - meta_include_prototype: false
-    - match: '{{beginOfArgs}}'
+    - match: '{{beginOfArgsMap}}'
       scope: punctuation.section.parens.begin.jlf
       set:
-      - match: '{{endOfArgs}}'
+      - match: '{{endOfArgsMap}}'
         scope: punctuation.section.block.end.jlf
         pop: true
       - match: '{{any}}'
@@ -220,7 +207,7 @@ contexts:
   gen:
     - meta_include_prototype: false
     - match: '{{beginOfMap}}'
-      scope: entity.name.jlf
+      scope: punctuation.section.block.begin.jlf
       set: keyOfGen
     - include: illegalInclude
 
@@ -231,7 +218,10 @@ contexts:
     - match: \btype\b
       scope: keyword.jlf
       push: [commaSeparatorOptional, genType, keySeparatorOptional]
-    - match: \bkey|value\b
+    - match: \bkey\b
+      scope: keyword.jlf
+      push: [commaSeparatorOptional, stringValue, keySeparatorOptional]
+    - match: \bvalue\b
       scope: keyword.jlf
       push: [commaSeparatorOptional, value, keySeparatorOptional]
     - match: \belem\b
@@ -257,10 +247,10 @@ contexts:
   iteratorConditionOptional:
     - match: '{{int}}'
       scope: constant.numeric.jlf
-      set: rangeOptinal
+      set: rangeTailOptinal
     - match: '{{beginOfExpr}}'
       scope: punctuation.section.parens.begin.jlf
-      set: [rangeOptinal, exprEnd, expr]
+      set: [rangeTailOptinal, exprEnd, expr]
     - include: stringInclude
     - match: '{{any}}'
       pop: true
@@ -280,118 +270,94 @@ contexts:
 
 # =============================================================================
 
-  pathInclude:
+  varSpecChainInclude:
     - meta_include_prototype: false
-    - match: '(?={{exprPathStarter}})'
-      set: [pathNextSegmentOptional, pathStartSegment]
+    - match: '(?={{varStarter}})'
+      set: [chainNextSegmentOptional, varSpec]
 
-  pathNextSegmentOptional:
+  varSpecChain:
+    - include: varSpecChainInclude
+    - include: illegalInclude
+
+  chainNextSegmentOptional:
     - match: '{{pathSegmentSeparator}}'
       scope: keyword.jlf
-      push: pathSegmentSpec
+      push: chainSegmentSpec
     - match: '{{any}}'
       pop: true
 
-  pathStartSegment:
+  varSpec:
     - meta_include_prototype: false
-    - match: '([{{fileSpecStarter}}{{varSpecStarter}}])({{beginOfArgs}})'
-      captures:
-        1: keyword.jlf
-        2: invalid.illegal.jlf
     - include: varSpecInclude
-    - match: '{{fileSpecStarter}}'
-      scope: keyword.jlf
-      set:
-        - meta_include_prototype: false
-        - match: '(?={{endOfNonQuotedString}})'
-          set: illegalInclude
-        - match: '{{any}}'
-          set:
-            - meta_include_prototype: false
-            - clear_scopes: true
-            - meta_scope: entity.name.label.jlf
-            - include: specInclude
-    - match: '{{pathSpecStarter}}'
-      scope: keyword.jlf
-      set:
-        - clear_scopes: true
-        - meta_scope: entity.name.label.jlf
-        - match: '{{pathCurrLevel}}'
-          pop: true
-        - match: '({{pathUpperLevel}})(?:\s*({{pathSegmentSeparator}})\s*({{pathUpperLevel}}))*'
-          captures:
-            2: keyword.jlf
-          pop: true
-        - match: '{{any}}'
-          set: pathSegmentSpec
 
-  pathSegmentSpec:
-    - match: '(?={{defStarter}})'
-      set: [pathNextSegmentOptional, defWithStarter]
+  chainSegmentSpec:
+    # - match: '(?={{defStarter}})'
+      # set: [chainNextSegmentOptional, defWithStarter]
     - match: '{{beginOfIterator}}'
       scope: punctuation.section.bracket.begin.jlf
-      set: [pathNextSegmentOptional, iteratorEnd, iteratorConditionOptional, iteratorNegationOptional]
+      set: [chainNextSegmentOptional, iteratorEnd, iteratorConditionOptional, iteratorNegationOptional]
     - include: intInclude
-    - include: intSubExprInclude
+    - include: exprInclude
     - include: varSpecInclude
-    - include: pathSegmentSpecHelperInclude
-    - include: simplePathSegmentSpecInclude
-    - include: illegalInclude
-
-  pathSegmentSpecHelperInclude:
-    - meta_include_prototype: false
     - match: '{{doubleQuotedStringDelimiter}}'
       scope: punctuation.definition.string.begin.jlf
       set:
         - meta_include_prototype: false
         - meta_scope: support.function.jlf
         - include: quotedInclude
-    - match: '{{pathSegmentSpecStarter}}'
+    - match: '{{chainSegmentSpecStarter}}'
       set:
         - meta_include_prototype: false
         - meta_scope: support.function.jlf
-        - match: '{{escapeStarter}}(?={{beginOfExpr}})'
-          scope: keyword.jlf
-          push: expr
-        - match: '(?={{endOfNonQuotedString}})'
-          pop: true
-        - match: '({{escapeStarter}}){{endOfNonQuotedString}}'
-          captures:
-            1: constant.character.escape.jlf
-        - include: escapeInclude
+        - include: nonQuotedStringTailInclude
+    - include: illegalInclude
+
+# =============================================================================
 
   varSpecInclude:
     - meta_include_prototype: false
-    - match: '{{varSpecStarter}}'
+    - match: '({{varStarter}})'
       scope: keyword.jlf
-      set:
-        - meta_include_prototype: false
-        - match: '(?={{endOfNonQuotedString}})'
-          set: illegalInclude
-        - match: '{{any}}'
-          set:
-            - meta_include_prototype: false
-            - clear_scopes: true
-            - meta_scope: entity.name.variable.jlf
-            - include: specInclude
+      set: [varArgsOptional, varName]
 
-  specInclude:
+  varChainInclude:
     - meta_include_prototype: false
-    - match: '(?={{beginOfArgs}})'
-      set:
-        - match: '{{beginOfArgs}}'
-          scope: punctuation.section.block.begin.jlf
-          set:
-            - match: '{{endOfArgs}}'
-              scope: punctuation.section.block.end.jlf
-              pop: true
-            - match: '{{any}}'
-              push: [ commaSeparatorOptional, value, keySeparatorOptional, argName ]
-    - match: '(?={{beginOfMap}})'
+    - match: '({{varStarter}})'
+      scope: keyword.jlf
+      set: [chainNextSegmentOptional, varArgsOptional, varName]
+
+  varName:
+    - meta_include_prototype: false
+    - match: '(Key|Idx|Len|File|Ref|\.\.|\.)(?={{endOfNonQuotedString}})'
+      scope: entity.name.label.jlf
+      pop: true
+    - match: '(?={{endOfNonQuotedString}})'
+      set: illegalInclude
+    - match: '{{any}}'
       set:
         - meta_include_prototype: false
         - clear_scopes: true
-        - include: mapInclude
+        - meta_scope: entity.name.variable.jlf
+        - include: nonQuotedStringTailInclude
+
+  varArgsOptional:
+    - meta_include_prototype: false
+    - match: '{{beginOfMap}}'
+      scope: punctuation.section.block.begin.jlf
+      set:
+        - match: '{{endOfMap}}'
+          scope: punctuation.section.block.end.jlf
+          pop: true
+        - match: '{{any}}'
+          push: [commaSeparatorOptional, value, keySeparatorOptional, argName]
+    - include: arrayInclude
+    - include: exprInclude
+    - match: '{{any}}'
+      pop: true
+
+  specInclude:
+    - meta_include_prototype: false
+    - include: varSpecArgsInclude
     - include: nonQuotedStringTailInclude
 
 # =============================================================================
@@ -402,9 +368,9 @@ contexts:
       scope: punctuation.section.parens.begin.jlf
       set:
         - match: '{{negationMark}}'
-          set: [exprEnd, exprTernaryBeginOptional, boolExprTailOptional, valueAtom]
+          set: [exprEnd, exprTernaryBeginOptional, boolExprTailOptional, valueChain]
         - match: '{{any}}'
-          set: [exprEnd, exprTernaryBeginOptional, exprTailOptional, valueAtom]
+          set: [exprEnd, exprTernaryBeginOptional, exprTailOptional, valueChain]
 
   negationMarkOptional:
     - meta_include_prototype: false
@@ -425,7 +391,7 @@ contexts:
 
   exprSumTailInclude:
     - match: '{{sumOps}}{{spaceAfter}}'
-      set: [ exprSumTailOptional, valueAtom ]
+      set: [ exprSumTailOptional, valueChain ]
 
   exprSumTailOptional:
     - include: exprSumTailInclude
@@ -434,7 +400,7 @@ contexts:
 
   exprMulTailInclude:
     - match: '{{mulOps}}{{spaceAfter}}'
-      set: [ exprMulTailOptional, valueAtom ]
+      set: [ exprMulTailOptional, valueChain ]
 
   exprMulTailOptional:
     - include: exprMulTailInclude
@@ -443,7 +409,7 @@ contexts:
 
   exprOrTailInclude:
     - match: '{{orOp}}{{spaceAfter}}'
-      set: [ exprOrTailOptional, valueAtom, negationMarkOptional]
+      set: [ exprOrTailOptional, valueChain, negationMarkOptional]
 
   exprOrTailOptional:
     - include: exprOrTailInclude
@@ -452,7 +418,7 @@ contexts:
 
   exprAndTailInclude:
     - match: '{{andOp}}{{spaceAfter}}'
-      set: [ exprAndTailOptional, valueAtom, negationMarkOptional]
+      set: [ exprAndTailOptional, valueChain, negationMarkOptional]
 
   exprAndTailOptional:
     - include: exprAndTailInclude
@@ -473,7 +439,10 @@ contexts:
     - include: exprMulTailInclude
     - match: '{{cmpOps}}{{spaceAfter}}'
       scope: keyword.operator.logical.jlf
-      set: [valueAtom]
+      set: [valueChain]
+    - match: '{{defMatchOp}}{{spaceAfter}}'
+      scope: keyword.operator.logical.jlf
+      set: [defValue]
     - include: boolExprTailInclude
     - match: '{{any}}'
       pop: true
@@ -574,14 +543,13 @@ contexts:
 
 # =============================================================================
 
-  valueStart:
-    - match: '(?={{exprPathStarter}})'
-      set: pathStartSegment
+  valueChainStart:
+    - include: varSpecInclude
     - match: '{{number}}'
       scope: constant.numeric.jlf
-      set: rangeOptinal
+      set: rangeTailOptinal
     - match: '(?={{beginOfExpr}})'
-      set: [rangeOptinal, expr]
+      set: [rangeTailOptinal, expr]
     - include: mapInclude
     - include: defInclude
     - include: genInclude
@@ -591,26 +559,30 @@ contexts:
     - include: stringInclude
     - include: illegalInclude
 
-  valueAtom:
+  valueChain:
     - match: '{{any}}'
-      set: [pathNextSegmentOptional, valueStart]
+      set: [chainNextSegmentOptional, valueChainStart]
 
   valueWithoutTernary:
     - match: '{{negationMark}}'
-      set: [boolExprTailOptional, valueAtom]
+      set: [boolExprTailOptional, valueChain]
     - match: '{{any}}'
-      set: [exprTailOptional, valueAtom]
+      set: [exprTailOptional, valueChain]
 
   value:
-    - match: '{{any}}'
-      set: [exprTernaryBeginOptional, valueWithoutTernary]
-
-  rangeOptinal:
-    - meta_include_prototype: false
-    - match: '{{rangeSeparator}}'
-      set: numberValue
-    - match: '{{any}}'
-      pop: true
+    - include: varChainInclude
+    - match: '{{number}}'
+      scope: constant.numeric.jlf
+      set: rangeTailOptinal
+    - match: '(?={{beginOfExpr}})'
+      set: [rangeTailOptinal, expr]
+    - include: mapInclude
+    - include: defInclude
+    - include: genInclude
+    - include: arrayInclude
+    - include: boolInclude
+    - include: nilInclude
+    - include: stringInclude
 
 # =====================================
 
@@ -623,6 +595,11 @@ contexts:
         - meta_scope: string.jlf
         - include: nonQuotedStringTailInclude
 
+  stringValue:
+    - include: commonValueInclude
+    - include: stringInclude
+    - include: illegalInclude
+
 # =====================================
 
   mapInclude:
@@ -633,8 +610,28 @@ contexts:
         - match: '{{endOfMap}}'
           scope: punctuation.section.block.end.jlf
           pop: true
+        - match: '(?={{varStarter}})'
+          push: [commaSeparatorOptional, optionalSpreadOptional, varSpec]
+        - match: '(?={{beginOfExpr}})'
+          push: [commaSeparatorOptional, optionalSpreadOptional, expr]
         - match: '{{any}}'
-          push: [ commaSeparatorOptional, value, keySeparatorOptional, optionalEnderOptional, key ]
+          push: [commaSeparatorOptional, value, keySeparatorOptional, optionalEnderOptional, key]
+
+  spreadOptional:
+    - meta_include_prototype: false
+    - match: '\.\.\.'
+      scope: keyword.jlf
+      pop: true
+    - match: '{{any}}'
+      pop: true
+
+  optionalSpreadOptional:
+    - meta_include_prototype: false
+    - match: '\.\.\.'
+      scope: comment.jlf
+      pop: true
+    - match: '{{any}}'
+      pop: true
 
   key:
     - match: '{{doubleQuotedStringDelimiter}}'
@@ -681,7 +678,13 @@ contexts:
           scope: punctuation.section.block.end.jlf
           pop: true
         - match: '{{any}}'
-          push: [commaSeparatorOptional, value]
+          push: [arrayIncludeHelper]
+
+  arrayIncludeHelper:
+    - match: '(?={{varStarter}})'
+      push: [spreadOptional, varSpec]
+    - match: '{{any}}'
+      push: [value]
 
 # =====================================
 
@@ -702,23 +705,33 @@ contexts:
 # =============================================================================
 
   rangeValue:
-    - include: pathInclude
     - match: '{{number}}'
       scope: constant.numeric.jlf
-      set: [ numberValue, rangeSeparator ]
+      set:
+        - meta_include_prototype: false
+        - match: '{{rangeSeparator}}'
+          scope: keyword.jlf
+          set: numberValue
+        - include: illegalInclude
+    - match: '(?={{varStarter}})'
+      set: [rangeTailOptinal, varSpecChain]
     - match: '(?={{beginOfExpr}})'
-      set: [rangeOptinal, expr]
+      set: [rangeTailOptinal, expr]
     - include: illegalInclude
 
-  rangeSeparator:
+  rangeTailOptinal:
     - meta_include_prototype: false
     - match: '{{rangeSeparator}}'
+      scope: keyword.jlf
+      set: numberValue
+    - match: '{{any}}'
       pop: true
-    - include: illegalInclude
+
+# =============================================================================
 
   numberValue:
+    - include: commonValueInclude
     - include: numberInclude
-    - include: exprInclude
     - include: illegalInclude
 
   numberInclude:
@@ -730,7 +743,7 @@ contexts:
 
   commonValueInclude:
     - meta_include_prototype: false
-    - include: pathInclude
+    - include: varSpecChainInclude
     - include: exprInclude
 
 # =============================================================================
@@ -739,23 +752,14 @@ contexts:
     - include: commonValueInclude
     - match: '{{beginOfArray}}'
       scope: punctuation.section.block.begin.jlf
-      set: [stringsExprTailOptional, stringsValueArrayTail]
+      set:
+        - match: '{{endOfArray}}'
+          scope: punctuation.section.block.end.jlf
+          pop: true
+        - match: '{{any}}'
+          push: [ commaSeparatorOptional, stringsValue ]
     - include: stringInclude
     - include: illegalInclude
-
-  stringsValueArrayTail:
-    - match: '{{endOfArray}}'
-      scope: punctuation.section.block.end.jlf
-      pop: true
-    - match: '{{any}}'
-      push: [ commaSeparatorOptional, stringsValue ]
-
-  stringsExprTailOptional:
-    - match: '(\+|\-)\s'
-      scope: keyword.operator.arithmetic.jlf
-      push: [stringsExprTailOptional, stringsValue]
-    - match: '{{any}}'
-      pop: true
 
 # =============================================================================
 
