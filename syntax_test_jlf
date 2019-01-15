@@ -1,8 +1,0 @@
-// SYNTAX TEST "Packages/User/jlf.sublime-syntax"
-
-{  }
-// <- source.jlf
-
-   $^ =
-// ^ keyword.jlf keyword.jlf
-//  ^

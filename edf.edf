@@ -1,0 +1,481 @@
+/*
+NOTE:
+
+Best viewed in Sublime 3 with installed:
+  edf.sublime-syntax, edf.tmPreferences (use ./sublime.sh)
+  https://github.com/jonschlinkert/sublime-markdown-extended
+  https://github.com/jonschlinkert/sublime-monokai-extended
+
+To adjust edf.sublime-syntax following packages may be helpful:
+  https://packagecontrol.io/packages/ColorSchemeEditor
+  https://packagecontrol.io/packages/PackageResourceViewer
+*/
+
+//! include lines to doc by default
+/**
+
+# EDF
+
+  EDF - expressive data format. Предназначен для снабжения приложения данными, в частности конфигурационными
+
+## Примеры YAML и JSON
+
+  Примеры файлов:
+    1.
+
+*/
+
+%YAML 1.2
+---
+some: thing
+#! exclude next line from doc
+...
+
+/**
+    2.
+*/
+{some: thing}
+//! exclude next line from doc
+...
+
+/**
+  Таким образом, любой YAML или JSON-файл является валидным EDF-файлом
+
+## Структура файла EDF
+
+  Файл EDF содержит один или несколько документов формата EDF (формат JSON является подмножестовм формата EDF) или YAML
+
+  Документ формата YAML должен иметь заголовок
+    %YAML 1.2
+    ---
+
+  Документ формата EDF не имеет заголовка
+
+  Окончание документа в обоих форматах:
+    ...
+
+  Последний документ в файле EDF может не иметь явного окончания
+
+  Один документ описывает одну структуру данных
+
+  Типы поддерживаемых структур данных:
+  - Null (синоним Nil)
+  - Bool
+  - Int
+  - String
+  - Range
+  - Def
+  - Gen
+  - Array
+  - Map
+*/
+
+/**
+
+## Формат EDF: step by step
+
+### JSON
+
+  Рассмотрим следующиe конфигурационныe данные в EDF-формате:
+*/
+
+{
+  "projects": {
+    "dip": {
+      "projShortcut": "dip",
+      "gitOrigin": "github.com:baza-winner/dip2.git",
+      "projName": "dip2",
+      "branch": "develop"
+    },
+    "agate": {
+      "projShortcut": "agate",
+      "gitOrigin": "github.com:baza-winner/agate.git",
+      "projName": "agate",
+      "branch": "develop"
+    },
+  },
+  "services": {
+    "ssh": {
+      "ports": {
+        "_": 2200
+      }
+    },
+    "nginx": {
+      "ports": {
+        "http": 8000,
+        "https": 4400
+      },
+      "upstream" 3000
+    },
+    "redis": {
+      "ports": {
+        "_": 6300,
+        "webdis": 7300
+      }
+    },
+  }
+}
+//! exclude next line from doc
+...
+/**
+  Очевидно, что это валидный JSON
+
+### JSON без пунктуации
+
+  EDF-позволяет упростить его, опустив лишнюю пунктуацию:
+*/
+
+{
+  projects {
+    dip {
+      projShortcut dip
+      gitOrigin github.com:baza-winner/dip2.git
+      projName dip2
+      branch develop
+    }
+    agate {
+      projShortcut agate
+      gitOrigin github.com:baza-winner/agate.git
+      projName agate
+      branch develop
+    }
+  }
+  services {
+    ssh {
+      ports {
+        _ 2200
+      }
+    }
+    nginx {
+      ports {
+        http 8000
+        https 4400
+      }
+      upstream 3000
+    }
+    redis {
+      ports {
+        _ 6300
+        webdis 7300
+      }
+    }
+  }
+}
+/**
+  Такую запись легче поддерживать, как минимум потому, что не надо следить за запятыми
+*/
+//! exclude next line from doc
+...
+
+/**
+### Валидация структуры
+
+  Но EDF-позволяет сделать больше для дальнейшей поддержки этой конфигурационной структуры.
+  Он позволяет определить формат этой структуры: для разработчика и для парсера этих данных.
+*/
+
+^Def:Map{
+  keysDef {
+    projects Map{
+      elemDef Map{
+        keysDef {
+          projName String
+          branch String
+        }
+      }
+    }
+    services Map{
+      elemDef Map{
+        keysDef {
+          ports Map{
+            elemDef Int{ range 1024..65535 }
+          }
+        }
+      }
+      keysDef {
+        nginx Map{
+          keysDef {
+            ports Map{
+              elemDef Int{ range 1024..65535 }
+            }
+            upstream Int{ range 1024..65535 }
+          }
+        }
+      }
+    }
+  }
+} {
+  projects {
+    dip {
+      projShortcut dip
+      gitOrigin github.com:baza-winner/dip2.git
+      projName dip2
+      branch develop
+    }
+    agate {
+      projShortcut agate
+      gitOrigin github.com:baza-winner/agate.git
+      projName agate
+      branch develop
+    }
+  }
+  services {
+    ssh {
+      ports {
+        _ 2200
+      }
+    }
+    nginx {
+      ports {
+        http 8000
+        https 4400
+      }
+      upstream 3000
+    }
+    redis {
+      ports {
+        _ 6300
+        webdis 7300
+      }
+    }
+  }
+}
+
+/**
+  Теперь при внесении изменений разработчик может свериться с определением структуры, чтобы не допусить ошибку
+  А парсер сможет проверить валидность структуры прямо при чтении и немедленно указать на ошибку, если такая обнаружится
+*/
+//! exclude next line from doc
+...
+
+/**
+### Использование внешнего файла
+
+  EDF позволяет вынести определение структуры в отдельный файл (`conf.def.edf`) оставив сами конфигурационные данные в основном файле (`conf.edf`):
+
+*/
+
+/**
+`conf.def.edf`:
+*/
+
+Def:Map{
+  keysDef {
+    projects Map{
+      elemDef Map{
+        keysDef {
+          projName String
+          branch String
+        }
+      }
+    }
+    services Map{
+      elemDef Map{
+        keysDef {
+          ports Map{
+            elemDef Int{ range 1024..65535 }
+          }
+        }
+      }
+      keysDef {
+        nginx Map{
+          keysDef {
+            ports Map{
+              elemDef Int{ range 1024..65535 }
+            }
+            upstream Int{ range 1024..65535 }
+          }
+        }
+      }
+    }
+  }
+}
+//! exclude next line from doc
+...
+
+/**
+`conf.edf`:
+*/
+
+^$File(./conf.def.edf)
+
+{
+  projects {
+    dip {
+      projShortcut dip
+      gitOrigin github.com:baza-winner/dip2.git
+      projName dip2
+      branch develop
+    }
+    agate {
+      projShortcut agate
+      gitOrigin github.com:baza-winner/agate.git
+      projName agate
+      branch develop
+    }
+  }
+  services {
+    ssh {
+      ports {
+        _ 2200
+      }
+    }
+    nginx {
+      ports {
+        http 8000
+        https 4400
+      }
+      upstream 3000
+    }
+    redis {
+      ports {
+        _ 6300
+        webdis 7300
+      }
+    }
+  }
+}
+
+//! exclude next line from doc
+...
+
+/**
+### Дальнешее использование определения структуры
+
+  Определение структуры можно использовать для хранения значений по умолчанию
+*/
+
+/**
+`conf.def.edf`:
+*/
+
+Def:Map{
+  keysDef {
+    projects Map{
+      elemDef Map{
+        keysDef {
+          projName String
+          branch String
+        }
+      }
+    }
+    services Map{
+      elemDef Map{
+        keysDef {
+          ports Map{
+            elemDef Int{ range 1024..65535 }
+          }
+        }
+      }
+      keysDef {
+        nginx Map{
+          keysDef {
+            ports Map{
+              elemDef Int{ range 1024..65535 }
+            }
+            upstream Int{ range 1024..65535 }
+          }
+        }
+      }
+    }
+  }
+}
+//! exclude next line from doc
+...
+
+/**
+`conf.edf`:
+*/
+
+^$File(./conf.def.edf)
+
+{
+  projects {
+    dip {
+      projShortcut dip
+      gitOrigin github.com:baza-winner/dip2.git
+      projName dip2
+      branch develop
+    }
+    agate {
+      projShortcut agate
+      gitOrigin github.com:baza-winner/agate.git
+      projName agate
+      branch develop
+    }
+  }
+  services {
+    ssh {
+      ports {
+        _ 2200
+      }
+    }
+    nginx {
+      ports {
+        http 8000
+        https 4400
+      }
+      upstream 3000
+    }
+    redis {
+      ports {
+        _ 6300
+        webdis 7300
+      }
+    }
+  }
+}
+
+//! exclude next line from doc
+...
+
+/**
+### Выражение в строке
+
+  Значение `projects|*|gitOrigin` можно выразить через значение `projects|*|projName`
+  А значение `projects|*|projShortcut` это всегда повторение значение ключа `projects|*`
+*/
+
+/**
+`conf.edf`:
+*/
+
+^$File(./conf.def.edf)
+
+{
+  projects {
+    dip {
+      projShortcut $..|$Key
+      gitOrigin github.com:baza-winner/\< $..|projName >.git
+      projName dip2
+      branch develop
+    }
+    agate {
+      projShortcut $..|$Key
+      gitOrigin github.com:baza-winner/\< $..|projName >.git
+      projName agate
+      branch develop
+    }
+  }
+  services {
+    ssh {
+      ports {
+        _ 2200
+      }
+    }
+    nginx {
+      ports {
+        http 8000
+        https 4400
+      }
+      upstream 3000
+    }
+    redis {
+      ports {
+        _ 6300
+        webdis 7300
+      }
+    }
+  }
+}
+

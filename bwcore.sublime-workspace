@@ -4,6 +4,74 @@
 		"selected_items":
 		[
 			[
+				"Mus",
+				"MustCmdOpt\tfunc(a bwval.FromProvider) bwexec.CmdOpt ·ƒ"
+			],
+			[
+				"opt",
+				"optOpt\t[]O ·ν"
+			],
+			[
+				"ValMap",
+				"ValMapIntf\tValKind ·Ɩ"
+			],
+			[
+				"Keys",
+				"KeysFilter\tfunc(key string) bool ·ʈ"
+			],
+			[
+				"file",
+				"fileSpec\tstring ·ν"
+			],
+			[
+				"Re",
+				"ReplaceAllStringFunc\tfunc(src string, repl func(string) string) string ·ƒ"
+			],
+			[
+				"pri",
+				"printCases\t[]printCase ·ν"
+			],
+			[
+				"pric",
+				"printCases\t[]printCase ·ν"
+			],
+			[
+				"K",
+				"KeyForPathS\tfunc() string ·ƒ"
+			],
+			[
+				"Sp",
+				"Sprintf\tfunc(format string, a ...interface{}) string ·ƒ"
+			],
+			[
+				"ne",
+				"needQuote\tbool ·ν"
+			],
+			[
+				"Par",
+				"ParseValByDef\tfunc(p bwparse.I, def Def, optBase ...bw.ValPath) interface{}, bwparse.Status ·ƒ"
+			],
+			[
+				"iot",
+				"ioutil\tpackage ·ρ"
+			],
+			[
+				"Pani",
+				"PanicErr\tfunc(err error, optDepth ...uint) ·ƒ"
+			],
+			[
+				"From",
+				"FromTemplate\tfunc(template Template, optVars ...map[string]interface{}) interface{}, error ·ƒ"
+			],
+			[
+				"Temp",
+				"TemplateFrom\tfunc(pp bwrune.ProviderProvider) Template ·ƒ"
+			],
+			[
+				"tes",
+				"testOpt\tinterface ·ν"
+			],
+			[
 				"typ",
 				"typeOf\treflect.Type ·ν"
 			],
@@ -34,10 +102,6 @@
 			[
 				"type",
 				"typedArg\tVarIs ·ν"
-			],
-			[
-				"Mus",
-				"MustVarPathFrom\tfunc(s string) VarPath ·ƒ"
 			],
 			[
 				"t",
@@ -110,10 +174,6 @@
 			[
 				"min",
 				"minNumber\t*float64 ·ν"
-			],
-			[
-				"From",
-				"FromSlice\tfunc(kk []Item) Set ·ƒ"
 			],
 			[
 				"Ar",
@@ -392,10 +452,6 @@
 				"options"
 			],
 			[
-				"opt",
-				"optName"
-			],
-			[
 				"en",
 				"entityName"
 			],
@@ -458,67 +514,31 @@
 			[
 				"perl",
 				"perlCode"
-			],
-			[
-				"pe",
-				"perlCode"
-			],
-			[
-				"new",
-				"newFileSpec"
-			],
-			[
-				"_profile",
-				"_profileFileSpec"
-			],
-			[
-				"projDi",
-				"projDirHolder"
-			],
-			[
-				"dst",
-				"dstVarName"
-			],
-			[
-				"__OPT",
-				"__OPTNAME_"
-			],
-			[
-				"__thisF",
-				"__thisFuncCommand"
-			],
-			[
-				"_thisF",
-				"__thisFuncCommand"
-			],
-			[
-				"_this",
-				"__thisFuncCommand"
-			],
-			[
-				"__this",
-				"__thisFuncCommand"
-			],
-			[
-				"_code",
-				"_codeToCallFuncParams2"
-			],
-			[
-				"add",
-				"additionalSuffix"
-			],
-			[
-				"__fu",
-				"__funcName"
-			],
-			[
-				"eta",
-				"etaValue"
 			]
 		]
 	},
 	"buffers":
 	[
+		{
+			"contents": "%YAML 1.2\n---\nname: JLF\n# See http://www.sublimetext.com/docs/3/syntax.html\nfile_extensions: [ jlf ]\nscope: source.jlf\n\nvariables:\n  space: '[\\s]+'\n  beginOfSingleLineComment: '//'\n  beginOfMultiLineComment: '/\\*'\n  endOfMultiLineComment: '\\*/'\n\n  any: '(?=.)'\n\n  number: '[\\+\\-]?\\d+(?:\\.\\d+)?'\n  id: '[a-zA-Z_]([a-zA-Z_\\d\\.-]*)'\n  bool: true|false\n  nil: nil\n\n  keySeparator: '(\\s[=-]>|\\s=|:)?(\\s|$)'\n  commaSeparatorOptional: ','\n\n  beginOfMap: '\\{'\n  endOfMap: '\\}'\n\n  beginOfArray: '\\['\n  endOfArray: '\\]'\n\n  beginOfVarDefBlock: '\\('\n  endOfVarDefBlock: '\\)'\n  beginOfExpr: '\\('\n  endOfExpr: '\\)'\n  beginOfStringSubExpr: '<'\n  endOfStringSubExpr: '>'\n\n  beginOfArgsMap: '\\{'\n  endOfArgsMap: '\\}'\n\n  beginOfArgsArray: '\\{'\n  endOfArgsArray: '\\}'\n\n  beginOfIterator: '\\['\n  endOfIterator: '\\]'\n\n  quotedStringDelimiter: '\"'\n  regexpStringDelimiter: '/'\n\n  escapeStarter: '\\\\'\n  varStarter: '\\$'\n  fileSpecStarter: '%'\n  defStarter: '\\bDef\\b'\n  genStarter: \\bGen\\b\n  colon: ':'\n  chainSegmentSpecStarter: '[^^\\s\\(\\|\\*%]'\n\n  int: '[-+]?\\d+'\n\n  pathSegmentSeparator: '\\|'\n  rangeSeparator: '\\.\\.'\n  negationMark: '!'\n\n  ternaryIf: '\\?'\n  ternaryDelimiter: ':'\n\n  spaceAfter: '(\\s|$)'\n  sumOps: '[\\+\\-]'\n  mulOps: '[\\*\\/]'\n  andOp: '(\\&\\&)'\n  orOp: '(\\|\\|)'\n  cmpOps: '(==|!=|<=|>=)'\n  matchOp: '(=~)'\n\n  keysDef: \\bKeysDef\\b\n  defTypeSingleSimple: \\bAny|Null|Nil\\b\n  genType: \\bArray|{{keysDef}}|Map|String|Int|Number|Bool|Range|Def|Gen\\b\n  defTypeSingleComplex: \\b{{genType}}|Func\\b\n  defTypeSingle: '{{defTypeSingleComplex}}|{{keysDef}}|{{defTypeSingleSimple}}'\n  defTypeMulti: '\\bArrayOf|AnyBut\\b'\n  spreadOp: '(\\.\\.\\.)'\n\n  optionalEnder: '\\?'\n  mustEnder: '!'\n  pathDefaultValueStarter: ':'\n  beginOfNonQuotedKey: '(?=[^{{beginOfMap}}{{endOfMap}}{{beginOfArray}}{{endOfArray}}{{commaSeparatorOptional}}])(?!{{endOfNonQuotedKey}})'\n  endOfNonQuotedKey: '{{space}}|{{optionalEnder}}|{{beginOfExpr}}|{{endOfExpr}}|{{beginOfMap}}|{{beginOfArray}}|{{endOfArray}}|{{keySeparator}}'\n  beginOfNonQuotedString: '(?=[\\\\a-zA-Z_\\.])'\n  endOfNonQuotedString: '{{space}}|{{optionalEnder}}|{{beginOfExpr}}|{{endOfExpr}}|{{endOfStringSubExpr}}|{{pathSegmentSeparator}}|{{beginOfMap}}|{{beginOfArray}}|{{endOfMap}}|{{endOfArray}}|{{commaSeparatorOptional}}|{{defStarter}}|{{spreadOp}}'\n  jsonQuotedEscapeRunes: '[bfnrt]'\n  jsonQuotedEscapeRunesAsIs: '[\"\\\\/]'\n  escapeRunes: '[abfnrtv]'\n  nonQuotedKeyBegin: '[^{{beginOfMap}}{{endOfMap}}{{beginOfArray}}{{endOfArray}}{{commaSeparatorOptional}}]'\n  doubleQuotedValidRune: '\\x{0020}-\\x{10ffff}'\n\n# =============================================================================\n# =============================================================================\n\ncontexts:\n\n  prototype:\n    - include: spaceInclude\n\n  spaceInclude:\n    - meta_include_prototype: false\n    - match: '{{space}}'\n    - match: '{{beginOfSingleLineComment}}'\n      scope: punctuation.definition.comment.jlf\n      push:\n        - meta_include_prototype: false\n        - meta_scope: comment.line.jlf\n        - match: $\n          pop: true\n    - match: '{{beginOfMultiLineComment}}'\n      scope: punctuation.definition.comment.begin.jlf\n      push:\n        - meta_include_prototype: false\n        - meta_scope: comment\n        - match: '{{endOfMultiLineComment}}'\n          scope: punctuation.definition.comment.end.jlf\n          pop: true\n\n  illegalInclude:\n    - meta_include_prototype: false\n    - match: .\n      scope: invalid.illegal.jlf\n\n# =============================================================================\n\n  varDefInclude:\n    - match: '({{varStarter}})({{defStarter}})'\n      captures:\n        1: keyword.jlf\n        2: variable.parameter.jlf\n      push: [defValue, keySeparatorOptional]\n    - match: '({{varStarter}})'\n      scope: keyword.jlf\n      push: [value, keySeparatorOptional, varDefArgsOptional, varName]\n\n  main:\n    - match: '{{any}}'\n      set: [mainTail, mainArgsOptional]\n\n  mainArgsOptional:\n    - match: '({{varStarter}})(?={{beginOfArgsMap}})'\n      scope: keyword.jlf\n      set: varDefArgsOptional\n    - match: '{{any}}'\n      pop: true\n\n  mainTail:\n    - include: varDefInclude\n    - match: '{{any}}'\n      set: [end, value]\n\n  end:\n    - include: varDefInclude\n    - include: illegalInclude\n\n# =============================================================================\n\n  varDefArgsOptional:\n    - meta_include_prototype: false\n    - include: varDefArgsInclude\n    - match: '{{any}}'\n      pop: true\n\n  varDefArgsInclude:\n    - match: '{{beginOfArgsMap}}'\n      scope: punctuation.section.parens.begin.jlf\n      set:\n      - match: '{{endOfArgsMap}}'\n        scope: punctuation.section.block.end.jlf\n        pop: true\n      - match: '{{any}}'\n        push: varDefArgName\n        # push: [ commaSeparatorOptional, defValue, keySeparatorOptional, optionalKeyEnder, argName]\n\n  varDefArgName:\n    - match: '(?={{beginOfNonQuotedString}}|{{quotedStringDelimiter}}|{{regexpStringDelimiter}}|{{beginOfArray}})'\n      set: [defValue, keySeparatorOptional, optionalKeyEnder, varDefArgNameItem]\n    - match: '(?={{varStarter}}|{{beginOfExpr}})'\n      set: [keysDefSpreadOptional, commonValue]\n    - include: illegalInclude\n\n  varDefArgsValue:\n    - include: commonValueInclude\n    - include: varDefArgsInclude\n    - include: illegalInclude\n\n\n  argNameAtomInclude:\n    - include: regexpInclude\n    - include: argNameInclude\n\n  argNameInclude:\n    - match: '{{quotedStringDelimiter}}'\n      scope: punctuation.definition.string.begin.jlf\n      set:\n        - meta_include_prototype: false\n        - meta_scope: entity.name.variable.jlf\n        - include: quotedInclude\n    - match: '{{beginOfNonQuotedKey}}'\n      set:\n        - meta_include_prototype: false\n        - meta_scope: entity.name.variable.jlf\n        - match: '(?={{endOfNonQuotedKey}})'\n          pop: true\n        - match: '(\\\\){{endOfNonQuotedKey}}'\n          captures:\n            1: constant.character.escape.jlf\n        - include: escapeInclude\n\n  argName:\n    - include: argNameInclude\n    - include: illegalInclude\n\n  argNameAtom:\n    - include: argNameAtomInclude\n    - include: illegalInclude\n\n  varDefArgNameItem:\n    - match: '{{beginOfArray}}'\n      scope: punctuation.section.block.begin.jlf\n      set:\n        - match: '{{endOfArray}}'\n          scope: punctuation.section.block.end.jlf\n          pop: true\n        - match: '{{any}}'\n          push: [ commaSeparatorOptional, argNameAtom ]\n    - include: argNameAtomInclude\n    - include: illegalInclude\n\n# =============================================================================\n\n  genValue:\n    - include: commonValueInclude\n    - match: '{{any}}'\n      set: [gen, genStarterOptional]\n\n  genStarterOptional:\n    - match: '({{genStarter}})(?:({{colon}})(?=({{genType}})))?'\n      scope: comment.jlf\n      pop: true\n    - match: '{{any}}'\n      pop: true\n\n  genInclude:\n    - meta_include_prototype: false\n    - match: '({{genStarter}})(?:({{colon}})(?=({{genType}})))?'\n      scope: keyword.jlf\n      set: gen\n\n  gen:\n    - meta_include_prototype: false\n    - match: '\\bMap\\b'\n      scope: variable.parameter.jlf\n      set:\n        - meta_include_prototype: false\n        - match: '({{beginOfMap}})'\n          set: [mapEnd, value, keySeparatorOptional, stringValue]\n        - include: illegalInclude\n    - match: '({{genType}})?'\n      scope: variable.parameter.jlf\n      set:\n        - meta_include_prototype: false\n        - match: '({{beginOfMap}})'\n          set:\n            - match: '{{endOfMap}}'\n              scope: punctuation.section.block.end.jlf\n              pop: true\n            - match: \\btype\\b\n              scope: keyword.jlf\n              push: [commaSeparatorOptional, genType, keySeparatorOptional]\n            - match: \\bkey\\b\n              scope: keyword.jlf\n              push: [commaSeparatorOptional, stringValue, keySeparatorOptional]\n            - match: \\bvalue\\b\n              scope: keyword.jlf\n              push: [commaSeparatorOptional, value, keySeparatorOptional]\n            - match: \\belem\\b\n              scope: keyword.jlf\n              push: [commaSeparatorOptional, gen, keySeparatorOptional]\n            - include: illegalInclude\n        - include: illegalInclude\n    - include: illegalInclude\n\n  genType:\n    - match: \\b{{defTypeSingle}}\\b\n      scope: variable.parameter.jlf\n      pop: true\n\n# =============================================================================\n\n  iteratorNegationOptional:\n    - meta_include_prototype: false\n    - match: '{{negationMark}}'\n      scope: keyword.jlf\n      pop: true\n    - match: '{{any}}'\n      pop: true\n\n  iteratorConditionOptional:\n    - match: '{{int}}'\n      scope: constant.numeric.jlf\n      set: rangeTailOptinal\n    - match: '{{beginOfExpr}}'\n      scope: punctuation.section.parens.begin.jlf\n      set: [rangeTailOptinal, exprEnd, expr]\n    - include: stringInclude\n    - match: '{{any}}'\n      pop: true\n\n  iteratorEnd:\n    - meta_include_prototype: false\n    - match: '{{endOfIterator}}'\n      scope: punctuation.section.bracket.begin.jlf\n      set:\n        - meta_include_prototype: false\n        - match: '{{beginOfIterator}}'\n          scope: punctuation.section.bracket.begin.jlf\n          set: [iteratorEnd, iteratorConditionOptional, iteratorNegationOptional]\n        - match: '{{any}}'\n          set: genValue\n    - include: illegalInclude\n\n# =============================================================================\n\n  varSpecChainInclude:\n    - meta_include_prototype: false\n    - match: '(?={{varStarter}})'\n      set: [chainNextSegmentOptional, varSpec]\n\n  varSpecChain:\n    - include: varSpecChainInclude\n    - include: illegalInclude\n\n  chainNextSegmentOptional:\n    # - meta_include_prototype: false\n    - match: '{{pathSegmentSeparator}}'\n      scope: keyword.jlf\n      push: chainSegmentSpec\n    - match: '{{any}}'\n      pop: true\n\n  varSpec:\n    - meta_include_prototype: false\n    - include: varSpecInclude\n\n  chainSegmentSpec:\n    - match: '(?={{defStarter}})'\n      set: [chainNextSegmentOptional, defWithStarter]\n    - match: '{{beginOfIterator}}'\n      scope: punctuation.section.bracket.begin.jlf\n      set: [chainNextSegmentOptional, iteratorEnd, iteratorConditionOptional, iteratorNegationOptional]\n    - include: intInclude\n    - include: exprInclude\n    - include: varSpecInclude\n    - match: '{{optionalEnder}}|{{mustEnder}}'\n      scope: entity.name.label.jlf\n      pop: true\n    - match: '{{quotedStringDelimiter}}'\n      scope: punctuation.definition.string.begin.jlf\n      set:\n        - meta_include_prototype: false\n        - meta_scope: support.function.jlf\n        - include: quotedInclude\n    - match: '{{chainSegmentSpecStarter}}'\n      set:\n        - meta_include_prototype: false\n        - meta_scope: support.function.jlf\n        - include: nonQuotedStringTailInclude\n    - include: illegalInclude\n\n# =============================================================================\n\n  varSpecInclude:\n    - meta_include_prototype: false\n    - match: '({{varStarter}})'\n      scope: keyword.jlf\n      set: [varArgsOptional, varName]\n\n  varChainInclude:\n    - meta_include_prototype: false\n    - match: '({{varStarter}})'\n      scope: keyword.jlf\n      set: [chainNextSegmentOptional, varArgsOptional, varName]\n\n  varName:\n    - meta_include_prototype: false\n    - match: '(_|Key|Idx|ElemOf|Len|File|Ref|\\.\\.|\\.)(?={{endOfNonQuotedString}})'\n      scope: entity.name.label.jlf\n      pop: true\n    - match: '(?={{endOfNonQuotedString}})'\n      set: illegalInclude\n    - match: '{{any}}'\n      set:\n        - meta_include_prototype: false\n        - clear_scopes: true\n        - meta_scope: entity.name.variable.jlf\n        - include: nonQuotedStringTailInclude\n\n  varArgsOptional:\n    - meta_include_prototype: false\n    - match: '{{beginOfMap}}'\n      scope: punctuation.section.block.begin.jlf\n      set:\n        - match: '{{endOfMap}}'\n          scope: punctuation.section.block.end.jlf\n          pop: true\n        - match: '{{any}}'\n          push: [commaSeparatorOptional, value, keySeparatorOptional, argName]\n    - include: arrayInclude\n    - include: exprInclude\n    - match: '{{any}}'\n      pop: true\n\n  specInclude:\n    - meta_include_prototype: false\n    - include: varSpecArgsInclude\n    - include: nonQuotedStringTailInclude\n\n# =============================================================================\n\n  exprInclude:\n    - meta_include_prototype: false\n    - match: '{{beginOfExpr}}'\n      scope: punctuation.section.parens.begin.jlf\n      set: [exprEnd,  exprContent]\n\n  exprContent:\n    - match: '{{negationMark}}'\n      set: [exprTernaryBeginOptional, boolExprTailOptional, valueChain]\n    - match: '{{any}}'\n      set: [exprTernaryBeginOptional, exprTailOptional, valueChain]\n\n  negationMarkOptional:\n    - meta_include_prototype: false\n    - match: '{{negationMark}}'\n      pop: true\n    - match: '{{any}}'\n      pop: true\n\n  exprEnd:\n    - match: '{{endOfExpr}}'\n      scope: punctuation.section.parens.end.jlf\n      pop: true\n    - include: illegalInclude\n\n  expr:\n    - include: exprInclude\n    - include: illegalInclude\n\n  exprSumTailInclude:\n    - match: '{{sumOps}}{{spaceAfter}}'\n      set: [ exprSumTailOptional, valueChain ]\n\n  exprSumTailOptional:\n    - include: exprSumTailInclude\n    - match: '{{any}}'\n      pop: true\n\n  exprMulTailInclude:\n    - match: '{{mulOps}}{{spaceAfter}}'\n      set: [ exprMulTailOptional, valueChain ]\n\n  exprMulTailOptional:\n    - include: exprMulTailInclude\n    - match: '{{any}}'\n      pop: true\n\n  exprOrTailInclude:\n    - match: '{{orOp}}{{spaceAfter}}'\n      set: [ exprOrTailOptional, valueChain, negationMarkOptional]\n\n  exprOrTailOptional:\n    - include: exprOrTailInclude\n    - match: '{{any}}'\n      pop: true\n\n  exprAndTailInclude:\n    - match: '{{andOp}}{{spaceAfter}}'\n      set: [ exprAndTailOptional, valueChain, negationMarkOptional]\n\n  exprAndTailOptional:\n    - include: exprAndTailInclude\n    - match: '{{any}}'\n      pop: true\n\n  boolExprTailInclude:\n    - include: exprOrTailInclude\n    - include: exprAndTailInclude\n\n  boolExprTailOptional:\n    - include: boolExprTailInclude\n    - match: '{{any}}'\n      pop: true\n\n  exprTailOptional:\n    - include: exprSumTailInclude\n    - include: exprMulTailInclude\n    - match: '{{cmpOps}}{{spaceAfter}}'\n      scope: keyword.operator.logical.jlf\n      set: valueChain\n    - match: '{{matchOp}}{{spaceAfter}}'\n      scope: keyword.operator.logical.jlf\n      set: mathOpRhs\n    - include: boolExprTailInclude\n    - match: '{{any}}'\n      pop: true\n\n  mathOpRhs:\n    - include: defInclude\n    - include: regexpInclude\n    - include: commonValueInclude\n    - include: illegalInclude\n\n  exprTernaryBeginOptional:\n    - match: '{{ternaryIf}}{{ternaryDelimiter}}'\n      scope: keyword.jlf\n      push: valueWithoutTernary\n    - match: '{{ternaryIf}}'\n      scope: keyword.jlf\n      push: [valueWithoutTernary, exprTernaryDelimiter, valueWithoutTernary]\n    - match: '{{any}}'\n      pop: true\n\n  exprTernaryIf:\n    - match: '{{ternaryIf}}'\n      scope: keyword.jlf\n      pop: true\n    - include: illegalInclude\n\n  exprTernaryDelimiter:\n    - match: '{{ternaryDelimiter}}'\n      pop: true\n    - include: illegalInclude\n\n# =============================================================================\n\n  intInclude:\n    - match: '{{int}}'\n      scope: constant.numeric.jlf\n      pop: true\n\n# =============================================================================\n\n  escapeInclude:\n    - meta_include_prototype: false\n    - match: '(?=\\\\$)'\n      set:\n        - include: illegalInclude\n    - match: '\\\\{{escapeRunes}}'\n      scope: constant.character.escape.jlf\n    - match: '\\\\\"'\n      scope: constant.character.escape.jlf\n      push:\n        - match: '\"'\n          scope: constant.character.escape.jlf\n          pop: true\n    - match: '(\\\\).'\n      captures:\n        1: comment.jlf\n\n  stringSubExprInclude:\n    - meta_include_prototype: false\n    - match: '({{escapeStarter}})({{beginOfStringSubExpr}})'\n      scope: keyword.jlf\n      push: [stringSubExprEnd, exprContent]\n\n  nonQuotedStringTailInclude:\n    - meta_include_prototype: false\n    - include: stringSubExprInclude\n    # - match: '({{escapeStarter}})({{beginOfStringSubExpr}})'\n    #   scope: keyword.jlf\n    #   push: [stringSubExprEnd, exprContent]\n    - match: '(?={{endOfNonQuotedString}})'\n      pop: true\n    - match: '({{escapeStarter}}){{endOfNonQuotedString}}'\n      captures:\n        1: constant.character.escape.jlf\n    - include: escapeInclude\n\n  stringSubExprEnd:\n    - match: '{{endOfStringSubExpr}}'\n      scope: keyword.jlf\n      pop: true\n    - include: illegalInclude\n\n  stringHelperInclude:\n    - match: '{{escapeStarter}}u'\n      push:\n        - meta_scope: constant.character.escape.jlf\n        - match: '[0-9a-fA-F]{4}'\n          pop: true\n        - include: illegalInclude\n    - match: '{{escapeStarter}}{{jsonQuotedEscapeRunes}}'\n      scope: constant.character.escape.jlf\n    - match: '({{escapeStarter}})({{jsonQuotedEscapeRunesAsIs}})'\n      captures:\n        1: constant.character.escape.jlf\n    - match: '({{escapeStarter}})([{{doubleQuotedValidRune}}])'\n      captures:\n        1: comment.jlf\n\n  quotedInclude:\n    - meta_include_prototype: false\n    - include: stringHelperInclude\n    - match: '{{quotedStringDelimiter}}'\n      scope: punctuation.definition.string.end.jlf\n      pop: true\n    - match: '(?={{escapeStarter}}|[^{{doubleQuotedValidRune}}])'\n      set:\n        - include: illegalInclude\n\n  quotedStringInclude:\n    - meta_include_prototype: false\n    - match: '{{quotedStringDelimiter}}'\n      scope: punctuation.definition.string.begin.jlf\n      set:\n        - meta_include_prototype: false\n        - meta_scope: string.quoted.double.jlf\n        - include: stringSubExprInclude\n        - include: quotedInclude\n\n# =============================================================================\n\n  valueHelperInclude:\n    - match: '{{number}}'\n      scope: constant.numeric.jlf\n      set: rangeTailOptinal\n    - match: '(?={{beginOfExpr}})'\n      set: [rangeTailOptinal, expr]\n    - include: mapInclude\n    - include: defInclude\n    - include: keysDefInclude\n    - include: genInclude\n    - include: arrayInclude\n    - include: boolInclude\n    - include: nilInclude\n    - include: regexpInclude\n    - include: stringInclude\n\n  valueChainStart:\n    - include: varSpecInclude\n    - include: valueHelperInclude\n    - include: illegalInclude\n\n  valueChain:\n    - match: '{{any}}'\n      set: [chainNextSegmentOptional, valueChainStart]\n\n  valueWithoutTernary:\n    - match: '{{negationMark}}'\n      set: [boolExprTailOptional, valueChain]\n    - match: '{{any}}'\n      set: [exprTailOptional, valueChain]\n\n  value:\n    - include: varChainInclude\n    - include: valueHelperInclude\n    - include: illegalInclude\n\n# =====================================\n\n  regexpInclude:\n    - meta_include_prototype: false\n    - match: '{{regexpStringDelimiter}}'\n      # scope: punctuation.definition.string.begin.jlf\n      scope: keyword.jlf\n      set:\n        - meta_include_prototype: false\n        - meta_scope: string.quoted.double.jlf\n        - include: stringSubExprInclude\n        - include: stringHelperInclude\n        - match: '\\.'\n          scope: keyword.jlf\n        - match: '\\[\\['\n          scope: keyword.jlf\n          set: [asciiCharsetClassEnd, colon, asciiCharsetClass, charsetNegationOptional, colon]\n        - match: '\\['\n          scope: keyword.jlf\n          push:\n            - match: '\\]'\n              scope: keyword.jlf\n              pop: true\n            - match: '\\\\[dD]'\n              scope: keyword.jlf\n            - match: '\\\\p(\\w)'\n              captures:\n                1: keyword.jlf\n                2: entity.name.variable.jlf\n        - match: '\\?|\\+\\*'\n          scope: keyword.jlf\n        # - match: '\\*'\n        #   scope: keyword.jlf\n        - match: '({{regexpStringDelimiter}})([igm]*)'\n          scope: keyword.jlf\n          pop: true\n\n  colon:\n    - meta_include_prototype: false\n    - match: '{{colon}}'\n      scope: punctuation.delimiter.jlf\n      pop: true\n    - match: illegalInclude\n\n  charsetNegationOptional:\n    - meta_include_prototype: false\n    - match: '^'\n      scope: keyword.jlf\n      pop: true\n    - match: '{{any}}'\n      pop: true\n\n  asciiCharsetClass:\n    - meta_include_prototype: false\n    - match: '\\balpha\\b'\n      scope: entity.name.variable.jlf\n      pop: true\n    - include: illegalInclude\n\n  asciiCharsetClassEnd:\n    - meta_include_prototype: false\n    - match: ']]'\n      scope: keyword.jlf\n      pop: true\n    - include: illegalInclude\n\n\n\n\n# =====================================\n\n  stringInclude:\n    - meta_include_prototype: false\n    - include: quotedStringInclude\n    - match: '{{beginOfNonQuotedString}}'\n      set:\n        - meta_include_prototype: false\n        - meta_scope: string.jlf\n        - include: nonQuotedStringTailInclude\n\n  stringValue:\n    - include: commonValueInclude\n    - include: stringInclude\n    - include: illegalInclude\n\n# =====================================\n\n  mapEnd:\n    - include: mapEndInclude\n    - include: illegalInclude\n\n  mapEndInclude:\n    - match: '{{endOfMap}}'\n      scope: punctuation.section.block.end.jlf\n      pop: true\n\n  mapInclude:\n    - meta_include_prototype: false\n    - match: '{{beginOfMap}}'\n      scope: punctuation.section.block.begin.jlf\n      set:\n        - include: mapEndInclude\n        - match: '(?={{varStarter}})'\n          push: [commaSeparatorOptional, optionalSpreadOptional, varSpec]\n        - match: '(?={{beginOfExpr}})'\n          push: [commaSeparatorOptional, optionalSpreadOptional, expr]\n        - match: '{{any}}'\n          push: [commaSeparatorOptional, value, keySeparatorOptional, optionalKeyEnder, key]\n\n  spreadOptional:\n    - meta_include_prototype: false\n    - match: '\\.\\.\\.'\n      scope: keyword.jlf\n      pop: true\n    - match: '{{any}}'\n      pop: true\n\n  optionalSpreadOptional:\n    - meta_include_prototype: false\n    - match: '\\.\\.\\.'\n      scope: comment.jlf\n      pop: true\n    - match: '{{any}}'\n      pop: true\n\n  key:\n    - match: '{{quotedStringDelimiter}}'\n      scope: punctuation.definition.string.begin.jlf\n      set:\n        - meta_include_prototype: false\n        - meta_scope: support.function.jlf\n        - include: quotedInclude\n    - match: '{{beginOfNonQuotedKey}}'\n      set:\n        - meta_include_prototype: false\n        - meta_scope: support.function.jlf\n        - match: '(?={{endOfNonQuotedKey}})'\n          pop: true\n        - match: '(\\\\){{endOfNonQuotedKey}}'\n          captures:\n            1: constant.character.escape.jlf\n        - include: escapeInclude\n    - include: illegalInclude\n\n  keySeparatorOptional:\n    - meta_include_prototype: false\n    - match: '{{keySeparator}}'\n      scope: comment.jlf\n      pop: true\n    - match: '{{any}}'\n      pop: true\n\n  commaSeparatorOptional:\n    - match: '{{commaSeparatorOptional}}'\n      scope: comment.jlf\n      pop: true\n    - match: '{{any}}'\n      pop: true\n\n# =====================================\n\n  arrayInclude:\n    - meta_include_prototype: false\n    - match: '{{beginOfArray}}'\n      scope: punctuation.section.block.begin.jlf\n      set:\n        - match: '{{endOfArray}}'\n          scope: punctuation.section.block.end.jlf\n          pop: true\n        - match: '{{any}}'\n          push: [arrayIncludeHelper]\n\n  arrayIncludeHelper:\n    - match: '(?={{varStarter}})'\n      push: [spreadOptional, varSpec]\n    - match: '{{any}}'\n      push: [value]\n\n# =====================================\n\n  boolInclude:\n    - meta_include_prototype: false\n    - match: \\b{{bool}}\\b\n      scope: constant.language.jlf\n      pop: true\n\n# =====================================\n\n  nilInclude:\n    - meta_include_prototype: false\n    - match: \\b{{nil}}\\b\n      scope: constant.language.jlf\n      pop: true\n\n# =============================================================================\n\n  rangeValue:\n    - match: '{{number}}'\n      scope: constant.numeric.jlf\n      set:\n        - meta_include_prototype: false\n        - include: rangeTailInclude\n        - include: illegalInclude\n    - match: '(?={{varStarter}})'\n      set: [rangeTailOptinal, varSpecChain]\n    - match: '(?={{beginOfExpr}})'\n      set: [rangeTailOptinal, expr]\n    - include: illegalInclude\n\n  rangeTailOptinal:\n    - meta_include_prototype: false\n    - include: rangeTailInclude\n    - match: '{{any}}'\n      pop: true\n\n  rangeTailInclude:\n    - match: '{{rangeSeparator}}'\n      scope: keyword.jlf\n      set:\n        - meta_include_prototype: false\n        - match: '{{spaceAfter}}'\n          pop: true\n        - match: '{{any}}'\n          set: numberValue\n\n# =============================================================================\n\n  numberValue:\n    - include: commonValueInclude\n    - include: numberInclude\n    - include: illegalInclude\n\n  numberInclude:\n    - match: '{{number}}'\n      scope: constant.numeric.jlf\n      pop: true\n\n# =============================================================================\n\n  commonValueInclude:\n    - meta_include_prototype: false\n    - include: varSpecChainInclude\n    - include: exprInclude\n\n# =============================================================================\n\n  stringsInclude:\n    - match: '{{beginOfArray}}'\n      scope: punctuation.section.block.begin.jlf\n      set:\n        - match: '{{endOfArray}}'\n          scope: punctuation.section.block.end.jlf\n          pop: true\n        - match: '{{any}}'\n          push: [ commaSeparatorOptional, stringValue ]\n    - include: stringInclude\n\n  stringsValue:\n    - include: commonValueInclude\n    - include: stringsInclude\n    - include: illegalInclude\n\n# =============================================================================\n\n  defValue:\n    - include: commonValueInclude\n    - match: '{{any}}'\n      set: [def, defStarterOptional]\n\n  defStarterOptional:\n    - match: '({{defStarter}})(?:({{colon}})(?=({{genType}}|defTypeMulti)))?'\n      scope: comment.jlf\n      pop: true\n    - match: '{{any}}'\n      pop: true\n\n  defInclude:\n    - meta_include_prototype: false\n    - match: '({{defStarter}})(?:({{colon}})(?=({{genType}}|defTypeMulti)))?'\n      scope: keyword.jlf\n      set: def\n\n  defWithStarter:\n    - match: '(?={{defStarter}})'\n      set:\n        - include: defInclude\n    - include: illegalInclude\n\n  def:\n    - meta_include_prototype: false\n    - include: defAtomInclude\n    - match: '{{beginOfArray}}'\n      scope: punctuation.section.block.begin.jlf\n      set:\n        - match: '{{endOfArray}}'\n          pop: true\n        - match: '{{any}}'\n          push: [ commaSeparatorOptional, defAtom ]\n    - include: illegalInclude\n\n  defAtom:\n    - include: defAtomInclude\n    - include: illegalInclude\n\n  defAtomInclude:\n    - match: '\\bFunc\\b'\n      scope: variable.parameter.jlf\n      set: [ defValue, retPrefix, varDefArgsOptional]\n    - match: '({{defTypeSingleComplex}}|defTypeMulti)'\n      scope: variable.parameter.jlf\n      set:\n        - meta_include_prototype: false\n        - match: '{{beginOfMap}}'\n          scope: punctuation.section.block.begin.jlf\n          set: keyOfDef\n        - match: '{{any}}'\n          pop: true\n    - match: '{{defTypeSingleSimple}}'\n      scope: variable.parameter.jlf\n      pop: true\n    - match: '{{beginOfMap}}'\n      scope: punctuation.section.block.begin.jlf\n      set: keyOfDef\n\n  retPrefix:\n    - match: '->'\n      scope: keyword.jlf\n      pop: true\n    - match: illegalInclude\n\n  keyOfDef:\n    - match: '{{endOfMap}}'\n      scope: punctuation.section.block.end.jlf\n      pop: true\n    - match: \\btype\\b\n      scope: keyword.jlf\n      push: [commaSeparatorOptional, defTypeValue, keySeparatorOptional]\n    - match: \\bkeysDef\\b\n      scope: keyword.jlf\n      push: [commaSeparatorOptional, keysDefValue, keySeparatorOptional]\n    - match: \\b(enum|keys)\\b\n      scope: keyword.jlf\n      push: [commaSeparatorOptional, stringsValue, keySeparatorOptional]\n    - match: \\b(elemDef|arrayElemDef)\\b\n      scope: keyword.jlf\n      push: [commaSeparatorOptional, defValue, keySeparatorOptional]\n    - match: \\brange\\b\n      scope: keyword.jlf\n      push: [commaSeparatorOptional, rangeValue, keySeparatorOptional]\n    - match: \\bisOptional\\b\n      scope: keyword.jlf\n      push: [commaSeparatorOptional, boolValue, keySeparatorOptional]\n    - match: \\bdefault\\b\n      scope: keyword.jlf\n      push: [commaSeparatorOptional, value, keySeparatorOptional]\n    - match: \\barg\\b\n      scope: keyword.jlf\n      push: [commaSeparatorOptional, varDefArgsValue, keySeparatorOptional]\n    - match: \\bret\\b\n      scope: keyword.jlf\n      push: [commaSeparatorOptional, defValue, keySeparatorOptional]\n    - include: illegalInclude\n\n  defTypeValue:\n    - match: '{{defStarter}}'\n      scope: comment.jlf\n      set:\n        - meta_include_prototype: false\n        - include: defTypeInclude\n        - include: illegalInclude\n    - include: defTypeInclude\n    - include: illegalInclude\n\n  defTypeInclude:\n    - match: \\b{{defTypeSingle}}\\b\n      scope: variable.parameter.jlf\n      pop: true\n    - match: '{{beginOfArray}}'\n      scope: punctuation.section.block.begin.jlf\n      set:\n        - match: '{{endOfArray}}'\n          pop: true\n        - match: \\b{{defTypeMulti}}|{{defTypeSingle}}\\b\n          scope: variable.parameter\n        - include: illegalInclude\n\n# =============================================================================\n\n  keysDefInclude:\n    - match: '{{keysDef}}(?={{beginOfMap}})'\n      scope: keyword.jlf\n      set: keysDefValueInclude\n\n  keysDefValueInclude:\n    - match: '({{keysDef}})?({{beginOfMap}})'\n      captures:\n        1: comment.jlf\n        2: punctuation.section.block.begin.jlf\n      set:\n        - match: '{{endOfMap}}'\n          scope: punctuation.section.block.end.jlf\n          pop: true\n        - match: '{{any}}'\n          push: keysDefKey\n\n  keysDefValue:\n    - include: commonValueInclude\n    - include: keysDefValueInclude\n    - include: illegalInclude\n\n  keysDefKey:\n    - match: '(?={{beginOfNonQuotedString}}|{{quotedStringDelimiter}}|{{regexpStringDelimiter}}|{{beginOfArray}})'\n      set: [defValue, keySeparatorOptional, optionalKeyEnder, stringsOrRegexp]\n    - match: '(?={{varStarter}}|{{beginOfExpr}})'\n      set: [keysDefSpreadOptional, commonValue]\n    - include: illegalInclude\n\n  stringsOrRegexp:\n    - meta_include_prototype: false\n    - include: stringsValue\n    - include: regexpInclude\n    - include: illegalInclude\n\n  keysDefSpreadOptional:\n    - meta_include_prototype: false\n    - match: '{{spreadOp}}'\n      scope: keyword.jlf\n      pop: true\n    - match: '{{any}}'\n      set: [defValue, keySeparatorOptional, optionalKeyEnder]\n\n  commonValue:\n    - meta_include_prototype: false\n    - include: varSpecChainInclude\n    - include: exprInclude\n    - include: illegalInclude\n\n# =============================================================================\n\n  optionalKeyEnder:\n    - meta_include_prototype: false\n    - match: '({{optionalEnder}}|{{mustEnder}})'\n      scope: keyword.jlf\n      pop: true\n    - match: '{{any}}'\n      pop: true\n\n# =============================================================================\n\n  boolValue:\n    - include: commonValueInclude\n    - include: boolInclude\n    - include: illegalInclude\n\n# =============================================================================\n",
+			"file": "jlf.sublime-syntax",
+			"file_size": 31239,
+			"file_write_time": 131919553719089090,
+			"settings":
+			{
+				"buffer_size": 31239,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "jjjjjj",
+			"settings":
+			{
+				"buffer_size": 6,
+				"line_ending": "Unix",
+				"name": "jjjjjj"
+			}
+		}
 	],
 	"build_system": "",
 	"build_system_choices":
@@ -532,16 +552,24 @@
 		"selected_items":
 		[
 			[
-				"git",
-				"Git: Status"
+				"pa",
+				"Package Control: Install Package"
+			],
+			[
+				"pack",
+				"Package Control: Install Package"
+			],
+			[
+				"packa",
+				"Package Control: Remove Package"
 			],
 			[
 				"inst",
 				"Package Control: Install Package"
 			],
 			[
-				"packa",
-				"Package Control: Remove Package"
+				"git",
+				"Git: Status"
 			],
 			[
 				"gi",
@@ -636,10 +664,40 @@
 	},
 	"expanded_folders":
 	[
-		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore"
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore"
 	],
 	"file_history":
 	[
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwos/bwos.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwexec/bwexec.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bw/bw.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwval/bwval.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwtype/bwtype.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwexec/bwexec_test.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwexec/bwexectesthelper2/bwexectesthelper2.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwval/bwval_test.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwval/bwval_holder_test.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwval/bwval_holder.go",
+		"/Users/yurybikuzin/Library/Application Support/Sublime Text 3/Packages/User/GoSublime/src/margo/margo.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwmap/bwmap.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwmap/bwmap_ordered.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwparse/bwparse.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/ansi/ansi.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwjson/bwjson.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwparse/bwparse_private.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwtype/bwtype_test.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwmap/bwmap_ordered_test.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/ansi/tags/tags.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwval/bwval_def.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwval/bwval_def_test.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwdebug/bwdebug.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwrune/bwrune.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwerr/where/where.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwerr/bwerr.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwos/bwos_test.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwparse/bwparse_test.go",
+		"/Users/yurybikuzin/go/src/github.com/baza-winner/bwcore/bwval/view@103,_.",
+		"/Users/yurybikuzin/Library/Application Support/Sublime Text 3/Packages/GoSublime/CHANGELOG.md",
 		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwtesting/bwtesting.go",
 		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/def.go",
 		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/defparse_logic.go",
@@ -659,7 +717,6 @@
 		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/internal/pfa/pfa_item_methods.go",
 		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/internal/pfa/pfa_state_methods.go",
 		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/internal/pfa/pfa.go",
-		"/Users/yurybikuzin/Library/Application Support/Sublime Text 3/Packages/User/GoSublime/src/margo/margo.go",
 		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/test.sh",
 		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/parsestackitem.go",
 		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defparse/pfaerrortype_string.go",
@@ -675,7 +732,6 @@
 		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/defvalid.go",
 		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/defvalid_init.go",
 		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/getvalidval.go",
-		"/Users/yurybikuzin/Library/Application Support/Sublime Text 3/Packages/GoSublime/CHANGELOG.md",
 		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/deftype.go",
 		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/bwmap/bwmap_test.go",
 		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bwcore/defvalid/defvalid_errors.go",
@@ -739,35 +795,7 @@
 		"/Users/yurybikuzin/dip2/bin/dip.bash",
 		"/Users/yurybikuzin/bw/pm/Bw.pm",
 		"/Users/yurybikuzin/bw/pm/BwCore.pm",
-		"/Users/yurybikuzin/bw/bash/_docker_up.awk",
-		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/bwcoretesting/bwcoretesting.go",
-		"/Users/yurybikuzin/bw/go/bin/bwcoretesting",
-		"/Users/yurybikuzin/bw/go/src/github.com/baza-winner/bw/testing/testing.go",
-		"/Users/yurybikuzin/bw/go/src/github.com/bw/ansi/ansi.go",
-		"/Users/yurybikuzin/bw/go/src/ansi/ansi_test.go",
-		"/Users/yurybikuzin/bw/go/src/ansi/ansi.go",
-		"/Users/yurybikuzin/bw/go/ansi/ansi.go",
-		"/Users/yurybikuzin/bw/go/ansi.go",
-		"/Users/yurybikuzin/Library/Application Support/Sublime Text 3/Packages/GoSublime/9o.md",
-		"/Users/yurybikuzin/bw/bw.bash",
-		"/Users/yurybikuzin/bw/docker/helper/docker-compose.main.yml",
-		"/Users/yurybikuzin/bw/docker/helper/docker-compose.nginx.yml",
-		"/Users/yurybikuzin/bw/docker/helper/docker-compose.mysql.yml",
-		"/Users/yurybikuzin/bw/bash/bashProfileSupport.bash",
-		"/Users/yurybikuzin/bw/generated/_docker_up.funcParams.code.bash",
-		"/Users/yurybikuzin/bw/bash/_setAtBashProfileHelper.awk",
-		"/Users/yurybikuzin/bw/bash/bwMain.bash",
-		"/Users/yurybikuzin/bw/tests/funcParamsSupport2Tests.bash",
-		"/Users/yurybikuzin/bw/docker/helper/mysql_secure_installation.sql",
-		"/Users/yurybikuzin/bw/core/funcOptionsSupport2.bash",
-		"/Users/yurybikuzin/bw/.bw/bash/psSupport.bash",
-		"/Users/yurybikuzin/bw/docker/helper/entrypoint.bash",
-		"/Users/yurybikuzin/bw/core/_mkFileFromTemplate.awk",
-		"/Users/yurybikuzin/bw/README.md",
-		"/Users/yurybikuzin/bw/generated/_setAtBashProfile.funcParams.code.bash",
-		"/Users/yurybikuzin/bw/generated/dip_docker_up.help.code.bash",
-		"/Users/yurybikuzin/bw/core/bwMain.bash",
-		"/Users/yurybikuzin/bw/generated/bw_project.help.code.bash"
+		"/Users/yurybikuzin/bw/bash/_docker_up.awk"
 	],
 	"find":
 	{
@@ -786,6 +814,64 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"O",
+			"hOpt",
+			"TestHolderMustString",
+			"a",
+			"kindOfInt",
+			"[0, 1]",
+			"+2.0",
+			"-1_000_000",
+			"`-1_000_000`",
+			"-1",
+			"!",
+			"+3.14",
+			"! ",
+			"Delete",
+			"TestHolderMustSetKeyVal",
+			"1.nonMapKey.some",
+			"err: is not Map",
+			"keys",
+			"values",
+			"default [ { some: 273 } ]",
+			"parseNumber",
+			"Number",
+			"default [ { some: 273 } ]",
+			"TestHolderMustSetKeyVal",
+			"{ val: { some: 0 thing: 1 good: 2 } def: { type Map keys { some Int } } }",
+			"MustValidVal",
+			"{ val: <some thing> def Array }",
+			"err: is not Map",
+			"1.nonMapKey.some",
+			"KindSwitch",
+			"bwdebug.Print",
+			"MustSetKeyVal",
+			"valueFormat",
+			"printCaseToUse",
+			"SetKeyVal",
+			"KeyVal(",
+			"Ordered",
+			"KindSwitch",
+			"TemplateFrom",
+			"ValidateOrderedMapKeyFunc",
+			"OnValidateOrderedMapKey",
+			"validKeys",
+			"KindSwitch",
+			"TestValKindString",
+			"bwval.PathStr",
+			"bwmap",
+			"bwos",
+			"KeyForPathS",
+			"IsL",
+			"fromProvider",
+			"GetVal",
+			"bwparse.From",
+			"TemplateFrom",
+			"bwjson",
+			"GetVal",
+			"FromTemplate",
+			"bwparse.From(",
+			"fmt",
 			"Where",
 			"\n\t",
 			"StringSet",
@@ -798,36 +884,153 @@
 		"regex": false,
 		"replace_history":
 		[
+			"CmdOpt",
+			"opt.h",
+			"fromProvider",
+			"DelKey",
+			"ss",
+			"m",
+			"// bwdebug.Print",
+			"pcToUse",
+			"bwval.PathS",
+			"keyForPathS",
+			"FromProvider",
+			"getVal",
+			"bwparse.MustFrom(",
 			"String",
 			"Test"
 		],
 		"reverse": false,
 		"show_context": false,
 		"use_buffer2": true,
-		"whole_word": false,
+		"whole_word": true,
 		"wrap": false
 	},
 	"groups":
 	[
 		{
+			"selected": 0,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "jlf.sublime-syntax",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 31239,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"SL.31.region_keys":
+							[
+							],
+							"git_gutter_is_enabled": true,
+							"history_list_is_closing": true,
+							"markdonw_live_preview_last_run": 1545728623.34,
+							"syntax": "Packages/YAML/YAML.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				}
 			]
 		},
 		{
+			"selected": 0,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "jlf.sublime-syntax",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 31239,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"SL.32.region_keys":
+							[
+							],
+							"git_gutter_is_enabled": true,
+							"history_list_is_closing": true,
+							"markdonw_live_preview_last_run": 1545728623.34,
+							"syntax": "Packages/YAML/YAML.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				}
 			]
 		},
 		{
+			"selected": 0,
 			"sheets":
 			[
+				{
+					"buffer": 1,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 6,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"auto_name": "jjjjjj",
+							"git_gutter_is_enabled": false,
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
 			]
 		}
 	],
 	"incremental_find":
 	{
-		"height": 26.0
+		"height": 38.0
 	},
 	"input":
 	{
@@ -859,8 +1062,8 @@
 		"cols":
 		[
 			0.0,
-			0.33,
-			0.733461785931,
+			0.281098081517,
+			0.615858607522,
 			1.0
 		],
 		"rows":
@@ -870,6 +1073,10 @@
 		]
 	},
 	"menu_visible": true,
+	"output.GoSublime/HUD":
+	{
+		"height": 0.0
+	},
 	"output.SublimeLinter":
 	{
 		"height": 0.0
@@ -877,6 +1084,10 @@
 	"output.find_results":
 	{
 		"height": 100.0
+	},
+	"output.mdpopups":
+	{
+		"height": 0.0
 	},
 	"pinned_build_system": "",
 	"project": "bwcore.sublime-project",
@@ -892,16 +1103,152 @@
 		"selected_items":
 		[
 			[
-				"bwtest",
-				"bwtesting/bwtesting.go"
+				"jlf",
+				"jlf.sublime-syntax"
+			],
+			[
+				"bwtesthelp",
+				"bwexec/bwexectesthelper2/bwexectesthelper2.go"
+			],
+			[
+				"bwval_hol",
+				"bwval/bwval_holder_test.go"
+			],
+			[
+				"bwval_te",
+				"bwval/bwval_test.go"
+			],
+			[
+				"bw",
+				"bw/bw.go"
+			],
+			[
+				"bwval.",
+				"bwval/bwval.go"
+			],
+			[
+				"bwexc",
+				"bwexec/bwexec_test.go"
+			],
+			[
+				"bexec",
+				"bwexec/bwexec.go"
+			],
+			[
+				"bwos",
+				"bwos/bwos.go"
+			],
+			[
+				"bwtype",
+				"bwtype/bwtype.go"
+			],
+			[
+				"bwval",
+				"bwval/bwval.go"
+			],
+			[
+				"bwparse",
+				"bwparse/bwparse_test.go"
+			],
+			[
+				"bwmap",
+				"bwmap/bwmap_ordered_test.go"
+			],
+			[
+				"bwtype_te",
+				"bwtype/bwtype_test.go"
+			],
+			[
+				"bwval_ho",
+				"bwval/bwval_holder_test.go"
+			],
+			[
+				"bwpars",
+				"bwparse/bwparse.go"
+			],
+			[
+				"bwval_d",
+				"bwval/bwval_def.go"
+			],
+			[
+				"bwval_",
+				"bwval/bwval_holder.go"
+			],
+			[
+				"bwdebu",
+				"bwdebug/bwdebug.go"
+			],
+			[
+				"bwpar",
+				"bwparse/bwparse.go"
+			],
+			[
+				"bwmap_",
+				"bwmap/bwmap_ordered.go"
+			],
+			[
+				"bwparse_pr",
+				"bwparse/bwparse_private.go"
+			],
+			[
+				"bwval_de",
+				"bwval/bwval_def.go"
+			],
+			[
+				"bwexe",
+				"bwexec/bwexec_test.go"
+			],
+			[
+				"bwex",
+				"bwexec/bwexec.go"
+			],
+			[
+				"bwvla",
+				"bwval/bwval.go"
+			],
+			[
+				"bw.",
+				"bw/bw.go"
+			],
+			[
+				"w",
+				"bwerr/where/where.go"
+			],
+			[
+				"bwjson",
+				"bwjson/bwjson.go"
+			],
+			[
+				"bwerr",
+				"bwerr/bwerr.go"
+			],
+			[
+				"bwrune",
+				"bwrune/bwrune.go"
+			],
+			[
+				"bwexec",
+				"bwexec/bwexec_test.go"
+			],
+			[
+				"bwval.go",
+				"bwval/bwval.go"
+			],
+			[
+				"bwparse_te",
+				"bwparse/bwparse_test.go"
 			],
 			[
 				"ansi",
 				"ansi/ansi.go"
 			],
 			[
-				"bwerr",
-				"bwerror/bwerror.go"
+				"bwexe_te",
+				"bwexec/bwexec_test.go"
+			],
+			[
+				"bwtest",
+				"bwtesting/bwtesting.go"
 			],
 			[
 				"def.",
@@ -1072,10 +1419,6 @@
 				"go/src/github.com/baza-winner/bwcore/defvalid/deftype/deftype.go"
 			],
 			[
-				"bwmap",
-				"go/src/github.com/baza-winner/bwcore/bwmap/bwmap.go"
-			],
-			[
 				"compli",
 				"go/src/github.com/baza-winner/bwcore/defvalid/compiledef.go"
 			],
@@ -1104,10 +1447,6 @@
 				"go/src/github.com/baza-winner/bwcore/bwjson/bwjson_test.go"
 			],
 			[
-				"bwjson",
-				"go/src/github.com/baza-winner/bwcore/bwjson/bwjson.go"
-			],
-			[
 				"bwerror",
 				"go/src/github.com/baza-winner/bwcore/bwerror/bwerror.go"
 			],
@@ -1132,28 +1471,12 @@
 				"go/src/github.com/baza-winner/bwcore/bwstring/bwstring.go"
 			],
 			[
-				"bwos",
-				"go/src/github.com/baza-winner/bwcore/bwos/bwos.go"
-			],
-			[
 				"ansi.go",
 				"go/src/github.com/baza-winner/bwcore/ansi/ansi.go"
 			],
 			[
-				"bwexe",
-				"go/src/github.com/baza-winner/bwcore/bwexec/bwexectesthelper2/bwexectesthelper2.go"
-			],
-			[
-				"bwexec",
-				"go/src/github.com/baza-winner/bwcore/bwexec/bwexectesthelper/bwexectesthelper.go"
-			],
-			[
 				"bwna",
 				"pm/BwAnsi.pm"
-			],
-			[
-				"bwex",
-				"go/src/github.com/baza-winner/bwcore/bwexec/bwexec.go"
 			],
 			[
 				"bwstring",
@@ -1290,118 +1613,6 @@
 			[
 				"bwP",
 				"pm/BwParams.pm"
-			],
-			[
-				"docker",
-				"docker/helper/docker-compose.nginx.yml"
-			],
-			[
-				"docker-comp",
-				"docker/helper/docker-compose.main.yml"
-			],
-			[
-				".sql",
-				"docker/helper/mysql_secure_installation.sql"
-			],
-			[
-				"_setB",
-				"bash/_setAtBashProfileHelper.awk"
-			],
-			[
-				"_mk",
-				"core/_mkFileFromTemplate.awk"
-			],
-			[
-				"_docker_up",
-				"bash/_docker_up.awk"
-			],
-			[
-				"dip_docker_up.h",
-				"generated/dip_docker_up.help.code.bash"
-			],
-			[
-				"bashPro",
-				"bash/bashProfileSupport.bash"
-			],
-			[
-				"bwMain",
-				"bash/bwMain.bash"
-			],
-			[
-				"bwC",
-				"bash/bwCommands.bash"
-			],
-			[
-				"_docker_up.fun",
-				"generated/_docker_up.funcParams.code.bash"
-			],
-			[
-				"REA",
-				"README.md"
-			],
-			[
-				"_set",
-				"bash/_setAtBashProfileHelper.awk"
-			],
-			[
-				"bash",
-				"bash/bashProfileSupport.bash"
-			],
-			[
-				"bw",
-				"bw.bash"
-			],
-			[
-				"file",
-				"core/coreFileUtils.bash"
-			],
-			[
-				"ent",
-				"docker/helper/entrypoint.bash"
-			],
-			[
-				"bwM",
-				"core/bwMain.bash"
-			],
-			[
-				"bw_proj",
-				"generated/bw_project.help.code.bash"
-			],
-			[
-				"fun",
-				"core/funcParamsSupport2.bash"
-			],
-			[
-				"bw_proje",
-				"generated/bw_project.help.code.bash"
-			],
-			[
-				"funcP",
-				"core/funcParamsSupport2.bash"
-			],
-			[
-				"test",
-				"tests/testsSupport.bash"
-			],
-			[
-				"profile",
-				"bash/profileSupport.bash"
-			],
-			[
-				"bwcom",
-				"bash/bwCommands.bash"
-			],
-			[
-				"bw_pro",
-				"generated/bw_project.funcParams.code.bash"
-			],
-			[
-				"bw.",
-				"bw.bash"
-			],
-			[
-				"api",
-				"bin/api"
 			]
 		],
 		"width": 0.0
