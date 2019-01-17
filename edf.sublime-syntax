@@ -15,7 +15,7 @@ variables:
   number: '[\+\-]?\d+(?:\.\d+)?'
   id: '[a-zA-Z_]([a-zA-Z_\d\.-]*)'
   bool: true|false
-  nil: nil
+  nil: nil|null
 
   keySeparator: '(\s[=-]>|\s=|:)?(\s|$)'
   commaSeparatorOptional: ','
@@ -72,9 +72,11 @@ variables:
 
   keysDef: \bKeysDef\b
   defTypeSingleSimple: \bAny|Null|Nil\b
-  genType: \bArray|{{keysDef}}|Map|String|Int|Number|Bool|Range|Def|Gen\b
+  # genType: \bArray|{{keysDef}}|Map|String|Int|Number|Bool|Range|Def|Gen\b
+  genType: \bArray|Map|String|Int|Number|Bool|Range|Def|Gen\b
   defTypeSingleComplex: \b{{genType}}|Func\b
-  defTypeSingle: '{{defTypeSingleComplex}}|{{keysDef}}|{{defTypeSingleSimple}}'
+  # defTypeSingle: '{{defTypeSingleComplex}}|{{keysDef}}|{{defTypeSingleSimple}}'
+  defTypeSingle: '{{defTypeSingleComplex}}|{{defTypeSingleSimple}}'
   defTypeMulti: '\bArrayOf|AnyBut\b'
   spreadOp: '(\.\.\.)'
 
@@ -137,29 +139,45 @@ contexts:
 # =============================================================================
 
   varDefInclude:
-    - match: '({{varStarter}})({{defStarter}})'
-      captures:
-        1: keyword.edf
-        2: variable.parameter.edf
-      push: [defValue, keySeparatorOptional]
     - match: '({{varStarter}})'
       scope: keyword.edf
       push: [value, keySeparatorOptional, varDefArgsOptional, varName]
 
   main:
-    - match: '%YAML'
-      embed: scope:source.yaml
-      embed_scope: source.yaml.embedded.edf
-      escape: '^\.\.\.$'
-    - match: '{{any}}'
-      set: [mainTail, mainArgsOptional]
+    - match: ''
+      push: [sectionFormat, sectionName]
 
-  mainArgsOptional:
-    - match: '({{varStarter}})(?={{beginOfArgsMap}})'
-      scope: keyword.edf
-      set: varDefArgsOptional
+  sectionName:
+    - match: '(^===)(.*)$'
+      captures:
+        1: keyword.jlf
+        2: entity.name.section.jlf
+      pop: true
     - match: '{{any}}'
       pop: true
+
+  sectionFormat:
+    - match: '^(?=%YAML)'
+      set:
+        - match: '^(?=%YAML)'
+          embed: scope:source.yaml
+          embed_scope: source.yaml.embedded.edf
+          escape: '^(\.\.\.)\s*$'
+          escape_captures:
+            1: entity.other.document.end.edf
+        - match: '{{any}}'
+          pop: true
+    - match: '^(%EDF\s.*$)?'
+      scope: keyword.other.directive.edf
+      set: seekMainConst
+
+  seekMainConst:
+    - match: '({{varStarter}})(?={{beginOfArgsMap}})'
+      scope: keyword.edf
+      set: [end, value, keySeparatorOptional, varDefArgsOptional]
+    - include: varDefInclude
+    - match: '{{any}}'
+      set: [end, value]
 
   mainTail:
     - include: varDefInclude
@@ -168,8 +186,12 @@ contexts:
 
   end:
     - include: varDefInclude
+    - match: '^---\s*$'
+      scope: entity.other.document.begin.jlf
+      set: sectionFormat
     - match: '^\.\.\.$'
-      set: main
+      scope: entity.other.document.end.jlf
+      pop: true
     - include: illegalInclude
 
 # =============================================================================
@@ -202,7 +224,6 @@ contexts:
     - include: commonValueInclude
     - include: varDefArgsInclude
     - include: illegalInclude
-
 
   argNameAtomInclude:
     - include: regexpInclude
@@ -403,7 +424,7 @@ contexts:
 
   varName:
     - meta_include_prototype: false
-    - match: '(_|Key|Idx|Len|File|Ref|\.\.|\.)(?={{endOfNonQuotedString}})'
+    - match: '(_|Key|Idx|Len|File|Env|Ref|\.\.|\.)(?={{endOfNonQuotedString}})'
       scope: variable.language.edf
       pop: true
     - match: '(?={{endOfNonQuotedString}})'
@@ -430,10 +451,10 @@ contexts:
     - match: '{{any}}'
       pop: true
 
-  specInclude:
-    - meta_include_prototype: false
-    - include: varSpecArgsInclude
-    - include: nonQuotedStringTailInclude
+  # specInclude:
+  #   - meta_include_prototype: false
+  #   - include: varSpecArgsInclude
+  #   - include: nonQuotedStringTailInclude
 
 # =============================================================================
 
@@ -445,9 +466,9 @@ contexts:
 
   exprContent:
     - match: '{{negationMark}}'
-      set: [exprTernaryBeginOptional, boolExprTailOptional, valueChain]
+      set: [exprTernaryBeginOptional, boolExprTailOptional, value]
     - match: '{{any}}'
-      set: [exprTernaryBeginOptional, exprTailOptional, valueChain]
+      set: [exprTernaryBeginOptional, exprTailOptional, value]
 
   negationMarkOptional:
     - meta_include_prototype: false
@@ -468,7 +489,7 @@ contexts:
 
   exprSumTailInclude:
     - match: '{{sumOps}}{{spaceAfter}}'
-      set: [ exprSumTailOptional, valueChain ]
+      set: [ exprSumTailOptional, value ]
 
   exprSumTailOptional:
     - include: exprSumTailInclude
@@ -644,8 +665,8 @@ contexts:
     - match: '(?={{beginOfExpr}})'
       set: [rangeTailOptinal, expr]
     - include: mapInclude
-    - include: defInclude
     - include: keysDefInclude
+    - include: defInclude
     - include: genInclude
     - include: arrayInclude
     - include: boolInclude
@@ -678,7 +699,7 @@ contexts:
 
   value:
     - match: '\^'
-      set: [valueAtom, defValue]
+      set: [valueChain, defValue]
     - include: valueAtomInclude
     - include: illegalInclude
 
@@ -865,14 +886,10 @@ contexts:
         - match: '{{endOfArray}}'
           scope: punctuation.section.block.end.edf
           pop: true
+        - match: '(?={{varStarter}})'
+          push: [commaSeparatorOptional, spreadOptional, varSpec]
         - match: '{{any}}'
-          push: [arrayIncludeHelper]
-
-  arrayIncludeHelper:
-    - match: '(?={{varStarter}})'
-      push: [spreadOptional, varSpec]
-    - match: '{{any}}'
-      push: [value]
+          push: value
 
 # =====================================
 
@@ -1020,6 +1037,11 @@ contexts:
       scope: punctuation.section.block.begin.edf
       set: keyOfDef
 
+  defArgs:
+    - match: '{{beginOfMap}}'
+      scope: punctuation.section.block.begin.edf
+      set: keyOfDef
+
   retPrefix:
     - match: '->'
       scope: keyword.edf
@@ -1156,3 +1178,4 @@ contexts:
     - include: illegalInclude
 
 # =============================================================================
+...

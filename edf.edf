@@ -1,3 +1,4 @@
+=== main
 /*
 NOTE:
 
@@ -16,13 +17,13 @@ To adjust edf.sublime-syntax following packages may be helpful:
 
 # EDF
 
-  EDF - expressive data format. Предназначен для снабжения приложения данными, в частности конфигурационными
+EDF - expressive data format. Предназначен для снабжения приложения данными, в частности конфигурационными
 
 ## Примеры YAML и JSON
 
-  Примеры файлов:
-    1.
+Примеры файлов:
 
+1.
 */
 
 %YAML 1.2
@@ -31,43 +32,62 @@ some: thing
 #! exclude next line from doc
 ...
 
+=== some
+
+%EDF
+
 /**
-    2.
+2.
 */
 {some: thing}
 //! exclude next line from doc
-...
+---
 
 /**
-  Таким образом, любой YAML или JSON-файл является валидным EDF-файлом
+Таким образом, любой YAML или JSON-файл является валидным EDF-файлом
 
 ## Структура файла EDF
 
-  Файл EDF содержит один или несколько документов формата EDF (формат JSON является подмножестовм формата EDF) или YAML
+Файл EDF состоит из одной или нескольких именованных секций
+Имя секции задается в первой непустой строке секции и предваряется маркером `=== `
+Имя секции может быть опущено, в этом случае маркер `=== ` тоже не используется, и секции присваивается имя по умолчнаию ("section`N`", где N - порядковый номер секции, начиная с 0)
+Если файл EDF содержит единственную секцию, имя которой явно не задано, то эта секция является безымямнной
 
-  Документ формата YAML должен иметь заголовок
-    %YAML 1.2
-    ---
+Каждая секция содержит один или несколько документов
+Все документы в секции должны быть одного формата
+Допустимые форматы:
+- EDF
+- YAML
 
-  Документ формата EDF не имеет заголовка
+Формат документов в секции указывается в заголовке секции после необязательного указания имени секции
+Секция документов формата YAML *должен* иметь заголовок формата
+> %YAML 1.2
 
-  Окончание документа в обоих форматах:
-    ...
+Секция документoв формата EDF *может* иметь заголовок формата
+> %EDF 0.1
 
-  Последний документ в файле EDF может не иметь явного окончания
+Каждый документ в секции начинается после заголовка формата со стартовой строки
+> ---
 
-  Один документ описывает одну структуру данных
+Для первого документа в секции формата EDF стартовую строку можно опустить
 
-  Типы поддерживаемых структур данных:
-  - Null (синоним Nil)
-  - Bool
-  - Int
-  - String
-  - Range
-  - Def
-  - Gen
-  - Array
-  - Map
+Окончанием секции является строка
+> ...
+
+Последняя секция в файле EDF может не иметь явного окончания
+
+Один документ описывает одну структуру данных
+
+Типы поддерживаемых структур данных:
+- Null (синоним Nil)
+- Bool
+- Int
+- String
+- Range
+- Def
+- Gen
+- Array
+- Map
 */
 
 /**
@@ -76,9 +96,8 @@ some: thing
 
 ### JSON
 
-  Рассмотрим следующиe конфигурационныe данные в EDF-формате:
+Рассмотрим следующиe конфигурационныe данные в EDF-формате:
 */
-
 {
   "projects": {
     "dip": {
@@ -115,14 +134,16 @@ some: thing
     },
   }
 }
-//! exclude next line from doc
-...
 /**
-  Очевидно, что это валидный JSON
+Очевидно, что это валидный JSON
+*/
+//! exclude next line from doc
+---
 
+/**
 ### JSON без пунктуации
 
-  EDF-позволяет упростить его, опустив лишнюю пунктуацию:
+EDF-позволяет упростить его, опустив лишнюю пунктуацию:
 */
 
 {
@@ -162,49 +183,52 @@ some: thing
   }
 }
 /**
-  Такую запись легче поддерживать, как минимум потому, что не надо следить за запятыми
+Такую запись легче поддерживать, как минимум потому, что не надо следить за запятыми
 */
 //! exclude next line from doc
-...
+---
 
 /**
 ### Валидация структуры
 
-  Но EDF-позволяет сделать больше для дальнейшей поддержки этой конфигурационной структуры.
-  Он позволяет определить формат этой структуры: для разработчика и для парсера этих данных.
+Но EDF-позволяет сделать больше для дальнейшей поддержки этой конфигурационной структуры
+Он позволяет определить формат этой структуры: для разработчика и для парсера этих данных
 */
 
 ^Def:Map{
   keysDef {
-    projects Map{
-      elemDef Map{
+    projects Def:Map{
+      type Map
+      elemDef Def:Map{
         keysDef {
-          projName String
-          branch String
+          projName Def:String
+          branch Def:String
         }
       }
     }
-    services Map{
-      elemDef Map{
+    services Def:Map{
+      elemDef Def:Map{
         keysDef {
-          ports Map{
-            elemDef Int{ range 1024..65535 }
+          ports Def:Map{
+            elemDef Def:Int{ range 1024..65535 }
           }
         }
       }
       keysDef {
-        nginx Map{
+        nginx Def:Map{
           keysDef {
-            ports Map{
-              elemDef Int{ range 1024..65535 }
+            ports Def:Map{
+              elemDef Def:Int{ range 1024..65535 }
             }
-            upstream Int{ range 1024..65535 }
+            upstream Def:Int{ range 1024..65535 }
           }
         }
       }
     }
   }
-} {
+}
+
+{
   projects {
     dip {
       projShortcut dip
@@ -242,48 +266,48 @@ some: thing
 }
 
 /**
-  Теперь при внесении изменений разработчик может свериться с определением структуры, чтобы не допусить ошибку
-  А парсер сможет проверить валидность структуры прямо при чтении и немедленно указать на ошибку, если такая обнаружится
+Теперь при внесении изменений разработчик может свериться с определением структуры, чтобы не допусить ошибку
+А парсер сможет проверить валидность структуры прямо при чтении и немедленно указать на ошибку, если такая обнаружится
 */
 //! exclude next line from doc
-...
+---
 
 /**
 ### Использование внешнего файла
 
-  EDF позволяет вынести определение структуры в отдельный файл (`conf.def.edf`) оставив сами конфигурационные данные в основном файле (`conf.edf`):
+EDF позволяет вынести определение структуры в отдельный файл (`conf.def.edf`) оставив сами конфигурационные данные в основном файле (`conf.edf`):
 
 */
 
 /**
 `conf.def.edf`:
 */
-
 Def:Map{
   keysDef {
-    projects Map{
-      elemDef Map{
+    projects Def:Map{
+      type Map
+      elemDef Def:Map{
         keysDef {
-          projName String
-          branch String
+          projName Def:String
+          branch Def:String
         }
       }
     }
-    services Map{
-      elemDef Map{
+    services Def:Map{
+      elemDef Def:Map{
         keysDef {
-          ports Map{
-            elemDef Int{ range 1024..65535 }
+          ports Def:Map{
+            elemDef Def:Int{ range 1024..65535 }
           }
         }
       }
       keysDef {
-        nginx Map{
+        nginx Def:Map{
           keysDef {
-            ports Map{
-              elemDef Int{ range 1024..65535 }
+            ports Def:Map{
+              elemDef Def:Int{ range 1024..65535 }
             }
-            upstream Int{ range 1024..65535 }
+            upstream Def:Int{ range 1024..65535 }
           }
         }
       }
@@ -291,12 +315,11 @@ Def:Map{
   }
 }
 //! exclude next line from doc
-...
+---
 
 /**
 `conf.edf`:
 */
-
 ^$File(./conf.def.edf)
 
 {
@@ -337,68 +360,30 @@ Def:Map{
 }
 
 //! exclude next line from doc
-...
+---
 
 /**
-### Дальнешее использование определения структуры
+### Выражение: Цепочка вызовов
 
-  Определение структуры можно использовать для хранения значений по умолчанию
+Заметим, что значение `projects|*|projShortcut` это всегда повторение значение ключа `projects|*`
+Поэтому можно использовать цепочку вызовов в качестве простого выражения для вычислиния значения
 */
-
-/**
-`conf.def.edf`:
-*/
-
-Def:Map{
-  keysDef {
-    projects Map{
-      elemDef Map{
-        keysDef {
-          projName String
-          branch String
-        }
-      }
-    }
-    services Map{
-      elemDef Map{
-        keysDef {
-          ports Map{
-            elemDef Int{ range 1024..65535 }
-          }
-        }
-      }
-      keysDef {
-        nginx Map{
-          keysDef {
-            ports Map{
-              elemDef Int{ range 1024..65535 }
-            }
-            upstream Int{ range 1024..65535 }
-          }
-        }
-      }
-    }
-  }
-}
-//! exclude next line from doc
-...
 
 /**
 `conf.edf`:
 */
-
 ^$File(./conf.def.edf)
 
 {
   projects {
     dip {
-      projShortcut dip
+      projShortcut $.|$..|$Key
       gitOrigin github.com:baza-winner/dip2.git
       projName dip2
       branch develop
     }
     agate {
-      projShortcut agate
+      projShortcut $.|$..|$Key
       gitOrigin github.com:baza-winner/agate.git
       projName agate
       branch develop
@@ -425,34 +410,35 @@ Def:Map{
     }
   }
 }
+/**
+Здесь `$.` возвращает текущий узел и передает его по цепочке `|` функции `$..` в качестве аргумента
+Та возвращает родительский узел и передает его по цепочке `|` функции `$Key` в качестве аргумента
+Та возвращает ключ родительского узла
+*/
 
 //! exclude next line from doc
-...
-
+---
 /**
 ### Выражение в строке
 
-  Значение `projects|*|gitOrigin` можно выразить через значение `projects|*|projName`
-  А значение `projects|*|projShortcut` это всегда повторение значение ключа `projects|*`
+В свою очередь, значение `projects|*|gitOrigin` можно выразить через значение `projects|*|projName`
 */
-
 /**
 `conf.edf`:
 */
-
 ^$File(./conf.def.edf)
 
 {
   projects {
     dip {
-      projShortcut $..|$Key
-      gitOrigin github.com:baza-winner/\< $..|projName >.git
+      projShortcut $.|$..|$Key
+      gitOrigin github.com:baza-winner/\< $.|$..|projName >.git
       projName dip2
       branch develop
     }
     agate {
-      projShortcut $..|$Key
-      gitOrigin github.com:baza-winner/\< $..|projName >.git
+      projShortcut $.|$..|$Key
+      gitOrigin github.com:baza-winner/\< $.|$..|projName >.git
       projName agate
       branch develop
     }
@@ -478,4 +464,699 @@ Def:Map{
     }
   }
 }
+/**
+Строка `github.com:baza-winner/\< $.|$..|projName >.git` содержит в себе выражение `$.|$..|projName`, которое означает
+"вернуть значение узла, находящегося по ключу `projName` в родительском узле текущего узла"
+*/
+
+//! exclude next line from doc
+---
+/**
+### Значения по умолчанию
+
+Определение структуры можно использовать для хранения значений по умолчанию
+*/
+/**
+`conf.def.edf`:
+*/
+Def:Map{
+  keysDef {
+    projects Def:Map{
+      elemDef Def:Map{
+        keysDef {
+          gitOrigin Def:String{
+            default github.com:baza-winner/\< $.|$..|projName >.git
+          }
+          projShortcut Def:String{
+            default $.|$..|$Key
+          }
+          projName Def:String
+          branch Def:String
+        }
+      }
+    }
+    services Def{
+      type Map
+      elemDef Def{
+        type Map
+        keysDef {
+          ports Def:Map{
+            elemDef Def:Int{ range 1024..65535 }
+          }
+        }
+      }
+      keysDef {
+        nginx Def:Map{
+          keysDef {
+            ports Def:Map{
+              elemDef Def:Int{ range 1024..65535 }
+            }
+            upstream Def:Int{ range 1024..65535 }
+          }
+        }
+      }
+    }
+  }
+}
+//! exclude next line from doc
+---
+/**
+`conf.edf`:
+*/
+^$File(./conf.def.edf)
+
+{
+  projects {
+    dip {
+      projName dip2
+    }
+    agate {
+      projName agate
+    }
+  }
+  services {
+    ssh {
+      ports {
+        _ 2200
+      }
+    }
+    nginx {
+      ports {
+        http 8000
+        https 4400
+      }
+      upstream 3000
+    }
+    redis {
+      ports {
+        _ 6300
+        webdis 7300
+      }
+    }
+  }
+}
+//! exclude next line from doc
+---
+/**
+### Константы
+
+Определение структуры содержит повторяющуюся логику `Int{ range 1024..65535 }`
+Ее можно вынести в константу
+
+*/
+/**
+`conf.def.edf`:
+*/
+
+$portDef = Def:Int{ range 1024..65535 }
+
+Def:Map{
+  keysDef {
+    projects Def:Map{
+      elemDef Def:Map{
+        keysDef {
+          gitOrigin Def:String{
+            default github.com:baza-winner/\< $.|$..|projName >.git
+          }
+          projShortcut Def:String{
+            default $.|$..|$Key
+          }
+          projName Def:String
+          branch Def:String
+        }
+      }
+    }
+    services Def{
+      type Map
+      elemDef Def{
+        type Map
+        keysDef {
+          ports Def:Map{
+            elemDef $portDef
+          }
+        }
+      }
+      keysDef {
+        nginx Def:Map{
+          keysDef {
+            ports Def:Map{
+              elemDef $portDef
+            }
+            upstream $portDef
+          }
+        }
+      }
+    }
+  }
+}
+//! exclude next line from doc
+---
+
+/**
+### Параметризованные константы
+
+Также в отдельную параметризованную константу можно вынести и
+
+  ```
+    ports Def:Map{
+      elemDef $portDef
+    }
+    upstream $portDef
+  ```
+*/
+/**
+`conf.def.edf`:
+*/
+$portDef = Def:Int{ range 1024..65535 }
+
+$serviceDef{
+  hasUpstream Def:Bool{default false}
+} = Def:Map{
+  keysDef {
+    ports Def:Map{ elemDef $portDef }
+    ( $hasUpstream ? { upstream $portDef } : {} )...
+  }
+}
+
+Def:Map{
+  keysDef {
+    projects Def:Map{
+      elemDef Def:Map{
+        keysDef {
+          gitOrigin Def:String{
+            default github.com:baza-winner/\< $.|$..|projName >.git
+          }
+          projShortcut Def:String{
+            default $.|$..|$Key
+          }
+          projName Def:String
+          branch Def:String
+        }
+      }
+    }
+    services Def:Map{
+      elemDef $serviceDef
+      keysDef {
+        nginx $serviceDef{ hasUpstream true }
+      }
+    }
+  }
+}
+//! exclude next line from doc
+---
+
+/**
+### Параметризованное основное значение
+
+Не только константы, но и основное значение можно параметризовать
+
+Рассмотрим следующий пример (реальные конфигурационные файлы проекта `crm`, пароли заменены):
+*/
+/**
+`alpha.json`:
+*/
+{
+  "logger": {
+    "level": "info"
+  },
+  "confirmContacts": {
+    "confirmUrl": "http://alpha.baza-winner.ru/subscribe.html"
+  },
+  "newItemChecksMessage": {
+    "baseOrderUrl": "https://alpha-w7.baza-winner.ru/search",
+    "basePhotoUrl": "https://alpha-images.baza-winner.ru/"
+  },
+  "itemChangeProcessingMessage": {
+    "baseSearchUrl": "https://alpha-w7.baza-winner.ru/search/",
+    "basePhotoUrl": "https://alpha-images.baza-winner.ru/"
+  },
+  "httpGate": {
+    "crm": {
+      "url": "https://alpha-crm.baza-winner.ru"
+    },
+    "agate": {
+      "auth": {
+        "username": "crm",
+        "password": "XXXXXXXXXXXX",
+        "realm": "service"
+      },
+      "url": "https://alpha-agate.baza-winner.ru"
+    },
+    "mls": {
+      "url": "http://alpha-mls.baza-winner.ru"
+    },
+    "onlineBazaWinner": {
+      "url": "https://alpha-online.baza-winner.ru"
+    },
+    "smsGate": {
+      "url": "http://kannel.baza-winner.ru:13003",
+      "user": "alpha-crm",
+      "password": "BBBBBBBB",
+      "from": "WinNER"
+    },
+    "geo": {
+      "url": "http://alpha-geo.baza-winner.ru"
+    }
+  },
+  "db": {
+    "crm": {
+      "username": "app_crm",
+      "password": "DDDDDDDDD",
+      "options": {
+        "host": "alpha-crm-mysql.baza-winner.ru",
+        "logging": false
+      }
+    }
+  },
+  "rmqQueue": {
+    "url": "amqp://alpha-crm:FFFFFFFFFF@alpha-queue0.baza-winner.ru/crm"
+  }
+}
+//! exclude next line from doc
+---
+/**
+`stable.json`:
+*/
+{
+  "logger": {
+    "level": "info"
+  },
+  "confirmContacts": {
+    "confirmUrl": "http://alpha.baza-winner.ru/subscribe.html"
+  },
+  "newItemChecksMessage": {
+    "baseOrderUrl": "https://alpha-w7.baza-winner.ru/search",
+    "basePhotoUrl": "https://alpha-images.baza-winner.ru/"
+  },
+  "itemChangeProcessingMessage": {
+    "baseSearchUrl": "https://alpha-w7.baza-winner.ru/search/",
+    "basePhotoUrl": "https://alpha-images.baza-winner.ru/"
+  },
+  "httpGate": {
+    "crm": {
+      "url": "https://alpha-crm.baza-winner.ru"
+    },
+    "agate": {
+      "auth": {
+        "username": "crm",
+        "password": "XXXXXXXXXXXX",
+        "realm": "service"
+      },
+      "url": "https://alpha-agate.baza-winner.ru"
+    },
+    "mls": {
+      "url": "http://alpha-mls.baza-winner.ru"
+    },
+    "onlineBazaWinner": {
+      "url": "https://alpha-online.baza-winner.ru"
+    },
+    "smsGate": {
+      "url": "http://kannel.baza-winner.ru:13003",
+      "user": "alpha-crm",
+      "password": "BBBBBBBB",
+      "from": "WinNER"
+    },
+    "geo": {
+      "url": "http://alpha-geo.baza-winner.ru"
+    }
+  },
+  "db": {
+    "crm": {
+      "username": "app_crm",
+      "password": "DDDDDDDDD",
+      "options": {
+        "host": "alpha-crm-mysql.baza-winner.ru",
+        "logging": false
+      }
+    }
+  },
+  "rmqQueue": {
+    "url": "amqp://alpha-crm:FFFFFFFFFF@alpha-queue0.baza-winner.ru/crm"
+  }
+}
+//! exclude next line from doc
+---
+/**
+`default.json`:
+*/
+{
+  "logger": {
+    "level": "info",
+    "timestamp": true
+  },
+  "confirmContacts": {
+    "confirmUrl": "http://baza-winner.ru/subscribe.html",
+    "emailSubject": "База WinNER: Активация подписки на новые объявления"
+  },
+  "mailer": {
+    "enabled": true,
+    "smtpServer": "smtp://relay.baza-winner.ru",
+    "from": "WinNER <support@baza-winner.ru>"
+  },
+  "newItemChecksMessage": {
+    "baseOrderUrl": "https://w7.baza-winner.ru/search",
+    "basePhotoUrl": "https://images.baza-winner.ru/"
+  },
+  "itemChangeProcessingMessage": {
+    "baseSearchUrl": "https://w7.baza-winner.ru/search/",
+    "basePhotoUrl": "https://images.baza-winner.ru/"
+  },
+  "httpGate": {
+    "crm": {
+      "url": "https://crm.baza-winner.ru"
+    },
+    "agate": {
+      "enabled": true,
+      "auth": {
+        "username": "crm",
+        "password": "XXXXXXXXXXXX",
+        "realm": "service"
+      },
+      "url": "http://127.0.0.1:3005"
+    },
+    "mls": {
+      "enabled": true,
+      "url": "http://127.0.0.1:3000"
+    },
+    "onlineBazaWinner": {
+      "url": "https://alpha-online.baza-winner.ru"
+    },
+    "smsGate": {
+      "enabled": true,
+      "url": "http://kannel.baza-winner.ru:13003",
+      "user": "stable-crm",
+      "password": "AAAAAAAAAA"
+    },
+    "geo": {
+      "url": "http://127.0.0.1:3000"
+    },
+    "firebase": {
+      "url": "https://android.googleapis.com/gcm/send",
+      "auth": {
+        "winner6": {
+          "senderKey": "AIzaSyALOHOV-sEIaVtFNZZXGj0zFtvM9LhHQXA",
+          "senderId": "517741639126",
+          "contactKindId": 2
+        },
+        "winner7": {
+          "senderKey": "AIzaSyALOHOV-sEIaVtFNZZXGj0zFtvM9LhHQXA",
+          "senderId": "517741639126",
+          "contactKindId": 3
+        },
+        "wandroid": {
+          "senderKey": "AIzaSyALOHOV-sEIaVtFNZZXGj0zFtvM9LhHQXA",
+          "senderId": "517741639126",
+          "contactKindId": 4
+        },
+        "wios": {
+          "senderKey": "AIzaSyALOHOV-sEIaVtFNZZXGj0zFtvM9LhHQXA",
+          "senderId": "517741639126",
+          "contactKindId": 5
+        },
+        "wipad": {
+          "senderKey": "AIzaSyALOHOV-sEIaVtFNZZXGj0zFtvM9LhHQXA",
+          "senderId": "517741639126",
+          "contactKindId": 6
+        },
+        "wlite": {
+          "senderKey": "AIzaSyALOHOV-sEIaVtFNZZXGj0zFtvM9LhHQXA",
+          "senderId": "517741639126",
+          "contactKindId": 7
+        }
+      }
+    }
+  },
+  "db": {
+    "crm": {
+      "database": "crm",
+      "username": "root",
+      "password": "123",
+      "options": {
+        "logging": false,
+        "charset": "utf8",
+        "host": "localhost",
+        "dialect": "mysql",
+        "dialectOptions": {
+          "multipleStatements": true
+        },
+        "pool": {
+          "max": 5,
+          "min": 0,
+          "idle": 10000
+        },
+        "define": {
+          "freezeTableName": true,
+          "underscored": false,
+          "timestamps": false
+        },
+        "timezone": "+03:00"
+      }
+    }
+  },
+  "rmqQueue": {
+    "url": "amqp://localhost"
+  },
+  "queues": {
+     "newItemCheck": {
+       "lockTimeout": 1800,
+       "concurrency": 2,
+       "tryCountIfError": 5,
+       "tryTimeout": 5
+     },
+     "itemChangeProcessing": {
+       "lockTimeout": 1800,
+       "concurrency": 2,
+       "tryCountIfError": 5,
+       "tryTimeout": 5
+     }
+  }
+}
+/**
+Логика по которой формируется конфигурация для каждой среды `alpha/stable` следующая:
+берется `default.json` и на него "накладывается" (то есть производится "слияние" двух структур) `alpha.json` или `stable.json` в зависимости от среды
+
+Цель такого подхода - исключить дублирование данных за счет "наследования" (в результате слияния двух структур)
+У такого подхода есть недостаток: непросто поддерживать несколько файлов.
+Можно заметить, что в данном случае:
+- `httpGate|agate` все равно дублируются в `alpha/stable.json`
+- `httpGate|crm` все равно дублируются в `default/stable.json`
+- настройки `newItemChecksMessage` и `itemChangeProcessingMessage` для `stable` среды хранятся в `default.json`, что крайне опасно.
+  Достаточно разработчику взять для `omega`-среды за основу конфигурационного файла копию `stable.json`
+  и забыть специально добавить настройки `newItemChecksMessage` и `itemChangeProcessingMessage`
+  как приложение из `omega`-среды начнет взаимодействовать со стабильными сервисами
+- настройка `firebase` не используется, но забыта, т.к. находится в `default.json`
+
+Вот как можно было бы организовать эти конфигурационные данные используя EDF:
+*/
+//! exclude next line from doc
+---
+
+// определяем константу
+$envEnum [alpha stable]
+
+// определяем константу - тип значения
+$envType Def:String{enum $envEnum}
+
+// определяем константу
+$envArg {env $envType}
+
+// вводим для того, чтобы контролировать, что при указании имени среды, для которой добавляем пароль, не допустили опечатку, такая опечатка будет выявлена еще на этапе парсинга EDF-файла
+$passwordType Def:Map{keys $envEnum elemDef String}
+
+$smsGateUrl{$envArg...} "http://kannel.\<$domain>:13003"
+$smsGateUsername{$envArg...} \<$env>-crm
+$smsGatePassword{$envArg...} (
+  ^$passwordType {
+    stable AAAAAAAAAA
+    alpha BBBBBBBB
+  } | $env
+)
+
+$dbCrm{$envArg...} crm
+$dbCrmUsername{$envArg...} app_crm
+$dbCrmPassword{$envArg...} (
+  ^$passwordType {
+    stable CCCCCCCCC
+    alpha DDDDDDDDD
+  } | $env
+)
+
+// определяем параметризованную константу
+// для указания параметров используем ранее заданную константу $envArg
+$urlPrefix{
+  $envArg...
+  delimiter String{default "-"}
+} ($env == stable ? "" : $env + $delimiter)
+
+// определяем константу
+$domain baza-winner.ru
+
+// определяем параметризованную константу
+// для указания параметров используем ранее заданную константу $envArg
+$url{
+  for String{enum [search confirm images crm agate mls online geo]}
+  $envArg...
+  suffix String
+  isHttp Bool{default false}
+} (
+  $Env(\<$for>Url) ?: // this line makes our config partially compatible with https://12factor.net
+    http\<$isHttp ? "" : s>://\<
+      $for == confirm
+        ? \<$urlPrefix[$env, "" ]>.\<$domain>/subscribe.html
+      : $for == search
+        ? \<$urlPrefix($env)>w7.\<$domain>/search
+        : \<$urlPrefix($env) + $suffix>.\<$domain>
+    >
+)
+
+$dbCrmHost{$envArg...}
+  \<$env>-crm-mysql.\<$domain>
+
+$rmqPassword{$envArg...} ^String (
+  $env == stable ? EEEEEEEEE :
+  $env == alpha ? FFFFFFFFFF :
+  null
+)|!
+
+$rmqQueueUrl{$envArg...}
+  "amqp://\<$env>-crm:\<$rmqPassword($env)>@\<$env>-queue0.\<$domain>/crm"
+
+$searchUrl{$envArg...} $url[search $env]
+$basePhotoUrl { basePhotoUrl $url[images $env] }
+
+// используем параметризованную константу для вычислиния основного значения
+${$envArg...} {
+  "logger": {
+    "level": "info",
+    "timestamp": true
+  },
+  "confirmContacts": {
+    "confirmUrl": $url[confirm $env true]
+    "emailSubject": "База WinNER: Активация подписки на новые объявления"
+  },
+  "mailer": {
+    "enabled": true,
+    "smtpServer": "smtp://relay.\<$domain>",
+    "from": "WinNER <support@\<$domain>>"
+  },
+  "newItemChecksMessage": {
+    "baseOrderUrl": $searchUrl($env),
+    $basePhotoUrl...
+  },
+  "itemChangeProcessingMessage": {
+    "baseSearchUrl": $searchUrl($env)
+    $basePhotoUrl...
+  },
+  "httpGate":
+  // задаем определение следующей структуры:, чтобы перенести в него повторяющиеся значения в качестве значений по умолчанию
+  ^Map{
+    elemDef Map{
+      keysDef {
+        enabled Bool{ default true }
+        url String{ default $url[ ($.|$..|$Key ) $env] }
+      }
+      elemDef Any
+    }
+  }
+  {
+    "crm": {
+      // !!! by default:
+      // enabled true
+      // url $url[ ($.|$..|$Key ) $env]
+    },
+    "agate": {
+      "auth": {
+        "username": "crm",
+        "password": "XXXXXXXXXXXX",
+        "realm": "service"
+      },
+      // !!! by default:
+      // enabled true
+      // url $url[ ($.|$..|$Key ) $env]
+    },
+    "mls": {
+      // !!! by default:
+      // enabled true
+      // url $url[ ($.|$..|$Key ) $env]
+    },
+    "onlineBazaWinner": {
+      // !!! by default:
+      // enabled true
+      "url": $url[online $env]
+    },
+    "smsGate": {
+      // !!! by default:
+      // enabled true
+      // "url": "http://kannel.\<$domain>:13003",
+      url: $smsGateUrl($env)
+      "user": $smsGateUsername($env) //"\<$env>-crm",
+      "password": $smsGatePassword($env)
+    },
+    "geo": {
+      // !!! by default:
+      // enabled true
+      // url $url[ ($.|$..|$Key ) $env]
+    },
+  },
+  "db": {
+    "crm": {
+      "database": $dbCrm($env),
+      "username": $dbCrmUsername($env),
+      "password": $dbCrmPassword($env),
+      "options": {
+        "logging": false,
+        "charset": "utf8",
+        "host": $dbCrmHost($env),
+        "dialect": "mysql",
+        "dialectOptions": {
+          "multipleStatements": true
+        },
+        "pool": {
+          "max": 5,
+          "min": 0,
+          "idle": 10000
+        },
+        "define": {
+          "freezeTableName": true,
+          "underscored": false,
+          "timestamps": false
+        },
+        "timezone": "+03:00"
+      }
+    }
+  },
+  "rmqQueue": {
+    "url": $rmqQueueUrl($env)
+  },
+  "queues":
+    ^Map{ // используем определение следующей структуры, чтобы вынести в нее совпадающие значения полей в качестве значений по умолчанию
+      elemDef Map{
+        keysDef {
+          lockTimeout Int{ default 1800 }
+          concurrency Int{ default 2 }
+          tryCountIfError Int{ default 5 }
+          tryTimeout Int{ default 5 }
+        }
+      }
+    }
+    {
+     "newItemCheck": {},
+     "itemChangeProcessing": {}
+    }
+}
+/**
+
+Таким образом удалось:
+- упаковать все конфигурационные данные в один файл для всех сред, сколько бы их ни было
+- сделать явными участки конфигурационных данных, зависящие от среды
+- исключить дублирование данных насколько это возможно
+- упростить поддержку:
+  - чтобы добавить поддержку `omega`-среды достаточно добавить значение `omega` в `$envEnum` и пароли в `$smsGatePassword` и `$dbCrmPassword`)
+  - чтобы "выключить" кусок конфигурации достаточно закомментировать его. Обычный JSON не поддерживает комментарии
+
+
+*/
+
+
+
 
