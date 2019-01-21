@@ -963,8 +963,10 @@ $envArg {env $envType}
 // вводим для того, чтобы контролировать, что при указании имени среды, для которой добавляем пароль, не допустили опечатку, такая опечатка будет выявлена еще на этапе парсинга EDF-файла
 $passwordType Def:Map{keys $envEnum elemDef String}
 
-$smsGateUrl{$envArg...} "http://kannel.\<$domain>:13003"
-$smsGateUsername{$envArg...} \<$env>-crm
+// определяем параметризованные константы
+$smsGateUrl{$envArg...}
+  "http://kannel.\<$domain>:13003"
+$smsGateUsername{$envArg...} "\<$env>-crm"
 $smsGatePassword{$envArg...} (
   ^$passwordType {
     stable AAAAAAAAAA
@@ -972,12 +974,26 @@ $smsGatePassword{$envArg...} (
   } | $env
 )
 
-$dbCrm{$envArg...} crm
-$dbCrmUsername{$envArg...} app_crm
+// определяем параметризованные константы
+$dbCrm{$envArg...} crm // несмотря на то, что значение константы не зависит от параметра $env,
+                       // мы его все-равно вводим для гибкости, чтобы можно было просто добавить логику,
+                       // если для какой-то среды имя базы данных будет иным
+$dbCrmUsername{$envArg...} app_crm // несмотря на то, что значение константы не зависит от параметра $env,
+                       // мы его все-равно вводим для гибкости, чтобы можно было просто добавить логику,
+                       // если для какой-то среды имя пользователя базы данных будет иным
 $dbCrmPassword{$envArg...} (
   ^$passwordType {
     stable CCCCCCCCC
     alpha DDDDDDDDD
+  } | $env
+)
+
+// определяем параметризованные константы
+$rmqUsername{$envArg...} \<$env>-crm
+$rmqPassword{$envArg...} (
+  ^$passwordType {
+    stable EEEEEEEEE
+    alpha AAAAAAAAAA
   } | $env
 )
 
@@ -986,7 +1002,9 @@ $dbCrmPassword{$envArg...} (
 $urlPrefix{
   $envArg...
   delimiter String{default "-"}
-} ($env == stable ? "" : $env + $delimiter)
+} (
+  $env == stable ? "" : $env + $delimiter
+)
 
 // определяем константу
 $domain baza-winner.ru
@@ -996,35 +1014,43 @@ $domain baza-winner.ru
 $url{
   for String{enum [search confirm images crm agate mls online geo]}
   $envArg...
-  suffix String
   isHttp Bool{default false}
 } (
   $Env(\<$for>Url) ?: // this line makes our config partially compatible with https://12factor.net
-    http\<$isHttp ? "" : s>://\<
+    "http\<$isHttp ? "" : s>://\<
       $for == confirm
-        ? \<$urlPrefix[$env, "" ]>.\<$domain>/subscribe.html
+        ? "\<$urlPrefix[$env, "" ]>.\<$domain>/subscribe.html"
       : $for == search
-        ? \<$urlPrefix($env)>w7.\<$domain>/search
-        : \<$urlPrefix($env) + $suffix>.\<$domain>
-    >
+        ? "\<$urlPrefix($env)>w7.\<$domain>/\<$for>"
+        : "\<$urlPrefix($env) + $for>.\<$domain>"
+    >"
 )
 
+// определяем параметризованную константу
+// для указания параметров используем ранее заданную константу $envArg
 $dbCrmHost{$envArg...}
   \<$env>-crm-mysql.\<$domain>
 
-$rmqPassword{$envArg...} ^String (
-  $env == stable ? EEEEEEEEE :
-  $env == alpha ? FFFFFFFFFF :
-  null
-)|!
-
+// определяем параметризованную константу
+// для указания параметров используем ранее заданную константу $envArg
 $rmqQueueUrl{$envArg...}
-  "amqp://\<$env>-crm:\<$rmqPassword($env)>@\<$env>-queue0.\<$domain>/crm"
+  "amqp://\<$rmqUsername($env)>:\<$rmqPassword($env)>@\<$env>-queue0.\<$domain>/crm"
+  // "amqp://\<$env>-crm:\<$rmqPassword($env)>@\<$env>-queue0.\<$domain>/crm"
 
-$searchUrl{$envArg...} $url[search $env]
-$basePhotoUrl { basePhotoUrl $url[images $env] }
+// определяем параметризованную константу
+// для указания параметров используем ранее заданную константу $envArg
+$searchUrl{$envArg...}
+  $url[search $env]
+
+
+// определяем константу
+$basePhotoUrl
+  {
+    basePhotoUrl $url[images $env]
+  }
 
 // используем параметризованную константу для вычислиния основного значения
+// основное значение - это как раз безымянная параметризованная константа
 ${$envArg...} {
   "logger": {
     "level": "info",
@@ -1053,7 +1079,9 @@ ${$envArg...} {
     elemDef Map{
       keysDef {
         enabled Bool{ default true }
-        url String{ default $url[ ($.|$..|$Key ) $env] }
+        url String{
+          default $url[ ($.|$..|$Key ) $env]
+        }
       }
       elemDef Any
     }
@@ -1149,11 +1177,10 @@ ${$envArg...} {
 Таким образом удалось:
 - упаковать все конфигурационные данные в один файл для всех сред, сколько бы их ни было
 - сделать явными участки конфигурационных данных, зависящие от среды
-- исключить дублирование данных насколько это возможно
+- исключить дублирование данных, насколько это возможно
 - упростить поддержку:
   - чтобы добавить поддержку `omega`-среды достаточно добавить значение `omega` в `$envEnum` и пароли в `$smsGatePassword` и `$dbCrmPassword`)
   - чтобы "выключить" кусок конфигурации достаточно закомментировать его. Обычный JSON не поддерживает комментарии
-
 
 */
 
